@@ -8,6 +8,13 @@
       "when": 1775570756083,
       "tag": "0000_hard_mephisto",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1775571352099,
+      "tag": "0001_shallow_tomas",
+      "breakpoints": true
     }
   ]
 }
