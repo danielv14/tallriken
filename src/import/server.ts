@@ -45,7 +45,7 @@ export const extractRecipeFromUrl = createServerFn({ method: 'POST' })
       .map((t) => t.id)
 
     // Om JSON-LD hittades men inga taggar föreslagits, låt AI:n tagga
-    if (draft.suggestedTagNames === undefined && tagNames.length > 0) {
+    if (!draft.suggestedTagNames && tagNames.length > 0) {
       try {
         const aiDraft = await extractRecipeWithAi(
           `<title>${draft.title}</title><p>${draft.description ?? ''}</p><ul>${draft.ingredients.map((i) => `<li>${i}</li>`).join('')}</ul>`,

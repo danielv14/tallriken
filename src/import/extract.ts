@@ -78,15 +78,16 @@ export const extractJsonLdRecipe = (html: string): RecipeDraft | null => {
 
       return {
         title,
-        description: (recipe.description as string) ?? undefined,
+        description: (recipe.description as string) ?? null,
         ingredients,
-        steps: parseInstructions(recipe.recipeInstructions),
+        steps: parseInstructions(recipe.recipeInstructions) ?? null,
         cookingTimeMinutes: recipe.totalTime
-          ? parseIsoDuration(recipe.totalTime as string)
+          ? parseIsoDuration(recipe.totalTime as string) ?? null
           : recipe.cookTime
-            ? parseIsoDuration(recipe.cookTime as string)
-            : undefined,
-        servings: parseServings(recipe.recipeYield),
+            ? parseIsoDuration(recipe.cookTime as string) ?? null
+            : null,
+        servings: parseServings(recipe.recipeYield) ?? null,
+        suggestedTagNames: null,
       }
     } catch {
       continue
