@@ -1,8 +1,9 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { getIsAuthenticated } from '#/auth/server'
-import { fetchRecipeById } from '#/recipes/server'
+import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { Button } from '#/components/ui/button'
+import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 
 export const Route = createFileRoute('/recipes/$recipeId')({
   beforeLoad: async () => {
@@ -23,13 +24,20 @@ export const Route = createFileRoute('/recipes/$recipeId')({
 
 function RecipeDetailPage() {
   const recipe = Route.useLoaderData()
+  const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const handleCopyIngredients = async () => {
     const text = recipe.ingredients.join('\n')
     await navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleDelete = async () => {
+    await removeRecipe({ data: { id: recipe.id } })
+    navigate({ to: '/' })
   }
 
   return (
@@ -39,7 +47,18 @@ function RecipeDetailPage() {
       </Link>
 
       <div className="mt-6">
-        <h1 className="text-3xl font-bold">{recipe.title}</h1>
+        <div className="flex items-start justify-between">
+          <h1 className="text-3xl font-bold">{recipe.title}</h1>
+          <div className="flex gap-2">
+            <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
+              <Button variant="secondary" size="sm">Redigera</Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={() => setShowDeleteDialog(true)}>
+              Ta bort
+            </Button>
+          </div>
+        </div>
+
         {recipe.description && (
           <p className="mt-2 text-gray-600">{recipe.description}</p>
         )}
@@ -97,6 +116,14 @@ function RecipeDetailPage() {
           </ol>
         </section>
       )}
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Ta bort recept"
+        description={`Är du säker på att du vill ta bort "${recipe.title}"?`}
+        onConfirm={handleDelete}
+      />
     </main>
   )
 }

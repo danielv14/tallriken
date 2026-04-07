@@ -14,6 +14,7 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesRecipeIdRouteImport } from './routes/recipes/$recipeId'
 import { Route as AdminTagsRouteImport } from './routes/admin/tags'
+import { Route as RecipesEditRecipeIdRouteImport } from './routes/recipes/edit/$recipeId'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 
@@ -42,6 +43,11 @@ const AdminTagsRoute = AdminTagsRouteImport.update({
   path: '/admin/tags',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesEditRecipeIdRoute = RecipesEditRecipeIdRouteImport.update({
+  id: '/recipes/edit/$recipeId',
+  path: '/recipes/edit/$recipeId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
   id: '/api/auth/logout',
   path: '/api/auth/logout',
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
+    | '/recipes/edit/$recipeId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
+    | '/recipes/edit/$recipeId'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
+    | '/recipes/edit/$recipeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   RecipesRecipeIdRoute: typeof RecipesRecipeIdRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  RecipesEditRecipeIdRoute: typeof RecipesEditRecipeIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTagsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/edit/$recipeId': {
+      id: '/recipes/edit/$recipeId'
+      path: '/recipes/edit/$recipeId'
+      fullPath: '/recipes/edit/$recipeId'
+      preLoaderRoute: typeof RecipesEditRecipeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/logout': {
       id: '/api/auth/logout'
       path: '/api/auth/logout'
@@ -183,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecipesRecipeIdRoute: RecipesRecipeIdRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  RecipesEditRecipeIdRoute: RecipesEditRecipeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

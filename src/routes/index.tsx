@@ -1,6 +1,9 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { useState } from 'react'
 import { getIsAuthenticated } from '#/auth/server'
-import { fetchAllRecipes } from '#/recipes/server'
+import { fetchAllRecipes, findRecipes } from '#/recipes/server'
+import { fetchAllTags } from '#/tags/server'
+import { Input } from '#/components/ui/input'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -9,28 +12,61 @@ export const Route = createFileRoute('/')({
       throw redirect({ to: '/login' })
     }
   },
-  loader: () => fetchAllRecipes(),
+  loader: async () => {
+    const [recipes, tags] = await Promise.all([fetchAllRecipes(), fetchAllTags()])
+    return { recipes, tags }
+  },
   component: HomePage,
 })
 
 function HomePage() {
-  const recipes = Route.useLoaderData()
+  const { recipes: initialRecipes, tags } = Route.useLoaderData()
+  const [recipes, setRecipes] = useState(initialRecipes)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
+  const [searching, setSearching] = useState(false)
+
+  const handleSearch = async (query: string, tagIds: number[]) => {
+    setSearching(true)
+    try {
+      if (!query.trim() && tagIds.length === 0) {
+        setRecipes(initialRecipes)
+      } else {
+        const results = await findRecipes({
+          data: {
+            query: query.trim() || undefined,
+            tagIds: tagIds.length > 0 ? tagIds : undefined,
+          },
+        })
+        setRecipes(results)
+      }
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  const handleQueryChange = (value: string) => {
+    setSearchQuery(value)
+    handleSearch(value, selectedTagIds)
+  }
+
+  const toggleTag = (tagId: number) => {
+    const newTagIds = selectedTagIds.includes(tagId)
+      ? selectedTagIds.filter((id) => id !== tagId)
+      : [...selectedTagIds, tagId]
+    setSelectedTagIds(newTagIds)
+    handleSearch(searchQuery, newTagIds)
+  }
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Tallriken</h1>
         <div className="flex items-center gap-4">
-          <Link
-            to="/import"
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
+          <Link to="/import" className="text-sm text-gray-600 hover:text-gray-900">
             Importera
           </Link>
-          <Link
-            to="/admin/tags"
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
+          <Link to="/admin/tags" className="text-sm text-gray-600 hover:text-gray-900">
             Taggar
           </Link>
           <form method="post" action="/api/auth/logout">
@@ -44,15 +80,49 @@ function HomePage() {
         </div>
       </div>
 
+      {initialRecipes.length > 0 && (
+        <div className="mt-6 space-y-3">
+          <Input
+            value={searchQuery}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            placeholder="Sök recept..."
+          />
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => toggleTag(tag.id)}
+                  className={`rounded-full px-3 py-1 text-sm transition ${
+                    selectedTagIds.includes(tag.id)
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {recipes.length === 0 ? (
         <div className="mt-16 text-center">
-          <p className="text-gray-500">Inga recept ännu.</p>
-          <Link
-            to="/import"
-            className="mt-2 inline-block text-sm font-medium text-gray-900 underline"
-          >
-            Lägg till ditt första recept
-          </Link>
+          {searchQuery || selectedTagIds.length > 0 ? (
+            <p className="text-gray-500">Inga recept matchade din sökning.</p>
+          ) : (
+            <>
+              <p className="text-gray-500">Inga recept ännu.</p>
+              <Link
+                to="/import"
+                className="mt-2 inline-block text-sm font-medium text-gray-900 underline"
+              >
+                Lägg till ditt första recept
+              </Link>
+            </>
+          )}
         </div>
       ) : (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
