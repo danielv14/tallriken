@@ -50,7 +50,7 @@ function RecipeDetailPage() {
         <div className="flex items-start justify-between">
           <h1 className="text-3xl font-bold">{recipe.title}</h1>
           <div className="flex gap-2">
-            <Link to="/recipes/$recipeId/edit" params={{ recipeId: String(recipe.id) }}>
+            <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
               <Button variant="secondary" size="sm">Redigera</Button>
             </Link>
             <Button variant="ghost" size="sm" onClick={() => setShowDeleteDialog(true)}>

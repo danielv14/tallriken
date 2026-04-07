@@ -5,7 +5,7 @@ import { fetchRecipeById, editRecipe } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
 
-export const Route = createFileRoute('/recipes/$recipeId/edit')({
+export const Route = createFileRoute('/recipes/edit/$recipeId')({
   beforeLoad: async () => {
     const isAuthenticated = await getIsAuthenticated()
     if (!isAuthenticated) {
