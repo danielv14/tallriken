@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import * as schema from '#/db/schema'
@@ -43,6 +43,34 @@ export const createRecipe = async (db: Database, input: CreateRecipeInput) => {
   }
 
   return recipe
+}
+
+export const getAllRecipes = async (db: Database) => {
+  const recipes = await db
+    .select()
+    .from(schema.recipesTable)
+    .orderBy(desc(schema.recipesTable.id))
+
+  const allRecipeTags = await db
+    .select({
+      recipeId: schema.recipeTagsTable.recipeId,
+      tagId: schema.tagsTable.id,
+      tagName: schema.tagsTable.name,
+    })
+    .from(schema.recipeTagsTable)
+    .innerJoin(schema.tagsTable, eq(schema.recipeTagsTable.tagId, schema.tagsTable.id))
+
+  const tagsByRecipeId = new Map<number, { id: number; name: string }[]>()
+  for (const row of allRecipeTags) {
+    const existing = tagsByRecipeId.get(row.recipeId) ?? []
+    existing.push({ id: row.tagId, name: row.tagName })
+    tagsByRecipeId.set(row.recipeId, existing)
+  }
+
+  return recipes.map((recipe) => ({
+    ...recipe,
+    tags: tagsByRecipeId.get(recipe.id) ?? [],
+  }))
 }
 
 export const getRecipeById = async (db: Database, id: number) => {

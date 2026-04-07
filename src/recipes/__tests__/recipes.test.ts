@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import * as schema from '#/db/schema'
-import { createRecipe, getRecipeById } from '#/recipes/crud'
+import { createRecipe, getRecipeById, getAllRecipes } from '#/recipes/crud'
 import { createTag } from '#/tags/crud'
 
 const createTestDb = () => {
@@ -101,5 +101,40 @@ describe('getRecipeById', () => {
     const fetched = await getRecipeById(db, 999)
 
     expect(fetched).toBeNull()
+  })
+})
+
+describe('getAllRecipes', () => {
+  it('returns recipes sorted by newest first, with tags', async () => {
+    const db = createTestDb()
+    const tag = await createTag(db, 'Snabblagat')
+
+    await createRecipe(db, {
+      title: 'Äldre recept',
+      ingredients: ['pasta'],
+      tagIds: [],
+    })
+    await createRecipe(db, {
+      title: 'Nyare recept',
+      ingredients: ['ris'],
+      tagIds: [tag.id],
+    })
+
+    const recipes = await getAllRecipes(db)
+
+    expect(recipes).toHaveLength(2)
+    expect(recipes[0].title).toBe('Nyare recept')
+    expect(recipes[0].tags).toHaveLength(1)
+    expect(recipes[0].tags[0].name).toBe('Snabblagat')
+    expect(recipes[1].title).toBe('Äldre recept')
+    expect(recipes[1].tags).toHaveLength(0)
+  })
+
+  it('returns empty array when no recipes exist', async () => {
+    const db = createTestDb()
+
+    const recipes = await getAllRecipes(db)
+
+    expect(recipes).toEqual([])
   })
 })
