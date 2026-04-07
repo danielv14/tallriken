@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import * as schema from '#/db/schema'
-import { createRecipe, getRecipeById, getAllRecipes } from '#/recipes/crud'
+import { createRecipe, getRecipeById, getAllRecipes, updateRecipe, deleteRecipe, searchRecipes } from '#/recipes/crud'
 import { createTag } from '#/tags/crud'
 
 const createTestDb = () => {
@@ -136,5 +136,124 @@ describe('getAllRecipes', () => {
     const recipes = await getAllRecipes(db)
 
     expect(recipes).toEqual([])
+  })
+})
+
+describe('updateRecipe', () => {
+  it('updates recipe fields and returns the updated recipe', async () => {
+    const db = createTestDb()
+    const recipe = await createRecipe(db, {
+      title: 'Pasta',
+      ingredients: ['pasta'],
+      tagIds: [],
+    })
+
+    const updated = await updateRecipe(db, recipe.id, {
+      title: 'Pasta Carbonara',
+      ingredients: ['400g spaghetti', '200g pancetta'],
+      steps: ['Koka', 'Stek', 'Blanda'],
+      cookingTimeMinutes: 25,
+      servings: 4,
+      tagIds: [],
+    })
+
+    expect(updated.title).toBe('Pasta Carbonara')
+    expect(updated.ingredients).toEqual(['400g spaghetti', '200g pancetta'])
+  })
+
+  it('updates tag associations', async () => {
+    const db = createTestDb()
+    const tag1 = await createTag(db, 'Italienskt')
+    const tag2 = await createTag(db, 'Snabblagat')
+    const recipe = await createRecipe(db, {
+      title: 'Pasta',
+      ingredients: ['pasta'],
+      tagIds: [tag1.id],
+    })
+
+    await updateRecipe(db, recipe.id, {
+      title: 'Pasta',
+      ingredients: ['pasta'],
+      tagIds: [tag2.id],
+    })
+
+    const fetched = await getRecipeById(db, recipe.id)
+    expect(fetched!.tags).toHaveLength(1)
+    expect(fetched!.tags[0].name).toBe('Snabblagat')
+  })
+})
+
+describe('deleteRecipe', () => {
+  it('removes the recipe so it no longer exists', async () => {
+    const db = createTestDb()
+    const recipe = await createRecipe(db, {
+      title: 'Pasta',
+      ingredients: ['pasta'],
+      tagIds: [],
+    })
+
+    await deleteRecipe(db, recipe.id)
+
+    const fetched = await getRecipeById(db, recipe.id)
+    expect(fetched).toBeNull()
+  })
+})
+
+describe('searchRecipes', () => {
+  it('finds recipes matching title', async () => {
+    const db = createTestDb()
+    await createRecipe(db, { title: 'Pasta Carbonara', ingredients: ['pasta'], tagIds: [] })
+    await createRecipe(db, { title: 'Köttfärssås', ingredients: ['köttfärs'], tagIds: [] })
+
+    const results = await searchRecipes(db, { query: 'pasta' })
+
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Pasta Carbonara')
+  })
+
+  it('finds recipes matching ingredients', async () => {
+    const db = createTestDb()
+    await createRecipe(db, { title: 'Stekt ris', ingredients: ['ris', 'ägg', 'soja'], tagIds: [] })
+    await createRecipe(db, { title: 'Pasta', ingredients: ['pasta'], tagIds: [] })
+
+    const results = await searchRecipes(db, { query: 'soja' })
+
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Stekt ris')
+  })
+
+  it('filters by tags', async () => {
+    const db = createTestDb()
+    const tag = await createTag(db, 'Snabblagat')
+    await createRecipe(db, { title: 'Snabb pasta', ingredients: ['pasta'], tagIds: [tag.id] })
+    await createRecipe(db, { title: 'Långkok', ingredients: ['kött'], tagIds: [] })
+
+    const results = await searchRecipes(db, { tagIds: [tag.id] })
+
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Snabb pasta')
+  })
+
+  it('combines text search and tag filter', async () => {
+    const db = createTestDb()
+    const tag = await createTag(db, 'Snabblagat')
+    await createRecipe(db, { title: 'Snabb pasta', ingredients: ['pasta'], tagIds: [tag.id] })
+    await createRecipe(db, { title: 'Pasta gratin', ingredients: ['pasta', 'ost'], tagIds: [] })
+    await createRecipe(db, { title: 'Snabb sallad', ingredients: ['sallad'], tagIds: [tag.id] })
+
+    const results = await searchRecipes(db, { query: 'pasta', tagIds: [tag.id] })
+
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Snabb pasta')
+  })
+
+  it('returns all recipes when no filters are provided', async () => {
+    const db = createTestDb()
+    await createRecipe(db, { title: 'A', ingredients: ['a'], tagIds: [] })
+    await createRecipe(db, { title: 'B', ingredients: ['b'], tagIds: [] })
+
+    const results = await searchRecipes(db, {})
+
+    expect(results).toHaveLength(2)
   })
 })
