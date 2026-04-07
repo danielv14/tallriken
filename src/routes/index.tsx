@@ -18,6 +18,12 @@ function HomePage() {
         <h1 className="text-3xl font-bold">Tallriken</h1>
         <div className="flex items-center gap-4">
           <Link
+            to="/import"
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            Importera
+          </Link>
+          <Link
             to="/admin/tags"
             className="text-sm text-gray-600 hover:text-gray-900"
           >

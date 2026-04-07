@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminTagsRouteImport } from './routes/admin/tags'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
@@ -18,6 +19,11 @@ import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,6 +49,7 @@ const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/admin/tags': typeof AdminTagsRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/admin/tags': typeof AdminTagsRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/admin/tags': typeof AdminTagsRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -67,15 +76,23 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/import'
     | '/login'
     | '/admin/tags'
     | '/api/auth/login'
     | '/api/auth/logout'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/admin/tags' | '/api/auth/login' | '/api/auth/logout'
+  to:
+    | '/'
+    | '/import'
+    | '/login'
+    | '/admin/tags'
+    | '/api/auth/login'
+    | '/api/auth/logout'
   id:
     | '__root__'
     | '/'
+    | '/import'
     | '/login'
     | '/admin/tags'
     | '/api/auth/login'
@@ -84,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRoute
   AdminTagsRoute: typeof AdminTagsRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
@@ -97,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -132,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ImportRoute: ImportRoute,
   LoginRoute: LoginRoute,
   AdminTagsRoute: AdminTagsRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
