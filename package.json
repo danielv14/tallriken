@@ -12,11 +12,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push --config=drizzle.config.local.ts",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
+    "@base-ui/react": "^1.3.0",
     "@cloudflare/vite-plugin": "^1.26.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.0",
@@ -24,10 +25,12 @@
     "@tanstack/react-router-ssr-query": "latest",
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.132.0",
+    "class-variance-authority": "^0.7.1",
     "drizzle-orm": "^0.44.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
