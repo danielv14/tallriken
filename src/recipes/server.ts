@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
-import { createRecipe } from '#/recipes/crud'
+import { createRecipe, getAllRecipes, getRecipeById } from '#/recipes/crud'
 
 export const saveRecipe = createServerFn({ method: 'POST' })
   .inputValidator(
@@ -18,4 +18,16 @@ export const saveRecipe = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const db = getDb()
     return createRecipe(db, data)
+  })
+
+export const fetchAllRecipes = createServerFn({ method: 'GET' }).handler(async () => {
+  const db = getDb()
+  return getAllRecipes(db)
+})
+
+export const fetchRecipeById = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ id: z.number() }))
+  .handler(async ({ data }) => {
+    const db = getDb()
+    return getRecipeById(db, data.id)
   })
