@@ -5,6 +5,7 @@ import { getDb } from '#/db/client'
 import { getAllTags } from '#/tags/crud'
 import { extractJsonLdRecipe } from '#/import/extract'
 import { extractRecipeWithAi } from '#/import/ai-extract'
+import { extractRecipeFromImages } from '#/import/ocr-extract'
 import { resolveTagIds } from '#/import/auto-tag'
 import type { RecipeDraft } from '#/import/schema'
 
@@ -48,4 +49,29 @@ export const extractRecipeFromUrl = createServerFn({ method: 'POST' })
     const tagIds = await resolveTagIds(draft, tags, env.OPENAI_API_KEY)
 
     return { ...draft, sourceUrl: data.url, tagIds }
+  })
+
+export const extractRecipeFromPhotos = createServerFn({ method: 'POST' })
+  .inputValidator(
+    z.object({
+      images: z.array(z.object({
+        base64: z.string().min(1),
+        mimeType: z.string().min(1),
+      })).min(1),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const db = getDb()
+    const tags = await getAllTags(db)
+    const tagNames = tags.map((t) => t.name)
+
+    const draft = await extractRecipeFromImages(data.images, tagNames, env.OPENAI_API_KEY)
+
+    if (!draft) {
+      throw new Error('Kunde inte extrahera något recept från bilderna')
+    }
+
+    const tagIds = await resolveTagIds(draft, tags, env.OPENAI_API_KEY)
+
+    return { ...draft, tagIds }
   })
