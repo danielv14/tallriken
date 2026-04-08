@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllRecipes, findRecipes } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
@@ -27,10 +28,16 @@ export const Route = createFileRoute('/')({
 
 function HomePage() {
   const { recipes: initialRecipes, tags } = Route.useLoaderData()
+  const setPageContext = useChatStore((s) => s.setPageContext)
   const [recipes, setRecipes] = useState(initialRecipes)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [searching, setSearching] = useState(false)
+
+  useEffect(() => {
+    setPageContext({ type: 'home' })
+    return () => setPageContext({ type: 'other' })
+  }, [setPageContext])
 
   const handleSearch = async (query: string, tagIds: number[]) => {
     setSearching(true)

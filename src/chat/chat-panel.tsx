@@ -1,22 +1,30 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useChat, fetchServerSentEvents } from '@tanstack/ai-react'
+import { useNavigate } from '@tanstack/react-router'
+import ReactMarkdown from 'react-markdown'
 import { useChatStore } from '#/chat/store'
 import { Button } from '#/components/ui/button'
 import { XMarkIcon, ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline'
 
 const ChatPanel = () => {
-  const { isOpen, close } = useChatStore()
+  const { isOpen, close, pageContext } = useChatStore()
+  const navigate = useNavigate()
   const [input, setInput] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { messages, sendMessage, isLoading } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
   })
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim() && !isLoading) {
-      sendMessage(input)
+      sendMessage(input, { body: { pageContext } })
       setInput('')
     }
   }
@@ -84,10 +92,32 @@ const ChatPanel = () => {
                 >
                   {message.parts.map((part, idx) => {
                     if (part.type === 'text') {
-                      return (
-                        <div key={idx} className="whitespace-pre-wrap">
-                          {'content' in part ? part.content : ''}
+                      const content = 'content' in part ? part.content : ''
+                      return isAssistant ? (
+                        <div key={idx} className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:mb-1 prose-headings:mt-2">
+                          <ReactMarkdown
+                            components={{
+                              a: ({ href, children }) => (
+                                <a
+                                  href={href}
+                                  onClick={(e) => {
+                                    if (href?.startsWith('/')) {
+                                      e.preventDefault()
+                                      navigate({ to: href })
+                                    }
+                                  }}
+                                  className="text-blue-600 underline hover:text-blue-800"
+                                >
+                                  {children}
+                                </a>
+                              ),
+                            }}
+                          >
+                            {content}
+                          </ReactMarkdown>
                         </div>
+                      ) : (
+                        <div key={idx} className="whitespace-pre-wrap">{content}</div>
                       )
                     }
                     return null
@@ -121,6 +151,7 @@ const ChatPanel = () => {
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
