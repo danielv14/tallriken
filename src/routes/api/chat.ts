@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { chat, toServerSentEventsResponse } from '@tanstack/ai'
+import { chat, toServerSentEventsResponse, maxIterations } from '@tanstack/ai'
 import { openaiText } from '@tanstack/ai-openai'
 import { env } from 'cloudflare:workers'
 import { searchRecipesTool } from '#/chat/tools'
@@ -31,6 +31,7 @@ export const Route = createFileRoute('/api/chat')({
           messages,
           conversationId,
           tools: [searchRecipesTool],
+          agentLoopStrategy: maxIterations(5),
         })
 
         return toServerSentEventsResponse(stream)
