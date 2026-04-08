@@ -3,13 +3,15 @@ import { useState } from 'react'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllTags } from '#/tags/server'
 import { saveRecipe } from '#/recipes/server'
-import { extractRecipeFromUrl } from '#/import/server'
+import { extractRecipeFromUrl, extractRecipeFromPhotos } from '#/import/server'
+import { recipeToFormData } from '#/recipes/form-utils'
 import { formDataToRecipeInput } from '#/recipes/form-utils'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
 import {
   ArrowLeftIcon,
+  CameraIcon,
   GlobeAltIcon,
   PencilIcon,
 } from '@heroicons/react/24/outline'
@@ -25,7 +27,7 @@ export const Route = createFileRoute('/import')({
   component: ImportPage,
 })
 
-type ImportTab = 'url' | 'manual'
+type ImportTab = 'url' | 'photo' | 'manual'
 
 function ImportPage() {
   const tags = Route.useLoaderData()
@@ -138,6 +140,18 @@ function ImportPage() {
           </button>
           <button
             type="button"
+            onClick={() => setTab('photo')}
+            className={`flex items-center gap-2 border-b-2 pb-2.5 text-sm font-semibold transition ${
+              tab === 'photo'
+                ? 'border-plum-600 text-plum-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <CameraIcon className="h-4 w-4" />
+            Från foto
+          </button>
+          <button
+            type="button"
             onClick={() => setTab('manual')}
             className={`flex items-center gap-2 border-b-2 pb-2.5 text-sm font-semibold transition ${
               tab === 'manual'
@@ -177,6 +191,13 @@ function ImportPage() {
           </div>
         )}
 
+        {tab === 'photo' && (
+          <PhotoImport
+            onExtracted={(draft) => setPreviewData(draft)}
+            onError={(msg) => setError(msg)}
+          />
+        )}
+
         {tab === 'manual' && (
           <div className="mt-5 rounded-xl bg-white p-5 ring-1 ring-gray-100">
             <RecipeForm
@@ -188,6 +209,90 @@ function ImportPage() {
           </div>
         )}
       </main>
+    </div>
+  )
+}
+
+type PhotoImportProps = {
+  onExtracted: (data: RecipeFormData) => void
+  onError: (message: string) => void
+}
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // Remove data:image/...;base64, prefix
+      resolve(result.split(',')[1])
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+const PhotoImport = ({ onExtracted, onError }: PhotoImportProps) => {
+  const [files, setFiles] = useState<File[]>([])
+  const [extracting, setExtracting] = useState(false)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files))
+    }
+  }
+
+  const handleExtract = async () => {
+    if (files.length === 0) return
+    setExtracting(true)
+    try {
+      const images = await Promise.all(
+        files.map(async (file) => ({
+          base64: await fileToBase64(file),
+          mimeType: file.type,
+        })),
+      )
+
+      const result = await extractRecipeFromPhotos({ data: { images } })
+
+      onExtracted({
+        title: result.title,
+        description: result.description ?? '',
+        ingredients: result.ingredients.length > 0 ? result.ingredients : [''],
+        steps: result.steps && result.steps.length > 0 ? result.steps : [''],
+        cookingTimeMinutes: result.cookingTimeMinutes ? String(result.cookingTimeMinutes) : '',
+        servings: result.servings ? String(result.servings) : '',
+        tagIds: result.tagIds,
+      })
+    } catch (err) {
+      console.error('Photo extract failed:', err)
+      onError('Kunde inte extrahera recept från bilderna. Försök med tydligare bilder eller lägg till manuellt.')
+    } finally {
+      setExtracting(false)
+    }
+  }
+
+  return (
+    <div className="mt-5 rounded-xl bg-white p-5 ring-1 ring-gray-100">
+      <p className="text-sm text-gray-500">
+        Ladda upp en eller flera bilder av en kokbokssida. Vi extraherar receptet automatiskt.
+      </p>
+      <div className="mt-4 space-y-4">
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+          className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+        />
+        {files.length > 0 && (
+          <p className="text-sm text-gray-500">
+            {files.length} {files.length === 1 ? 'bild' : 'bilder'} vald{files.length === 1 ? '' : 'a'}
+          </p>
+        )}
+        <Button onClick={handleExtract} disabled={extracting || files.length === 0}>
+          {extracting ? 'Extraherar recept...' : 'Extrahera recept'}
+        </Button>
+      </div>
     </div>
   )
 }
