@@ -5,6 +5,12 @@ import { Markdown } from '#/components/markdown'
 import { Button } from '#/components/ui/button'
 import { XMarkIcon, ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline'
 
+const CONTEXT_PREFIX_REGEX = /^\[KONTEXT:.*?\]\n/
+
+const stripContextPrefix = (text: string): string => {
+  return text.replace(CONTEXT_PREFIX_REGEX, '')
+}
+
 const ChatPanel = () => {
   const { isOpen, close, pageContext } = useChatStore()
   const [input, setInput] = useState('')
@@ -13,17 +19,23 @@ const ChatPanel = () => {
 
   const { messages, sendMessage, isLoading } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
-    body: { pageContext },
   })
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const buildMessageWithContext = (text: string): string => {
+    if (pageContext.type === 'recipe') {
+      return `[KONTEXT: Användaren tittar på receptet "${pageContext.recipeTitle}" (ID: ${pageContext.recipeId}, URL: /recipes/${pageContext.recipeId})]\n${text}`
+    }
+    return text
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim() && !isLoading) {
-      sendMessage(input)
+      sendMessage(buildMessageWithContext(input))
       setInput('')
     }
   }
@@ -91,7 +103,8 @@ const ChatPanel = () => {
                 >
                   {message.parts.map((part, idx) => {
                     if (part.type === 'text') {
-                      const content = 'content' in part ? part.content : ''
+                      const rawContent = 'content' in part ? part.content : ''
+                      const content = stripContextPrefix(rawContent)
                       return isAssistant ? (
                         <Markdown key={idx} content={content} />
                       ) : (

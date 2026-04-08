@@ -14,30 +14,20 @@ Regler:
 - Om du inte hittar något passande, säg det och föreslå alternativ
 - Var kortfattad och tydlig
 - Formatera inköpslistor och veckomenyer på ett lättläst sätt med markdown
-- Basera dina förslag på användarens egna receptsamling`
-
-const buildContextMessage = (pageContext: { type: string; recipeId?: number; recipeTitle?: string }): string => {
-  if (pageContext.type === 'recipe' && pageContext.recipeTitle) {
-    return `\n\nAnvändaren tittar just nu på receptet "${pageContext.recipeTitle}" (ID: ${pageContext.recipeId}, URL: /recipes/${pageContext.recipeId}). Om användaren refererar till "det här receptet" eller liknande, utgå från detta recept.`
-  }
-  return ''
-}
+- Basera dina förslag på användarens egna receptsamling
+- Om meddelandet börjar med [KONTEXT: ...] innehåller det information om vilken sida användaren befinner sig på. Använd den informationen för att förstå vad användaren syftar på med "det här receptet" eller liknande.`
 
 export const Route = createFileRoute('/api/chat')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const body = await request.json()
-        const { messages, conversationId } = body
-        const pageContext = body.pageContext ?? body.data?.pageContext
-
-        const contextMessage = pageContext ? buildContextMessage(pageContext) : ''
+        const { messages, conversationId } = await request.json()
 
         const stream = chat({
           adapter: openaiText('gpt-4o-mini', {
             apiKey: env.OPENAI_API_KEY,
           }),
-          system: SYSTEM_PROMPT + contextMessage,
+          system: SYSTEM_PROMPT,
           messages,
           conversationId,
           tools: [searchRecipesTool],
