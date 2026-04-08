@@ -87,3 +87,30 @@ export const uploadRecipeImage = createServerFn({ method: 'POST' })
 
     return { imageUrl: getImageUrl(key) }
   })
+
+export const uploadImageForRecipe = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    recipeId: z.number(),
+    base64: z.string().min(1),
+    mimeType: z.string().min(1),
+  }))
+  .handler(async ({ data }) => {
+    const binaryString = atob(data.base64)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+
+    const extension = data.mimeType.includes('png') ? 'png' : 'jpg'
+    const key = `recipes/${data.recipeId}-uploaded-${Date.now()}.${extension}`
+    await uploadImageToR2(key, bytes.buffer, data.mimeType)
+
+    const imageUrl = getImageUrl(key)
+    const db = getDb()
+    await db
+      .update(schema.recipesTable)
+      .set({ imageUrl })
+      .where(eq(schema.recipesTable.id, data.recipeId))
+
+    return { imageUrl }
+  })

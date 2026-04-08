@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
-import { generateAndSaveImage } from '#/images/server'
+import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
@@ -40,6 +40,7 @@ function RecipeDetailPage() {
   const [copied, setCopied] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [generatingImage, setGeneratingImage] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState(recipe.imageUrl)
 
   useEffect(() => {
@@ -71,6 +72,24 @@ function RecipeDetailPage() {
     }
   }
 
+  const handleUploadImage = async (file: File) => {
+    setUploadingImage(true)
+    try {
+      const reader = new FileReader()
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const result = await uploadImageForRecipe({ data: { recipeId: recipe.id, base64, mimeType: file.type } })
+      setCurrentImageUrl(result.imageUrl)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   const handleDelete = async () => {
     await removeRecipe({ data: { id: recipe.id } })
     navigate({ to: '/' })
@@ -99,30 +118,36 @@ function RecipeDetailPage() {
       <main className="mx-auto max-w-2xl px-4 py-8">
         {/* Recipe image */}
         {currentImageUrl ? (
-          <div className="relative mb-6 overflow-hidden rounded-xl">
+          <div className="mb-6 overflow-hidden rounded-xl">
             <img
               src={currentImageUrl}
               alt={recipe.title}
               className="max-h-72 w-full object-cover"
             />
-            <button
-              onClick={handleGenerateImage}
-              disabled={generatingImage}
-              className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm backdrop-blur transition hover:bg-white"
-            >
-              <SparklesIcon className="h-3.5 w-3.5" />
-              {generatingImage ? 'Genererar...' : 'Ny bild'}
-            </button>
           </div>
         ) : (
-          <div className="mb-6 flex items-center justify-center rounded-xl bg-gray-50 py-12">
+          <div className="mb-6 flex items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-10">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100">
+              <PhotoIcon className="h-4 w-4" />
+              {uploadingImage ? 'Laddar upp...' : 'Ladda upp bild'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploadingImage}
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handleUploadImage(file)
+                }}
+              />
+            </label>
             <button
               onClick={handleGenerateImage}
               disabled={generatingImage}
               className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
             >
               <SparklesIcon className="h-4 w-4" />
-              {generatingImage ? 'Genererar bild...' : 'Generera bild med AI'}
+              {generatingImage ? 'Genererar...' : 'Generera med AI'}
             </button>
           </div>
         )}
