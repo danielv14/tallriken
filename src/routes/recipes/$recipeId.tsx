@@ -117,43 +117,42 @@ function RecipeDetailPage() {
       </nav>
 
       <main className="mx-auto max-w-2xl px-4 py-8">
-        {/* Recipe image */}
-        {currentImageUrl ? (
-          <div className="mb-6 overflow-hidden rounded-xl">
+        <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
+          {/* Recipe image */}
+          {currentImageUrl ? (
             <img
               src={currentImageUrl}
               alt={recipe.title}
               className="max-h-96 w-full object-cover"
             />
-          </div>
-        ) : (
-          <div className="mb-6 flex items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-10">
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100">
-              <PhotoIcon className="h-4 w-4" />
-              {uploadingImage ? 'Laddar upp...' : 'Ladda upp bild'}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={uploadingImage}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleUploadImage(file)
-                }}
-              />
-            </label>
-            <button
-              onClick={handleGenerateImage}
-              disabled={generatingImage}
-              className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
-            >
-              <SparklesIcon className="h-4 w-4" />
-              {generatingImage ? 'Genererar...' : 'Generera med AI'}
-            </button>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center justify-center gap-3 border-b border-dashed border-gray-200 bg-gray-50 py-10">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100">
+                <PhotoIcon className="h-4 w-4" />
+                {uploadingImage ? 'Laddar upp...' : 'Ladda upp bild'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingImage}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleUploadImage(file)
+                  }}
+                />
+              </label>
+              <button
+                onClick={handleGenerateImage}
+                disabled={generatingImage}
+                className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
+              >
+                <SparklesIcon className="h-4 w-4" />
+                {generatingImage ? 'Genererar...' : 'Generera med AI'}
+              </button>
+            </div>
+          )}
 
-        <div className="rounded-xl bg-white p-6 ring-1 ring-gray-100">
+          <div className="p-6">
           {/* Title & meta */}
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{recipe.title}</h1>
@@ -260,6 +259,7 @@ function RecipeDetailPage() {
               </section>
             </>
           )}
+          </div>
         </div>
       </main>
 
