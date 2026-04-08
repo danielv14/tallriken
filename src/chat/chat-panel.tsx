@@ -167,9 +167,11 @@ const ChatPanel = () => {
               value={input}
               onChange={(e) => {
                 setInput(e.target.value)
-                // Auto-resize
                 e.target.style.height = 'auto'
-                e.target.style.height = `${Math.min(e.target.scrollHeight, 96)}px`
+                const maxHeight = 96
+                const newHeight = Math.min(e.target.scrollHeight, maxHeight)
+                e.target.style.height = `${newHeight}px`
+                e.target.style.overflowY = e.target.scrollHeight > maxHeight ? 'auto' : 'hidden'
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -180,7 +182,7 @@ const ChatPanel = () => {
                 }
               }}
               placeholder="Ställ en fråga..."
-              className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+              className="flex-1 resize-none overflow-hidden rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
               rows={1}
               disabled={isLoading}
             />
