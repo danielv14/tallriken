@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { Button } from '#/components/ui/button'
@@ -33,8 +34,14 @@ export const Route = createFileRoute('/recipes/$recipeId')({
 function RecipeDetailPage() {
   const recipe = Route.useLoaderData()
   const navigate = useNavigate()
+  const setPageContext = useChatStore((s) => s.setPageContext)
   const [copied, setCopied] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  useEffect(() => {
+    setPageContext({ type: 'recipe', recipeId: recipe.id, recipeTitle: recipe.title })
+    return () => setPageContext({ type: 'other' })
+  }, [recipe.id, recipe.title, setPageContext])
 
   const handleCopyIngredients = async () => {
     const text = recipe.ingredients

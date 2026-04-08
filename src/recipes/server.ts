@@ -57,6 +57,7 @@ export const findRecipes = createServerFn({ method: 'GET' })
     z.object({
       query: z.string().optional(),
       tagIds: z.array(z.number()).optional(),
+      maxCookingTimeMinutes: z.number().positive().optional(),
     }),
   )
   .handler(async ({ data }) => {
