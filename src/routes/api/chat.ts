@@ -27,7 +27,9 @@ export const Route = createFileRoute('/api/chat')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { messages, conversationId, pageContext } = await request.json()
+        const body = await request.json()
+        const { messages, conversationId } = body
+        const pageContext = body.pageContext ?? body.data?.pageContext
 
         const contextMessage = pageContext ? buildContextMessage(pageContext) : ''
 

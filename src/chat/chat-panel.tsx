@@ -13,6 +13,7 @@ const ChatPanel = () => {
 
   const { messages, sendMessage, isLoading } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
+    body: { pageContext },
   })
 
   useEffect(() => {
@@ -22,7 +23,7 @@ const ChatPanel = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim() && !isLoading) {
-      sendMessage(input, { body: { pageContext } })
+      sendMessage(input)
       setInput('')
     }
   }
