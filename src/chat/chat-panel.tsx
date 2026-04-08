@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChat, fetchServerSentEvents } from '@tanstack/ai-react'
-import { useNavigate } from '@tanstack/react-router'
-import ReactMarkdown from 'react-markdown'
 import { useChatStore } from '#/chat/store'
+import { Markdown } from '#/components/markdown'
 import { Button } from '#/components/ui/button'
 import { XMarkIcon, ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline'
 
 const ChatPanel = () => {
   const { isOpen, close, pageContext } = useChatStore()
-  const navigate = useNavigate()
   const [input, setInput] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -94,28 +92,7 @@ const ChatPanel = () => {
                     if (part.type === 'text') {
                       const content = 'content' in part ? part.content : ''
                       return isAssistant ? (
-                        <div key={idx} className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:mb-1 prose-headings:mt-2">
-                          <ReactMarkdown
-                            components={{
-                              a: ({ href, children }) => (
-                                <a
-                                  href={href}
-                                  onClick={(e) => {
-                                    if (href?.startsWith('/')) {
-                                      e.preventDefault()
-                                      navigate({ to: href })
-                                    }
-                                  }}
-                                  className="text-blue-600 underline hover:text-blue-800"
-                                >
-                                  {children}
-                                </a>
-                              ),
-                            }}
-                          >
-                            {content}
-                          </ReactMarkdown>
-                        </div>
+                        <Markdown key={idx} content={content} />
                       ) : (
                         <div key={idx} className="whitespace-pre-wrap">{content}</div>
                       )
