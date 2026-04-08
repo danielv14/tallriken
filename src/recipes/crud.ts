@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, like, or } from 'drizzle-orm'
+import { and, desc, eq, inArray, like, lte, or } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
 
@@ -28,6 +28,7 @@ type UpdateRecipeInput = {
 type SearchFilters = {
   query?: string
   tagIds?: number[]
+  maxCookingTimeMinutes?: number
 }
 
 export const createRecipe = async (db: Database, input: CreateRecipeInput) => {
@@ -112,6 +113,12 @@ export const searchRecipes = async (db: Database, filters: SearchFilters) => {
         like(schema.recipesTable.description, pattern),
         like(schema.recipesTable.ingredients, pattern),
       ),
+    )
+  }
+
+  if (filters.maxCookingTimeMinutes) {
+    conditions.push(
+      lte(schema.recipesTable.cookingTimeMinutes, filters.maxCookingTimeMinutes),
     )
   }
 
