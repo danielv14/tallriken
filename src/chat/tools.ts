@@ -20,7 +20,7 @@ const searchRecipesDef = toolDefinition({
   inputSchema: z.object({
     query: z.string().optional().describe('Fritext-sökning, t.ex. "pasta", "kyckling"'),
     tagIds: z.array(z.number()).optional().describe('Filtrera på specifika tagg-ID:n'),
-    maxCookingTimeMinutes: z.number().optional().describe('Max tillagningstid i minuter. Använd t.ex. 30 för snabba recept.'),
+    maxCookingTimeMinutes: z.number().optional().describe('Max tillagningstid i minuter. Använd BARA om användaren explicit ber om snabba recept eller anger en tidsgräns. Lämna tomt annars.'),
   }),
   outputSchema: z.array(recipeResultSchema),
 })
