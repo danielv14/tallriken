@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesRecipeIdRouteImport } from './routes/recipes/$recipeId'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminTagsRouteImport } from './routes/admin/tags'
 import { Route as RecipesEditRecipeIdRouteImport } from './routes/recipes/edit/$recipeId'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
@@ -36,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
 const RecipesRecipeIdRoute = RecipesRecipeIdRouteImport.update({
   id: '/recipes/$recipeId',
   path: '/recipes/$recipeId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTagsRoute = AdminTagsRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/admin/tags': typeof AdminTagsRoute
+  '/api/chat': typeof ApiChatRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/admin/tags': typeof AdminTagsRoute
+  '/api/chat': typeof ApiChatRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/admin/tags': typeof AdminTagsRoute
+  '/api/chat': typeof ApiChatRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/login'
     | '/admin/tags'
+    | '/api/chat'
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/login'
     | '/admin/tags'
+    | '/api/chat'
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/login'
     | '/admin/tags'
+    | '/api/chat'
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRoute
   AdminTagsRoute: typeof AdminTagsRoute
+  ApiChatRoute: typeof ApiChatRoute
   RecipesRecipeIdRoute: typeof RecipesRecipeIdRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/recipes/$recipeId'
       fullPath: '/recipes/$recipeId'
       preLoaderRoute: typeof RecipesRecipeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/tags': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImportRoute: ImportRoute,
   LoginRoute: LoginRoute,
   AdminTagsRoute: AdminTagsRoute,
+  ApiChatRoute: ApiChatRoute,
   RecipesRecipeIdRoute: RecipesRecipeIdRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,

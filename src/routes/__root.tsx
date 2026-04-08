@@ -1,4 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
+import { ChatPanel } from '#/chat/chat-panel'
+import { ChatToggle } from '#/chat/chat-toggle'
+import { useChatStore } from '#/chat/store'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -11,6 +14,7 @@ export const Route = createRootRoute({
     links: [{ rel: 'stylesheet', href: appCss }],
   }),
   shellComponent: RootDocument,
+  component: RootComponent,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -24,5 +28,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
+  )
+}
+
+function RootComponent() {
+  const isOpen = useChatStore((s) => s.isOpen)
+
+  return (
+    <>
+      <div
+        className={`transition-all duration-300 ${isOpen ? 'md:mr-[420px]' : ''}`}
+      >
+        <Outlet />
+      </div>
+      <ChatPanel />
+      <ChatToggle />
+    </>
   )
 }
