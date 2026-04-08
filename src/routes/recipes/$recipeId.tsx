@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
+import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
@@ -12,6 +13,8 @@ import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
   CheckIcon,
+  SparklesIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/$recipeId')({
@@ -37,6 +40,9 @@ function RecipeDetailPage() {
   const setPageContext = useChatStore((s) => s.setPageContext)
   const [copied, setCopied] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [generatingImage, setGeneratingImage] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [currentImageUrl, setCurrentImageUrl] = useState(recipe.imageUrl)
 
   useEffect(() => {
     setPageContext({ type: 'recipe', recipeId: recipe.id, recipeTitle: recipe.title })
@@ -55,6 +61,36 @@ function RecipeDetailPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleGenerateImage = async () => {
+    setGeneratingImage(true)
+    try {
+      const result = await generateAndSaveImage({ data: { recipeId: recipe.id } })
+      setCurrentImageUrl(result.imageUrl)
+    } catch (err) {
+      console.error('Image generation failed:', err)
+    } finally {
+      setGeneratingImage(false)
+    }
+  }
+
+  const handleUploadImage = async (file: File) => {
+    setUploadingImage(true)
+    try {
+      const reader = new FileReader()
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const result = await uploadImageForRecipe({ data: { recipeId: recipe.id, base64, mimeType: file.type } })
+      setCurrentImageUrl(result.imageUrl)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   const handleDelete = async () => {
     await removeRecipe({ data: { id: recipe.id } })
     navigate({ to: '/' })
@@ -64,7 +100,7 @@ function RecipeDetailPage() {
     <div className="min-h-screen">
       {/* Compact header */}
       <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
             <ArrowLeftIcon className="h-4 w-4" />
             Tillbaka
@@ -80,8 +116,43 @@ function RecipeDetailPage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
-        <div className="rounded-xl bg-white p-6 ring-1 ring-gray-100">
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
+          {/* Recipe image */}
+          {currentImageUrl ? (
+            <img
+              src={currentImageUrl}
+              alt={recipe.title}
+              className="max-h-96 w-full object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center gap-3 border-b border-dashed border-gray-200 bg-gray-50 py-10">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100">
+                <PhotoIcon className="h-4 w-4" />
+                {uploadingImage ? 'Laddar upp...' : 'Ladda upp bild'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingImage}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleUploadImage(file)
+                  }}
+                />
+              </label>
+              <button
+                onClick={handleGenerateImage}
+                disabled={generatingImage}
+                className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
+              >
+                <SparklesIcon className="h-4 w-4" />
+                {generatingImage ? 'Genererar...' : 'Generera med AI'}
+              </button>
+            </div>
+          )}
+
+          <div className="p-6">
           {/* Title & meta */}
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{recipe.title}</h1>
@@ -188,6 +259,7 @@ function RecipeDetailPage() {
               </section>
             </>
           )}
+          </div>
         </div>
       </main>
 

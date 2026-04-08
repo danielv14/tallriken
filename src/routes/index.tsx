@@ -72,7 +72,7 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       {/* Compact nav */}
       <nav className="border-b border-gray-100 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
@@ -95,19 +95,11 @@ function HomePage() {
             >
               Taggar
             </Link>
-            <form method="post" action="/api/auth/logout">
-              <button
-                type="submit"
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
-              >
-                Logga ut
-              </button>
-            </form>
           </div>
         </div>
       </nav>
 
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl flex-1 px-4 py-8">
         {/* Search & filters */}
         {initialRecipes.length > 0 && (
           <div className="space-y-3">
@@ -171,8 +163,16 @@ function HomePage() {
                 key={recipe.id}
                 to="/recipes/$recipeId"
                 params={{ recipeId: String(recipe.id) }}
-                className="group rounded-xl bg-white p-4 ring-1 ring-gray-100 transition hover:ring-plum-200 hover:shadow-md"
+                className="group overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 transition hover:ring-plum-200 hover:shadow-md"
               >
+                {recipe.imageUrl && (
+                  <img
+                    src={recipe.imageUrl}
+                    alt={recipe.title}
+                    className="aspect-[16/10] w-full object-cover"
+                  />
+                )}
+                <div className="p-4">
                 <h2 className="font-bold text-gray-900 group-hover:text-plum-600">{recipe.title}</h2>
                 {recipe.description && (
                   <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-gray-500">{recipe.description}</p>
@@ -203,11 +203,25 @@ function HomePage() {
                     ))}
                   </div>
                 )}
+                </div>
               </Link>
             ))}
           </div>
         )}
       </main>
+
+      <footer className="border-t border-gray-100 py-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-center px-4">
+          <form method="post" action="/api/auth/logout">
+            <button
+              type="submit"
+              className="text-sm text-gray-400 transition hover:text-gray-600"
+            >
+              Logga ut
+            </button>
+          </form>
+        </div>
+      </footer>
     </div>
   )
 }
