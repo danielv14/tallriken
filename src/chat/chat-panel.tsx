@@ -99,10 +99,24 @@ const ChatPanel = () => {
           )}
           {messages.map((message) => {
             const isAssistant = message.role === 'assistant'
-            const textContent = message.parts
-              .filter((p) => p.type === 'text')
+            const textParts = message.parts.filter((p) => p.type === 'text')
+            const textContent = textParts
               .map((p) => ('content' in p ? p.content : ''))
               .join('')
+              .trim()
+
+            const hasToolCall = message.parts.some((p) => p.type === 'tool-call')
+            const hasOnlyToolParts = textContent === '' && hasToolCall
+
+            // Skip rendering messages that only contain tool calls (no visible text)
+            if (isAssistant && hasOnlyToolParts) {
+              return null
+            }
+
+            // Skip assistant messages with no content at all
+            if (isAssistant && textContent === '') {
+              return null
+            }
 
             return (
               <div
@@ -116,17 +130,15 @@ const ChatPanel = () => {
                       : 'bg-gray-900 text-white'
                   }`}
                 >
-                  {message.parts.map((part, idx) => {
-                    if (part.type === 'text') {
-                      const rawContent = 'content' in part ? part.content : ''
-                      const content = stripContextPrefix(rawContent)
-                      return isAssistant ? (
-                        <Markdown key={idx} content={content} />
-                      ) : (
-                        <div key={idx} className="whitespace-pre-wrap">{content}</div>
-                      )
-                    }
-                    return null
+                  {textParts.map((part, idx) => {
+                    const rawContent = 'content' in part ? part.content : ''
+                    const content = stripContextPrefix(rawContent)
+                    if (!content) return null
+                    return isAssistant ? (
+                      <Markdown key={idx} content={content} />
+                    ) : (
+                      <div key={idx} className="whitespace-pre-wrap">{content}</div>
+                    )
                   })}
                   {isAssistant && textContent && (
                     <button
