@@ -1,9 +1,6 @@
-import { and, desc, eq, inArray, like, or, sql } from 'drizzle-orm'
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
-import type { DrizzleD1Database } from 'drizzle-orm/d1'
+import { and, desc, eq, inArray, like, or } from 'drizzle-orm'
 import * as schema from '#/db/schema'
-
-type Database = BetterSQLite3Database<typeof schema> | DrizzleD1Database<typeof schema>
+import type { Database } from '#/db/types'
 
 type CreateRecipeInput = {
   title: string

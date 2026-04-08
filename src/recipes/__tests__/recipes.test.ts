@@ -1,49 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import * as schema from '#/db/schema'
+import { createTestDb, createTestTag, createTestRecipe } from '#/test-utils'
 import { createRecipe, getRecipeById, getAllRecipes, updateRecipe, deleteRecipe, searchRecipes } from '#/recipes/crud'
-import { createTag } from '#/tags/crud'
-
-const createTestDb = () => {
-  const sqlite = new Database(':memory:')
-  sqlite.exec(`
-    CREATE TABLE tags (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE recipes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      description TEXT,
-      ingredients TEXT NOT NULL,
-      steps TEXT,
-      cooking_time_minutes INTEGER,
-      servings INTEGER,
-      source_url TEXT,
-      image_url TEXT,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE recipe_tags (
-      recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
-      tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE
-    );
-  `)
-  return drizzle(sqlite, { schema })
-}
 
 describe('createRecipe', () => {
   it('creates a recipe and returns it with an id', async () => {
     const db = createTestDb()
 
-    const recipe = await createRecipe(db, {
+    const recipe = await createTestRecipe(db, {
       title: 'Pasta Carbonara',
       ingredients: ['400g spaghetti', '200g pancetta', '4 äggulor', '100g parmesan'],
       steps: ['Koka pasta', 'Stek pancetta', 'Blanda ägg och ost', 'Vänd ihop'],
       cookingTimeMinutes: 25,
       servings: 4,
-      tagIds: [],
     })
 
     expect(recipe.id).toBeTruthy()
@@ -52,10 +20,10 @@ describe('createRecipe', () => {
 
   it('creates recipe with tag associations', async () => {
     const db = createTestDb()
-    const tag1 = await createTag(db, 'Snabblagat')
-    const tag2 = await createTag(db, 'Italienskt')
+    const tag1 = await createTestTag(db, 'Snabblagat')
+    const tag2 = await createTestTag(db, 'Italienskt')
 
-    const recipe = await createRecipe(db, {
+    const recipe = await createTestRecipe(db, {
       title: 'Pasta Carbonara',
       ingredients: ['400g spaghetti'],
       tagIds: [tag1.id, tag2.id],
@@ -70,9 +38,9 @@ describe('createRecipe', () => {
 describe('getRecipeById', () => {
   it('returns the recipe with its tags and parsed arrays', async () => {
     const db = createTestDb()
-    const tag = await createTag(db, 'Barnvänligt')
+    const tag = await createTestTag(db, 'Barnvänligt')
 
-    const recipe = await createRecipe(db, {
+    const recipe = await createTestRecipe(db, {
       title: 'Köttfärssås',
       description: 'Klassisk köttfärssås',
       ingredients: ['500g köttfärs', '1 burk krossade tomater'],
@@ -107,18 +75,10 @@ describe('getRecipeById', () => {
 describe('getAllRecipes', () => {
   it('returns recipes sorted by newest first, with tags', async () => {
     const db = createTestDb()
-    const tag = await createTag(db, 'Snabblagat')
+    const tag = await createTestTag(db, 'Snabblagat')
 
-    await createRecipe(db, {
-      title: 'Äldre recept',
-      ingredients: ['pasta'],
-      tagIds: [],
-    })
-    await createRecipe(db, {
-      title: 'Nyare recept',
-      ingredients: ['ris'],
-      tagIds: [tag.id],
-    })
+    await createTestRecipe(db, { title: 'Äldre recept' })
+    await createTestRecipe(db, { title: 'Nyare recept', tagIds: [tag.id] })
 
     const recipes = await getAllRecipes(db)
 
@@ -142,11 +102,7 @@ describe('getAllRecipes', () => {
 describe('updateRecipe', () => {
   it('updates recipe fields and returns the updated recipe', async () => {
     const db = createTestDb()
-    const recipe = await createRecipe(db, {
-      title: 'Pasta',
-      ingredients: ['pasta'],
-      tagIds: [],
-    })
+    const recipe = await createTestRecipe(db, { title: 'Pasta' })
 
     const updated = await updateRecipe(db, recipe.id, {
       title: 'Pasta Carbonara',
@@ -163,13 +119,9 @@ describe('updateRecipe', () => {
 
   it('updates tag associations', async () => {
     const db = createTestDb()
-    const tag1 = await createTag(db, 'Italienskt')
-    const tag2 = await createTag(db, 'Snabblagat')
-    const recipe = await createRecipe(db, {
-      title: 'Pasta',
-      ingredients: ['pasta'],
-      tagIds: [tag1.id],
-    })
+    const tag1 = await createTestTag(db, 'Italienskt')
+    const tag2 = await createTestTag(db, 'Snabblagat')
+    const recipe = await createTestRecipe(db, { title: 'Pasta', tagIds: [tag1.id] })
 
     await updateRecipe(db, recipe.id, {
       title: 'Pasta',
@@ -186,11 +138,7 @@ describe('updateRecipe', () => {
 describe('deleteRecipe', () => {
   it('removes the recipe so it no longer exists', async () => {
     const db = createTestDb()
-    const recipe = await createRecipe(db, {
-      title: 'Pasta',
-      ingredients: ['pasta'],
-      tagIds: [],
-    })
+    const recipe = await createTestRecipe(db, { title: 'Pasta' })
 
     await deleteRecipe(db, recipe.id)
 
@@ -202,8 +150,8 @@ describe('deleteRecipe', () => {
 describe('searchRecipes', () => {
   it('finds recipes matching title', async () => {
     const db = createTestDb()
-    await createRecipe(db, { title: 'Pasta Carbonara', ingredients: ['pasta'], tagIds: [] })
-    await createRecipe(db, { title: 'Köttfärssås', ingredients: ['köttfärs'], tagIds: [] })
+    await createTestRecipe(db, { title: 'Pasta Carbonara' })
+    await createTestRecipe(db, { title: 'Köttfärssås', ingredients: ['köttfärs'] })
 
     const results = await searchRecipes(db, { query: 'pasta' })
 
@@ -213,8 +161,8 @@ describe('searchRecipes', () => {
 
   it('finds recipes matching ingredients', async () => {
     const db = createTestDb()
-    await createRecipe(db, { title: 'Stekt ris', ingredients: ['ris', 'ägg', 'soja'], tagIds: [] })
-    await createRecipe(db, { title: 'Pasta', ingredients: ['pasta'], tagIds: [] })
+    await createTestRecipe(db, { title: 'Stekt ris', ingredients: ['ris', 'ägg', 'soja'] })
+    await createTestRecipe(db, { title: 'Pasta' })
 
     const results = await searchRecipes(db, { query: 'soja' })
 
@@ -224,9 +172,9 @@ describe('searchRecipes', () => {
 
   it('filters by tags', async () => {
     const db = createTestDb()
-    const tag = await createTag(db, 'Snabblagat')
-    await createRecipe(db, { title: 'Snabb pasta', ingredients: ['pasta'], tagIds: [tag.id] })
-    await createRecipe(db, { title: 'Långkok', ingredients: ['kött'], tagIds: [] })
+    const tag = await createTestTag(db, 'Snabblagat')
+    await createTestRecipe(db, { title: 'Snabb pasta', tagIds: [tag.id] })
+    await createTestRecipe(db, { title: 'Långkok', ingredients: ['kött'] })
 
     const results = await searchRecipes(db, { tagIds: [tag.id] })
 
@@ -236,10 +184,10 @@ describe('searchRecipes', () => {
 
   it('combines text search and tag filter', async () => {
     const db = createTestDb()
-    const tag = await createTag(db, 'Snabblagat')
-    await createRecipe(db, { title: 'Snabb pasta', ingredients: ['pasta'], tagIds: [tag.id] })
-    await createRecipe(db, { title: 'Pasta gratin', ingredients: ['pasta', 'ost'], tagIds: [] })
-    await createRecipe(db, { title: 'Snabb sallad', ingredients: ['sallad'], tagIds: [tag.id] })
+    const tag = await createTestTag(db, 'Snabblagat')
+    await createTestRecipe(db, { title: 'Snabb pasta', tagIds: [tag.id] })
+    await createTestRecipe(db, { title: 'Pasta gratin', ingredients: ['pasta', 'ost'] })
+    await createTestRecipe(db, { title: 'Snabb sallad', ingredients: ['sallad'], tagIds: [tag.id] })
 
     const results = await searchRecipes(db, { query: 'pasta', tagIds: [tag.id] })
 
@@ -249,8 +197,8 @@ describe('searchRecipes', () => {
 
   it('returns all recipes when no filters are provided', async () => {
     const db = createTestDb()
-    await createRecipe(db, { title: 'A', ingredients: ['a'], tagIds: [] })
-    await createRecipe(db, { title: 'B', ingredients: ['b'], tagIds: [] })
+    await createTestRecipe(db, { title: 'A' })
+    await createTestRecipe(db, { title: 'B' })
 
     const results = await searchRecipes(db, {})
 

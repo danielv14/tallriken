@@ -1,9 +1,6 @@
 import { asc, eq } from 'drizzle-orm'
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
-import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import * as schema from '#/db/schema'
-
-type Database = BetterSQLite3Database<typeof schema> | DrizzleD1Database<typeof schema>
+import type { Database } from '#/db/types'
 
 export const createTag = async (db: Database, name: string) => {
   const result = await db

@@ -1,20 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import * as schema from '#/db/schema'
+import { createTestDb } from '#/test-utils'
 import { createTag, getAllTags, renameTag, deleteTag } from '#/tags/crud'
-
-const createTestDb = () => {
-  const sqlite = new Database(':memory:')
-  sqlite.exec(`
-    CREATE TABLE tags (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      created_at INTEGER NOT NULL
-    );
-  `)
-  return drizzle(sqlite, { schema })
-}
 
 describe('createTag', () => {
   it('creates a tag and returns it with an id', async () => {
