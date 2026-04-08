@@ -1,1 +1,23 @@
 @import 'tailwindcss';
+@import '@fontsource/nunito/latin.css';
+
+@theme {
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+
+  --color-plum-50: oklch(0.96 0.02 315);
+  --color-plum-100: oklch(0.92 0.04 312);
+  --color-plum-200: oklch(0.85 0.07 310);
+  --color-plum-300: oklch(0.75 0.12 308);
+  --color-plum-400: oklch(0.64 0.17 305);
+  --color-plum-500: oklch(0.53 0.20 303);
+  --color-plum-600: oklch(0.45 0.20 300);
+  --color-plum-700: oklch(0.38 0.17 298);
+  --color-plum-800: oklch(0.30 0.13 298);
+  --color-plum-900: oklch(0.22 0.09 298);
+}
+
+@layer base {
+  body {
+    background: oklch(0.975 0.003 80);
+  }
+}
