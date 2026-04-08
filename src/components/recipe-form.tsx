@@ -148,12 +148,15 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
             <div key={groupIndex} className={form.ingredientGroups.length > 1 ? 'rounded-lg border border-gray-200 p-3' : ''}>
               {form.ingredientGroups.length > 1 && (
                 <div className="mb-2 flex items-center gap-2">
-                  <Input
-                    value={group.group}
-                    onChange={(e) => updateGroupName(groupIndex, e.target.value)}
-                    placeholder="Gruppnamn, t.ex. Deg, Fyllning..."
-                    className="font-medium"
-                  />
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs font-medium text-gray-400">Gruppnamn</label>
+                    <Input
+                      value={group.group}
+                      onChange={(e) => updateGroupName(groupIndex, e.target.value)}
+                      placeholder="T.ex. Deg, Fyllning, Sås..."
+                      className="font-medium"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => removeGroup(groupIndex)}
