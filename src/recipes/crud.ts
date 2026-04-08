@@ -2,10 +2,12 @@ import { and, desc, eq, inArray, like, or } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
 
+type IngredientGroup = { group: string | null; items: string[] }
+
 type CreateRecipeInput = {
   title: string
   description?: string
-  ingredients: string[]
+  ingredients: IngredientGroup[]
   steps?: string[]
   cookingTimeMinutes?: number
   servings?: number
@@ -16,7 +18,7 @@ type CreateRecipeInput = {
 type UpdateRecipeInput = {
   title: string
   description?: string
-  ingredients: string[]
+  ingredients: IngredientGroup[]
   steps?: string[]
   cookingTimeMinutes?: number
   servings?: number

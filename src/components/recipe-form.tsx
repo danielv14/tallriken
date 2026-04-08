@@ -4,7 +4,7 @@ import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
-import { type RecipeFormData, EMPTY_FORM_DATA } from '#/recipes/form-utils'
+import { type RecipeFormData, type IngredientGroupFormData, EMPTY_FORM_DATA } from '#/recipes/form-utils'
 export type { RecipeFormData } from '#/recipes/form-utils'
 export { EMPTY_FORM_DATA as EMPTY_FORM } from '#/recipes/form-utils'
 
@@ -23,21 +23,79 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const updateListItem = (field: 'ingredients' | 'steps', index: number, value: string) => {
+  // Ingredient group helpers
+  const updateGroupName = (groupIndex: number, name: string) => {
     setForm((prev) => ({
       ...prev,
-      [field]: prev[field].map((item, i) => (i === index ? value : item)),
+      ingredientGroups: prev.ingredientGroups.map((g, i) =>
+        i === groupIndex ? { ...g, group: name } : g,
+      ),
     }))
   }
 
-  const addListItem = (field: 'ingredients' | 'steps') => {
-    setForm((prev) => ({ ...prev, [field]: [...prev[field], ''] }))
-  }
-
-  const removeListItem = (field: 'ingredients' | 'steps', index: number) => {
+  const updateIngredient = (groupIndex: number, itemIndex: number, value: string) => {
     setForm((prev) => ({
       ...prev,
-      [field]: prev[field].length > 1 ? prev[field].filter((_, i) => i !== index) : prev[field],
+      ingredientGroups: prev.ingredientGroups.map((g, i) =>
+        i === groupIndex
+          ? { ...g, items: g.items.map((item, j) => (j === itemIndex ? value : item)) }
+          : g,
+      ),
+    }))
+  }
+
+  const addIngredient = (groupIndex: number) => {
+    setForm((prev) => ({
+      ...prev,
+      ingredientGroups: prev.ingredientGroups.map((g, i) =>
+        i === groupIndex ? { ...g, items: [...g.items, ''] } : g,
+      ),
+    }))
+  }
+
+  const removeIngredient = (groupIndex: number, itemIndex: number) => {
+    setForm((prev) => ({
+      ...prev,
+      ingredientGroups: prev.ingredientGroups.map((g, i) =>
+        i === groupIndex && g.items.length > 1
+          ? { ...g, items: g.items.filter((_, j) => j !== itemIndex) }
+          : g,
+      ),
+    }))
+  }
+
+  const addGroup = () => {
+    setForm((prev) => ({
+      ...prev,
+      ingredientGroups: [...prev.ingredientGroups, { group: '', items: [''] }],
+    }))
+  }
+
+  const removeGroup = (groupIndex: number) => {
+    setForm((prev) => ({
+      ...prev,
+      ingredientGroups: prev.ingredientGroups.length > 1
+        ? prev.ingredientGroups.filter((_, i) => i !== groupIndex)
+        : prev.ingredientGroups,
+    }))
+  }
+
+  // Step helpers
+  const updateStep = (index: number, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      steps: prev.steps.map((s, i) => (i === index ? value : s)),
+    }))
+  }
+
+  const addStep = () => {
+    setForm((prev) => ({ ...prev, steps: [...prev.steps, ''] }))
+  }
+
+  const removeStep = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      steps: prev.steps.length > 1 ? prev.steps.filter((_, i) => i !== index) : prev.steps,
     }))
   }
 
@@ -50,8 +108,10 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
     }))
   }
 
-  const filledIngredients = form.ingredients.filter((i) => i.trim())
-  const canSubmit = form.title.trim() && filledIngredients.length > 0
+  const hasFilledIngredients = form.ingredientGroups.some((g) =>
+    g.items.some((i) => i.trim()),
+  )
+  const canSubmit = form.title.trim() && hasFilledIngredients
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,32 +143,66 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
 
       <div>
         <span className="text-sm font-semibold text-gray-700">Ingredienser *</span>
-        <div className="mt-2 space-y-2">
-          {form.ingredients.map((ingredient, index) => (
-            <div key={index} className="flex gap-2">
-              <Input
-                value={ingredient}
-                onChange={(e) => updateListItem('ingredients', index, e.target.value)}
-                placeholder={`Ingrediens ${index + 1}, t.ex. 400g spaghetti`}
-              />
-              {form.ingredients.length > 1 && (
+        <div className="mt-2 space-y-4">
+          {form.ingredientGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className={form.ingredientGroups.length > 1 ? 'rounded-lg border border-gray-200 p-3' : ''}>
+              {form.ingredientGroups.length > 1 && (
+                <div className="mb-2 flex items-center gap-2">
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs font-semibold text-gray-500">Gruppnamn</label>
+                    <Input
+                      value={group.group}
+                      onChange={(e) => updateGroupName(groupIndex, e.target.value)}
+                      placeholder="T.ex. Deg, Fyllning, Sås..."
+                      className="font-medium"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeGroup(groupIndex)}
+                    className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              <div className="space-y-2">
+                {group.items.map((ingredient, itemIndex) => (
+                  <div key={itemIndex} className="flex gap-2">
+                    <Input
+                      value={ingredient}
+                      onChange={(e) => updateIngredient(groupIndex, itemIndex, e.target.value)}
+                      placeholder={`Ingrediens ${itemIndex + 1}, t.ex. 400g spaghetti`}
+                    />
+                    {group.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeIngredient(groupIndex, itemIndex)}
+                        className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
                 <button
                   type="button"
-                  onClick={() => removeListItem('ingredients', index)}
-                  className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                  onClick={() => addIngredient(groupIndex)}
+                  className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
                 >
-                  <XMarkIcon className="h-4 w-4" />
+                  <PlusIcon className="h-4 w-4" />
+                  Lägg till ingrediens
                 </button>
-              )}
+              </div>
             </div>
           ))}
           <button
             type="button"
-            onClick={() => addListItem('ingredients')}
-            className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
+            onClick={addGroup}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 transition hover:text-gray-700"
           >
             <PlusIcon className="h-4 w-4" />
-            Lägg till ingrediens
+            Lägg till ingrediensgrupp
           </button>
         </div>
       </div>
@@ -124,14 +218,14 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
                 </span>
                 <Input
                   value={step}
-                  onChange={(e) => updateListItem('steps', index, e.target.value)}
+                  onChange={(e) => updateStep(index, e.target.value)}
                   placeholder={`Steg ${index + 1}`}
                 />
               </div>
               {form.steps.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => removeListItem('steps', index)}
+                  onClick={() => removeStep(index)}
                   className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
                 >
                   <XMarkIcon className="h-4 w-4" />
@@ -141,7 +235,7 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
           ))}
           <button
             type="button"
-            onClick={() => addListItem('steps')}
+            onClick={addStep}
             className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
           >
             <PlusIcon className="h-4 w-4" />

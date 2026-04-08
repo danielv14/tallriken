@@ -5,7 +5,7 @@ import { fetchAllTags } from '#/tags/server'
 import { saveRecipe } from '#/recipes/server'
 import { extractRecipeFromUrl, extractRecipeFromPhotos } from '#/import/server'
 import { recipeToFormData } from '#/recipes/form-utils'
-import { formDataToRecipeInput } from '#/recipes/form-utils'
+import { formDataToRecipeInput, draftToFormData } from '#/recipes/form-utils'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
@@ -47,15 +47,7 @@ function ImportPage() {
     setError(null)
     try {
       const result = await extractRecipeFromUrl({ data: { url: url.trim() } })
-      setPreviewData({
-        title: result.title,
-        description: result.description ?? '',
-        ingredients: result.ingredients.length > 0 ? result.ingredients : [''],
-        steps: result.steps && result.steps.length > 0 ? result.steps : [''],
-        cookingTimeMinutes: result.cookingTimeMinutes ? String(result.cookingTimeMinutes) : '',
-        servings: result.servings ? String(result.servings) : '',
-        tagIds: result.tagIds,
-      })
+      setPreviewData(draftToFormData(result))
     } catch (err) {
       console.error('URL extract failed:', err)
       setError('Kunde inte hämta recept från den angivna URL:en. Prova att lägga till manuellt istället.')
@@ -254,15 +246,7 @@ const PhotoImport = ({ onExtracted, onError }: PhotoImportProps) => {
 
       const result = await extractRecipeFromPhotos({ data: { images } })
 
-      onExtracted({
-        title: result.title,
-        description: result.description ?? '',
-        ingredients: result.ingredients.length > 0 ? result.ingredients : [''],
-        steps: result.steps && result.steps.length > 0 ? result.steps : [''],
-        cookingTimeMinutes: result.cookingTimeMinutes ? String(result.cookingTimeMinutes) : '',
-        servings: result.servings ? String(result.servings) : '',
-        tagIds: result.tagIds,
-      })
+      onExtracted(draftToFormData(result))
     } catch (err) {
       console.error('Photo extract failed:', err)
       onError('Kunde inte extrahera recept från bilderna. Försök med tydligare bilder eller lägg till manuellt.')

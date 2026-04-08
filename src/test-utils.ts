@@ -4,6 +4,8 @@ import * as schema from '#/db/schema'
 import { createTag } from '#/tags/crud'
 import { createRecipe } from '#/recipes/crud'
 
+type IngredientGroup = { group: string | null; items: string[] }
+
 export const createTestDb = () => {
   const sqlite = new BetterSqlite3(':memory:')
   sqlite.exec(`
@@ -41,7 +43,7 @@ export const createTestRecipe = async (
   overrides: Partial<{
     title: string
     description: string
-    ingredients: string[]
+    ingredients: IngredientGroup[]
     steps: string[]
     cookingTimeMinutes: number
     servings: number
@@ -50,7 +52,7 @@ export const createTestRecipe = async (
 ) => {
   return createRecipe(db, {
     title: overrides.title ?? 'Testrecept',
-    ingredients: overrides.ingredients ?? ['testingrediens'],
+    ingredients: overrides.ingredients ?? [{ group: null, items: ['testingrediens'] }],
     description: overrides.description,
     steps: overrides.steps,
     cookingTimeMinutes: overrides.cookingTimeMinutes,

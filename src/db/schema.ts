@@ -12,7 +12,7 @@ export const recipesTable = sqliteTable('recipes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),
   description: text('description'),
-  ingredients: text('ingredients', { mode: 'json' }).notNull().$type<string[]>(),
+  ingredients: text('ingredients', { mode: 'json' }).notNull().$type<{ group: string | null; items: string[] }[]>(),
   steps: text('steps', { mode: 'json' }).$type<string[]>(),
   cookingTimeMinutes: integer('cooking_time_minutes'),
   servings: integer('servings'),

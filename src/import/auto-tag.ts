@@ -25,7 +25,8 @@ export const resolveTagIds = async (
 
   try {
     const tagNames = tags.map((t) => t.name)
-    const summaryHtml = `<title>${draft.title}</title><p>${draft.description ?? ''}</p><ul>${draft.ingredients.map((i) => `<li>${i}</li>`).join('')}</ul>`
+    const allItems = draft.ingredients.flatMap((g) => g.items)
+    const summaryHtml = `<title>${draft.title}</title><p>${draft.description ?? ''}</p><ul>${allItems.map((i) => `<li>${i}</li>`).join('')}</ul>`
     const aiDraft = await extractRecipeWithAi(summaryHtml, tagNames, apiKey)
 
     if (aiDraft?.suggestedTagNames) {

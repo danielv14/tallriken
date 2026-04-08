@@ -79,7 +79,7 @@ export const extractJsonLdRecipe = (html: string): RecipeDraft | null => {
       return {
         title,
         description: (recipe.description as string) ?? null,
-        ingredients,
+        ingredients: [{ group: null, items: ingredients }],
         steps: parseInstructions(recipe.recipeInstructions) ?? null,
         cookingTimeMinutes: recipe.totalTime
           ? parseIsoDuration(recipe.totalTime as string) ?? null

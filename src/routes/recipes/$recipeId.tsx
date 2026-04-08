@@ -37,7 +37,12 @@ function RecipeDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const handleCopyIngredients = async () => {
-    const text = recipe.ingredients.join('\n')
+    const text = recipe.ingredients
+      .map((g) => {
+        const header = g.group ? `${g.group}\n` : ''
+        return header + g.items.join('\n')
+      })
+      .join('\n\n')
     await navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -138,14 +143,23 @@ function RecipeDetailPage() {
                 )}
               </button>
             </div>
-            <ul className="mt-3 space-y-2">
-              {recipe.ingredients.map((ingredient, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-base text-gray-700">
-                  <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-plum-400" />
-                  {ingredient}
-                </li>
+            <div className="mt-3 space-y-4">
+              {recipe.ingredients.map((group, groupIndex) => (
+                <div key={groupIndex}>
+                  {group.group && (
+                    <h3 className="mb-2 text-sm font-bold text-gray-600">{group.group}</h3>
+                  )}
+                  <ul className="space-y-2">
+                    {group.items.map((ingredient, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-base text-gray-700">
+                        <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-plum-400" />
+                        {ingredient}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
 
           {/* Steps */}
