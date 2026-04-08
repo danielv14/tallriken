@@ -32,7 +32,7 @@ const Markdown = ({ content }: MarkdownProps) => {
             const internalPath = extractInternalPath(resolvedHref)
 
             if (internalPath) {
-              return <Link to={internalPath}>{children}</Link>
+              return <Link to={internalPath} className="text-blue-600 underline hover:text-blue-800">{children}</Link>
             }
 
             return (
