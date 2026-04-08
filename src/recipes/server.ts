@@ -3,36 +3,25 @@ import { z } from 'zod'
 import { getDb } from '#/db/client'
 import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes } from '#/recipes/crud'
 
+const recipeInputSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  ingredients: z.array(z.string().min(1)).min(1),
+  steps: z.array(z.string().min(1)).optional(),
+  cookingTimeMinutes: z.number().positive().optional(),
+  servings: z.number().positive().optional(),
+  tagIds: z.array(z.number()),
+})
+
 export const saveRecipe = createServerFn({ method: 'POST' })
-  .inputValidator(
-    z.object({
-      title: z.string().min(1),
-      description: z.string().optional(),
-      ingredients: z.array(z.string().min(1)).min(1),
-      steps: z.array(z.string().min(1)).optional(),
-      cookingTimeMinutes: z.number().positive().optional(),
-      servings: z.number().positive().optional(),
-      tagIds: z.array(z.number()),
-    }),
-  )
+  .inputValidator(recipeInputSchema)
   .handler(async ({ data }) => {
     const db = getDb()
     return createRecipe(db, data)
   })
 
 export const editRecipe = createServerFn({ method: 'POST' })
-  .inputValidator(
-    z.object({
-      id: z.number(),
-      title: z.string().min(1),
-      description: z.string().optional(),
-      ingredients: z.array(z.string().min(1)).min(1),
-      steps: z.array(z.string().min(1)).optional(),
-      cookingTimeMinutes: z.number().positive().optional(),
-      servings: z.number().positive().optional(),
-      tagIds: z.array(z.number()),
-    }),
-  )
+  .inputValidator(recipeInputSchema.extend({ id: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
     const { id, ...input } = data

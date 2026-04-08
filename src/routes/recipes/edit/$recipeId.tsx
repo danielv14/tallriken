@@ -4,6 +4,7 @@ import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, editRecipe } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
+import { formDataToRecipeInput, recipeToFormData } from '#/recipes/form-utils'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/edit/$recipeId')({
@@ -32,34 +33,13 @@ function EditRecipePage() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
 
-  const initialData: RecipeFormData = {
-    title: recipe.title,
-    description: recipe.description ?? '',
-    ingredients: recipe.ingredients.length > 0 ? recipe.ingredients : [''],
-    steps: recipe.steps && recipe.steps.length > 0 ? recipe.steps : [''],
-    cookingTimeMinutes: recipe.cookingTimeMinutes ? String(recipe.cookingTimeMinutes) : '',
-    servings: recipe.servings ? String(recipe.servings) : '',
-    tagIds: recipe.tags.map((t) => t.id),
-  }
+  const initialData = recipeToFormData(recipe)
 
   const handleSubmit = async (form: RecipeFormData) => {
     setError(null)
     try {
-      const filledIngredients = form.ingredients.filter((i) => i.trim()).map((i) => i.trim())
-      const filledSteps = form.steps.filter((s) => s.trim()).map((s) => s.trim())
       await editRecipe({
-        data: {
-          id: recipe.id,
-          title: form.title.trim(),
-          description: form.description.trim() || undefined,
-          ingredients: filledIngredients,
-          steps: filledSteps.length > 0 ? filledSteps : undefined,
-          cookingTimeMinutes: form.cookingTimeMinutes
-            ? parseInt(form.cookingTimeMinutes, 10)
-            : undefined,
-          servings: form.servings ? parseInt(form.servings, 10) : undefined,
-          tagIds: form.tagIds,
-        },
+        data: { id: recipe.id, ...formDataToRecipeInput(form) },
       })
       navigate({ to: '/recipes/$recipeId', params: { recipeId: String(recipe.id) } })
     } catch (err) {

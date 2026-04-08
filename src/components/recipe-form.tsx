@@ -4,15 +4,9 @@ import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
-export type RecipeFormData = {
-  title: string
-  description: string
-  ingredients: string[]
-  steps: string[]
-  cookingTimeMinutes: string
-  servings: string
-  tagIds: number[]
-}
+import { type RecipeFormData, EMPTY_FORM_DATA } from '#/recipes/form-utils'
+export type { RecipeFormData } from '#/recipes/form-utils'
+export { EMPTY_FORM_DATA as EMPTY_FORM } from '#/recipes/form-utils'
 
 type RecipeFormProps = {
   initialData?: RecipeFormData
@@ -22,18 +16,8 @@ type RecipeFormProps = {
   onCancel: () => void
 }
 
-export const EMPTY_FORM: RecipeFormData = {
-  title: '',
-  description: '',
-  ingredients: [''],
-  steps: [''],
-  cookingTimeMinutes: '',
-  servings: '',
-  tagIds: [],
-}
-
 const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: RecipeFormProps) => {
-  const [form, setForm] = useState<RecipeFormData>(initialData ?? EMPTY_FORM)
+  const [form, setForm] = useState<RecipeFormData>(initialData ?? EMPTY_FORM_DATA)
 
   const updateField = (field: 'title' | 'description' | 'cookingTimeMinutes' | 'servings', value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))

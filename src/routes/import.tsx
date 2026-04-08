@@ -4,6 +4,7 @@ import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllTags } from '#/tags/server'
 import { saveRecipe } from '#/recipes/server'
 import { extractRecipeFromUrl } from '#/import/server'
+import { formDataToRecipeInput } from '#/recipes/form-utils'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
@@ -66,21 +67,7 @@ function ImportPage() {
     setSaving(true)
     setError(null)
     try {
-      const filledIngredients = previewData.ingredients.filter((i) => i.trim()).map((i) => i.trim())
-      const filledSteps = previewData.steps.filter((s) => s.trim()).map((s) => s.trim())
-      await saveRecipe({
-        data: {
-          title: previewData.title.trim(),
-          description: previewData.description.trim() || undefined,
-          ingredients: filledIngredients,
-          steps: filledSteps.length > 0 ? filledSteps : undefined,
-          cookingTimeMinutes: previewData.cookingTimeMinutes
-            ? parseInt(previewData.cookingTimeMinutes, 10)
-            : undefined,
-          servings: previewData.servings ? parseInt(previewData.servings, 10) : undefined,
-          tagIds: previewData.tagIds,
-        },
-      })
+      await saveRecipe({ data: formDataToRecipeInput(previewData) })
       navigate({ to: '/' })
     } catch (err) {
       console.error('Save recipe failed:', err)
