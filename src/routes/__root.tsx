@@ -19,7 +19,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-screen bg-white font-sans text-gray-900 antialiased">
+      <body className="min-h-screen font-sans text-gray-800 antialiased">
         {children}
         <Scripts />
       </body>
