@@ -103,7 +103,7 @@ const ChatPanel = () => {
             return (
               <div
                 key={message.id}
-                className={`mb-4 ${isAssistant ? '' : 'flex justify-end'}`}
+                className={`${isAssistant ? 'mb-8' : 'mb-4 flex justify-end'}`}
               >
                 <div
                   className={`relative max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
