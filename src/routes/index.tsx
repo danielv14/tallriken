@@ -72,7 +72,7 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       {/* Compact nav */}
       <nav className="border-b border-gray-100 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
@@ -99,7 +99,7 @@ function HomePage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl flex-1 px-4 py-8">
         {/* Search & filters */}
         {initialRecipes.length > 0 && (
           <div className="space-y-3">
