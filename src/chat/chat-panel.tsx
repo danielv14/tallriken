@@ -3,7 +3,7 @@ import { useChat, fetchServerSentEvents } from '@tanstack/ai-react'
 import { useChatStore } from '#/chat/store'
 import { Markdown } from '#/components/markdown'
 import { Button } from '#/components/ui/button'
-import { XMarkIcon, ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, ClipboardDocumentIcon, CheckIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 const CONTEXT_PREFIX_REGEX = /^\[KONTEXT:.*?\]\n/
 
@@ -17,7 +17,7 @@ const ChatPanel = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { messages, sendMessage, isLoading } = useChat({
+  const { messages, sendMessage, isLoading, clear } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
   })
 
@@ -61,12 +61,23 @@ const ChatPanel = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <h2 className="font-semibold">Receptassistenten</h2>
-          <button
-            onClick={close}
-            className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {messages.length > 0 && (
+              <button
+                onClick={clear}
+                className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+                title="Rensa chatten"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+            )}
+            <button
+              onClick={close}
+              className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
