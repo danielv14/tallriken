@@ -16,8 +16,9 @@ const buildSystemPrompt = (tagNames: string[]) => {
 
 Regler:
 - Extrahera ALLA ingredienser, inte bara några. Var noggrann.
+- Ingredienser ska grupperas om receptet har underrubriker (t.ex. "Deg", "Fyllning", "Sås"). Varje grupp har ett "group"-fält (gruppnamn eller null om ingen grupp) och "items" (lista med ingredienser).
+- Om receptet inte har grupperade ingredienser, använd en enda grupp med group: null.
 - Extrahera ALLA tillagningssteg i ordning. Var noggrann.
-- Ingredienser ska vara en lista med strängar, en per ingrediens (inkludera mängd och enhet)
 - Steg ska vara en lista med strängar, ett per steg
 - Tillagningstid i minuter som heltal
 - Portioner som heltal

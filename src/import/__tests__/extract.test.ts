@@ -90,7 +90,7 @@ describe('extractJsonLdRecipe', () => {
     expect(result).not.toBeNull()
     expect(result!.title).toBe('Pasta Carbonara')
     expect(result!.description).toBe('Klassisk italiensk pasta')
-    expect(result!.ingredients).toEqual(['400g spaghetti', '200g pancetta', '4 äggulor', '100g parmesan'])
+    expect(result!.ingredients).toEqual([{ group: null, items: ['400g spaghetti', '200g pancetta', '4 äggulor', '100g parmesan'] }])
     expect(result!.steps).toEqual(['Koka pastan', 'Stek pancettan', 'Blanda ägg och ost', 'Vänd ihop'])
     expect(result!.cookingTimeMinutes).toBe(25)
     expect(result!.servings).toBe(4)

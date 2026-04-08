@@ -3,10 +3,15 @@ import { z } from 'zod'
 import { getDb } from '#/db/client'
 import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes } from '#/recipes/crud'
 
+const ingredientGroupSchema = z.object({
+  group: z.string().nullable(),
+  items: z.array(z.string().min(1)).min(1),
+})
+
 const recipeInputSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  ingredients: z.array(z.string().min(1)).min(1),
+  ingredients: z.array(ingredientGroupSchema).min(1),
   steps: z.array(z.string().min(1)).optional(),
   cookingTimeMinutes: z.number().positive().optional(),
   servings: z.number().positive().optional(),
