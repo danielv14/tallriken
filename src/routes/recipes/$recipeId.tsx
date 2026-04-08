@@ -123,7 +123,7 @@ function RecipeDetailPage() {
             <img
               src={currentImageUrl}
               alt={recipe.title}
-              className="max-h-72 w-full object-cover"
+              className="max-h-96 w-full object-cover"
             />
           </div>
         ) : (
