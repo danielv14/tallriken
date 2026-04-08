@@ -16,6 +16,8 @@ const recipeInputSchema = z.object({
   cookingTimeMinutes: z.number().positive().optional(),
   servings: z.number().positive().optional(),
   tagIds: z.array(z.number()),
+  sourceUrl: z.string().optional(),
+  imageUrl: z.string().optional(),
 })
 
 export const saveRecipe = createServerFn({ method: 'POST' })

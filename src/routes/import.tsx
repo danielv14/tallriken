@@ -39,6 +39,8 @@ function ImportPage() {
 
   const [url, setUrl] = useState('')
   const [extracting, setExtracting] = useState(false)
+  const [importMeta, setImportMeta] = useState<{ sourceUrl?: string; imageUrl?: string }>({})
+
 
   const handleExtractUrl = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,6 +49,7 @@ function ImportPage() {
     setError(null)
     try {
       const result = await extractRecipeFromUrl({ data: { url: url.trim() } })
+      setImportMeta({ sourceUrl: result.sourceUrl, imageUrl: result.imageUrl ?? undefined })
       setPreviewData(draftToFormData(result))
     } catch (err) {
       console.error('URL extract failed:', err)
@@ -61,7 +64,7 @@ function ImportPage() {
     setSaving(true)
     setError(null)
     try {
-      await saveRecipe({ data: formDataToRecipeInput(previewData) })
+      await saveRecipe({ data: { ...formDataToRecipeInput(previewData), ...importMeta } })
       navigate({ to: '/' })
     } catch (err) {
       console.error('Save recipe failed:', err)

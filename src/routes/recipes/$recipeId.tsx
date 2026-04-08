@@ -103,7 +103,7 @@ function RecipeDetailPage() {
             <img
               src={currentImageUrl}
               alt={recipe.title}
-              className="w-full object-cover"
+              className="max-h-72 w-full object-cover"
             />
             <button
               onClick={handleGenerateImage}

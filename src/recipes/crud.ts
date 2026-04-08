@@ -12,6 +12,7 @@ type CreateRecipeInput = {
   cookingTimeMinutes?: number
   servings?: number
   sourceUrl?: string
+  imageUrl?: string
   tagIds: number[]
 }
 
@@ -42,6 +43,7 @@ export const createRecipe = async (db: Database, input: CreateRecipeInput) => {
       cookingTimeMinutes: input.cookingTimeMinutes ?? null,
       servings: input.servings ?? null,
       sourceUrl: input.sourceUrl ?? null,
+      imageUrl: input.imageUrl ?? null,
       createdAt: new Date(),
     })
     .returning()

@@ -61,6 +61,27 @@ const findRecipeInJsonLd = (data: unknown): Record<string, unknown> | null => {
   return null
 }
 
+export const extractJsonLdImageUrl = (html: string): string | null => {
+  const matches = [...html.matchAll(JSON_LD_REGEX)]
+
+  for (const match of matches) {
+    try {
+      const parsed = JSON.parse(match[1])
+      const recipe = findRecipeInJsonLd(parsed)
+      if (!recipe) continue
+
+      const image = recipe.image
+      if (typeof image === 'string') return image
+      if (Array.isArray(image) && typeof image[0] === 'string') return image[0]
+      if (image && typeof image === 'object' && 'url' in image) return String(image.url)
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
 export const extractJsonLdRecipe = (html: string): RecipeDraft | null => {
   const matches = [...html.matchAll(JSON_LD_REGEX)]
 
