@@ -61,10 +61,10 @@ const findRecipeInJsonLd = (data: unknown): Record<string, unknown> | null => {
   return null
 }
 
-export const extractJsonLdImageUrl = (html: string): string | null => {
-  const matches = [...html.matchAll(JSON_LD_REGEX)]
-
-  for (const match of matches) {
+export const extractImageUrl = (html: string): string | null => {
+  // Try JSON-LD first
+  const jsonLdMatches = [...html.matchAll(JSON_LD_REGEX)]
+  for (const match of jsonLdMatches) {
     try {
       const parsed = JSON.parse(match[1])
       const recipe = findRecipeInJsonLd(parsed)
@@ -78,6 +78,11 @@ export const extractJsonLdImageUrl = (html: string): string | null => {
       continue
     }
   }
+
+  // Fallback: Open Graph image
+  const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
+    ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i)
+  if (ogMatch?.[1]) return ogMatch[1]
 
   return null
 }

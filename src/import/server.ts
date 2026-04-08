@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { env } from 'cloudflare:workers'
 import { getDb } from '#/db/client'
 import { getAllTags } from '#/tags/crud'
-import { extractJsonLdRecipe, extractJsonLdImageUrl } from '#/import/extract'
+import { extractJsonLdRecipe, extractImageUrl } from '#/import/extract'
 import { extractRecipeWithAi } from '#/import/ai-extract'
 import { extractRecipeFromImages } from '#/import/ocr-extract'
 import { resolveTagIds } from '#/import/auto-tag'
@@ -66,7 +66,7 @@ export const extractRecipeFromUrl = createServerFn({ method: 'POST' })
     const tagIds = await resolveTagIds(draft, tags, env.OPENAI_API_KEY)
 
     // Try to extract and store the recipe image
-    const originalImageUrl = extractJsonLdImageUrl(html)
+    const originalImageUrl = extractImageUrl(html)
     const imageUrl = originalImageUrl ? await downloadAndStoreImage(originalImageUrl) : null
 
     return { ...draft, sourceUrl: data.url, tagIds, imageUrl }
