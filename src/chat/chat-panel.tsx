@@ -46,18 +46,22 @@ const ChatPanel = () => {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  if (!isOpen) return null
-
   return (
     <>
       {/* Mobile backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/30 md:hidden"
+        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 md:hidden ${
+          isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
         onClick={close}
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-white shadow-xl md:w-[420px] md:border-l md:border-gray-200">
+      <div
+        className={`fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-white shadow-xl transition-transform duration-300 ease-out md:w-[420px] md:border-l md:border-gray-200 ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <h2 className="font-semibold">Receptassistenten</h2>
