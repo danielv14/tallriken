@@ -149,7 +149,7 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
               {form.ingredientGroups.length > 1 && (
                 <div className="mb-2 flex items-center gap-2">
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-gray-400">Gruppnamn</label>
+                    <label className="mb-1 block text-xs font-semibold text-gray-500">Gruppnamn</label>
                     <Input
                       value={group.group}
                       onChange={(e) => updateGroupName(groupIndex, e.target.value)}

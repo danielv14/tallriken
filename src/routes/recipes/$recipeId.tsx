@@ -147,7 +147,7 @@ function RecipeDetailPage() {
               {recipe.ingredients.map((group, groupIndex) => (
                 <div key={groupIndex}>
                   {group.group && (
-                    <h3 className="mb-2 text-sm font-semibold text-gray-500">{group.group}</h3>
+                    <h3 className="mb-2 text-sm font-bold text-gray-600">{group.group}</h3>
                   )}
                   <ul className="space-y-2">
                     {group.items.map((ingredient, i) => (
