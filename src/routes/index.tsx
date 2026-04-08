@@ -171,8 +171,16 @@ function HomePage() {
                 key={recipe.id}
                 to="/recipes/$recipeId"
                 params={{ recipeId: String(recipe.id) }}
-                className="group rounded-xl bg-white p-4 ring-1 ring-gray-100 transition hover:ring-plum-200 hover:shadow-md"
+                className="group overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 transition hover:ring-plum-200 hover:shadow-md"
               >
+                {recipe.imageUrl && (
+                  <img
+                    src={recipe.imageUrl}
+                    alt={recipe.title}
+                    className="aspect-[16/10] w-full object-cover"
+                  />
+                )}
+                <div className="p-4">
                 <h2 className="font-bold text-gray-900 group-hover:text-plum-600">{recipe.title}</h2>
                 {recipe.description && (
                   <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-gray-500">{recipe.description}</p>
@@ -203,6 +211,7 @@ function HomePage() {
                     ))}
                   </div>
                 )}
+                </div>
               </Link>
             ))}
           </div>

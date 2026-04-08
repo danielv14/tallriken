@@ -16,6 +16,7 @@ import { Route as RecipesRecipeIdRouteImport } from './routes/recipes/$recipeId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminTagsRouteImport } from './routes/admin/tags'
 import { Route as RecipesEditRecipeIdRouteImport } from './routes/recipes/edit/$recipeId'
+import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 
@@ -54,6 +55,11 @@ const RecipesEditRecipeIdRoute = RecipesEditRecipeIdRouteImport.update({
   path: '/recipes/edit/$recipeId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiImagesSplatRoute = ApiImagesSplatRouteImport.update({
+  id: '/api/images/$',
+  path: '/api/images/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
   id: '/api/auth/logout',
   path: '/api/auth/logout',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/images/$': typeof ApiImagesSplatRoute
   '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/images/$': typeof ApiImagesSplatRoute
   '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/images/$': typeof ApiImagesSplatRoute
   '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
+    | '/api/images/$'
     | '/recipes/edit/$recipeId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
+    | '/api/images/$'
     | '/recipes/edit/$recipeId'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
+    | '/api/images/$'
     | '/recipes/edit/$recipeId'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   RecipesRecipeIdRoute: typeof RecipesRecipeIdRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiImagesSplatRoute: typeof ApiImagesSplatRoute
   RecipesEditRecipeIdRoute: typeof RecipesEditRecipeIdRoute
 }
 
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesEditRecipeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/images/$': {
+      id: '/api/images/$'
+      path: '/api/images/$'
+      fullPath: '/api/images/$'
+      preLoaderRoute: typeof ApiImagesSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/logout': {
       id: '/api/auth/logout'
       path: '/api/auth/logout'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecipesRecipeIdRoute: RecipesRecipeIdRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiImagesSplatRoute: ApiImagesSplatRoute,
   RecipesEditRecipeIdRoute: RecipesEditRecipeIdRoute,
 }
 export const routeTree = rootRouteImport

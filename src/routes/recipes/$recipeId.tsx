@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
+import { generateAndSaveImage } from '#/images/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
@@ -12,6 +13,7 @@ import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
   CheckIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/$recipeId')({
@@ -37,6 +39,8 @@ function RecipeDetailPage() {
   const setPageContext = useChatStore((s) => s.setPageContext)
   const [copied, setCopied] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [generatingImage, setGeneratingImage] = useState(false)
+  const [currentImageUrl, setCurrentImageUrl] = useState(recipe.imageUrl)
 
   useEffect(() => {
     setPageContext({ type: 'recipe', recipeId: recipe.id, recipeTitle: recipe.title })
@@ -53,6 +57,18 @@ function RecipeDetailPage() {
     await navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleGenerateImage = async () => {
+    setGeneratingImage(true)
+    try {
+      const result = await generateAndSaveImage({ data: { recipeId: recipe.id } })
+      setCurrentImageUrl(result.imageUrl)
+    } catch (err) {
+      console.error('Image generation failed:', err)
+    } finally {
+      setGeneratingImage(false)
+    }
   }
 
   const handleDelete = async () => {
@@ -81,6 +97,36 @@ function RecipeDetailPage() {
       </nav>
 
       <main className="mx-auto max-w-2xl px-4 py-8">
+        {/* Recipe image */}
+        {currentImageUrl ? (
+          <div className="relative mb-6 overflow-hidden rounded-xl">
+            <img
+              src={currentImageUrl}
+              alt={recipe.title}
+              className="w-full object-cover"
+            />
+            <button
+              onClick={handleGenerateImage}
+              disabled={generatingImage}
+              className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm backdrop-blur transition hover:bg-white"
+            >
+              <SparklesIcon className="h-3.5 w-3.5" />
+              {generatingImage ? 'Genererar...' : 'Ny bild'}
+            </button>
+          </div>
+        ) : (
+          <div className="mb-6 flex items-center justify-center rounded-xl bg-gray-50 py-12">
+            <button
+              onClick={handleGenerateImage}
+              disabled={generatingImage}
+              className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
+            >
+              <SparklesIcon className="h-4 w-4" />
+              {generatingImage ? 'Genererar bild...' : 'Generera bild med AI'}
+            </button>
+          </div>
+        )}
+
         <div className="rounded-xl bg-white p-6 ring-1 ring-gray-100">
           {/* Title & meta */}
           <div>
