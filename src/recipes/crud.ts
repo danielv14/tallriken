@@ -23,6 +23,7 @@ type UpdateRecipeInput = {
   steps?: string[]
   cookingTimeMinutes?: number
   servings?: number
+  imageUrl?: string
   tagIds: number[]
 }
 
@@ -72,6 +73,7 @@ export const updateRecipe = async (db: Database, id: number, input: UpdateRecipe
       steps: input.steps,
       cookingTimeMinutes: input.cookingTimeMinutes ?? null,
       servings: input.servings ?? null,
+      imageUrl: input.imageUrl ?? null,
     })
     .where(eq(schema.recipesTable.id, id))
     .returning()

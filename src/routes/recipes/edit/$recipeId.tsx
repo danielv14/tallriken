@@ -35,11 +35,11 @@ function EditRecipePage() {
 
   const initialData = recipeToFormData(recipe)
 
-  const handleSubmit = async (form: RecipeFormData) => {
+  const handleSubmit = async (form: RecipeFormData, formImageUrl?: string) => {
     setError(null)
     try {
       await editRecipe({
-        data: { id: recipe.id, ...formDataToRecipeInput(form) },
+        data: { id: recipe.id, ...formDataToRecipeInput(form), imageUrl: formImageUrl },
       })
       navigate({ to: '/recipes/$recipeId', params: { recipeId: String(recipe.id) } })
     } catch (err) {
@@ -69,6 +69,7 @@ function EditRecipePage() {
         <div className="mt-6 rounded-xl bg-white p-5 ring-1 ring-gray-100">
           <RecipeForm
             initialData={initialData}
+            initialImageUrl={recipe.imageUrl ?? undefined}
             tags={tags}
             onSubmit={handleSubmit}
             submitLabel="Spara ändringar"

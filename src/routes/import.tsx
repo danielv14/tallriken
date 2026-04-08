@@ -91,9 +91,11 @@ function ImportPage() {
           <div className="mt-6 rounded-xl bg-white p-5 ring-1 ring-gray-100">
             <RecipeForm
               initialData={previewData}
+              initialImageUrl={importMeta.imageUrl}
               tags={tags}
-              onSubmit={(form) => {
+              onSubmit={(form, formImageUrl) => {
                 setPreviewData(form)
+                setImportMeta((prev) => ({ ...prev, imageUrl: formImageUrl }))
                 handleSave()
               }}
               submitLabel={saving ? 'Sparar...' : 'Spara recept'}
@@ -197,7 +199,10 @@ function ImportPage() {
           <div className="mt-5 rounded-xl bg-white p-5 ring-1 ring-gray-100">
             <RecipeForm
               tags={tags}
-              onSubmit={setPreviewData}
+              onSubmit={(form, formImageUrl) => {
+                setImportMeta((prev) => ({ ...prev, imageUrl: formImageUrl }))
+                setPreviewData(form)
+              }}
               submitLabel="Förhandsgranska"
               onCancel={() => navigate({ to: '/' })}
             />

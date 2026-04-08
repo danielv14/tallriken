@@ -50,3 +50,40 @@ export const generateAndSaveImage = createServerFn({ method: 'POST' })
 
     return { imageUrl }
   })
+
+export const generateImageFromDetails = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    title: z.string().min(1),
+    description: z.string().optional(),
+  }))
+  .handler(async ({ data }) => {
+    const imageData = await generateRecipeImage(
+      data.title,
+      data.description ?? null,
+      env.OPENAI_API_KEY,
+    )
+
+    const key = `recipes/preview-${Date.now()}.png`
+    await uploadImageToR2(key, imageData, 'image/png')
+
+    return { imageUrl: getImageUrl(key) }
+  })
+
+export const uploadRecipeImage = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    base64: z.string().min(1),
+    mimeType: z.string().min(1),
+  }))
+  .handler(async ({ data }) => {
+    const binaryString = atob(data.base64)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+
+    const extension = data.mimeType.includes('png') ? 'png' : 'jpg'
+    const key = `recipes/uploaded-${Date.now()}.${extension}`
+    await uploadImageToR2(key, bytes.buffer, data.mimeType)
+
+    return { imageUrl: getImageUrl(key) }
+  })
