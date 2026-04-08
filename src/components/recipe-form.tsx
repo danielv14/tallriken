@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
+import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 export type RecipeFormData = {
   title: string
@@ -75,9 +76,9 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <label className="block">
-        <span className="text-sm font-medium">Titel *</span>
+        <span className="text-sm font-semibold text-gray-700">Titel *</span>
         <Input
           value={form.title}
           onChange={(e) => updateField('title', e.target.value)}
@@ -87,7 +88,7 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium">Beskrivning</span>
+        <span className="text-sm font-semibold text-gray-700">Beskrivning</span>
         <Textarea
           value={form.description}
           onChange={(e) => updateField('description', e.target.value)}
@@ -97,8 +98,8 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
       </label>
 
       <div>
-        <span className="text-sm font-medium">Ingredienser *</span>
-        <div className="mt-1 space-y-2">
+        <span className="text-sm font-semibold text-gray-700">Ingredienser *</span>
+        <div className="mt-2 space-y-2">
           {form.ingredients.map((ingredient, index) => (
             <div key={index} className="flex gap-2">
               <Input
@@ -107,25 +108,36 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
                 placeholder={`Ingrediens ${index + 1}, t.ex. 400g spaghetti`}
               />
               {form.ingredients.length > 1 && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => removeListItem('ingredients', index)}>
-                  Ta bort
-                </Button>
+                <button
+                  type="button"
+                  onClick={() => removeListItem('ingredients', index)}
+                  className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
               )}
             </div>
           ))}
-          <Button type="button" variant="secondary" size="sm" onClick={() => addListItem('ingredients')}>
-            + Lägg till ingrediens
-          </Button>
+          <button
+            type="button"
+            onClick={() => addListItem('ingredients')}
+            className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Lägg till ingrediens
+          </button>
         </div>
       </div>
 
       <div>
-        <span className="text-sm font-medium">Steg</span>
-        <div className="mt-1 space-y-2">
+        <span className="text-sm font-semibold text-gray-700">Steg</span>
+        <div className="mt-2 space-y-2">
           {form.steps.map((step, index) => (
             <div key={index} className="flex gap-2">
               <div className="flex min-w-0 flex-1 items-start gap-2">
-                <span className="mt-2 text-sm text-gray-400">{index + 1}.</span>
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-plum-600 text-[11px] font-bold text-white">
+                  {index + 1}
+                </span>
                 <Input
                   value={step}
                   onChange={(e) => updateListItem('steps', index, e.target.value)}
@@ -133,21 +145,30 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
                 />
               </div>
               {form.steps.length > 1 && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => removeListItem('steps', index)}>
-                  Ta bort
-                </Button>
+                <button
+                  type="button"
+                  onClick={() => removeListItem('steps', index)}
+                  className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
               )}
             </div>
           ))}
-          <Button type="button" variant="secondary" size="sm" onClick={() => addListItem('steps')}>
-            + Lägg till steg
-          </Button>
+          <button
+            type="button"
+            onClick={() => addListItem('steps')}
+            className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Lägg till steg
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
-          <span className="text-sm font-medium">Tillagningstid (min)</span>
+          <span className="text-sm font-semibold text-gray-700">Tillagningstid (min)</span>
           <Input
             type="number"
             value={form.cookingTimeMinutes}
@@ -158,7 +179,7 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium">Portioner</span>
+          <span className="text-sm font-semibold text-gray-700">Portioner</span>
           <Input
             type="number"
             value={form.servings}
@@ -171,17 +192,17 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
 
       {tags.length > 0 && (
         <div>
-          <span className="text-sm font-medium">Taggar</span>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <span className="text-sm font-semibold text-gray-700">Taggar</span>
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {tags.map((tag) => (
               <button
                 key={tag.id}
                 type="button"
                 onClick={() => toggleTag(tag.id)}
-                className={`rounded-full px-3 py-1 text-sm transition ${
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                   form.tagIds.includes(tag.id)
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-plum-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {tag.name}
@@ -191,7 +212,7 @@ const RecipeForm = ({ initialData, tags, onSubmit, submitLabel, onCancel }: Reci
         </div>
       )}
 
-      <div className="flex gap-3 pt-4">
+      <div className="flex gap-2 pt-2">
         <Button type="submit" disabled={!canSubmit}>
           {submitLabel}
         </Button>
