@@ -100,7 +100,7 @@ function RecipeDetailPage() {
     <div className="min-h-screen">
       {/* Compact header */}
       <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
             <ArrowLeftIcon className="h-4 w-4" />
             Tillbaka
@@ -116,7 +116,7 @@ function RecipeDetailPage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-8">
         <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
           {/* Recipe image */}
           {currentImageUrl ? (

@@ -77,14 +77,14 @@ function ImportPage() {
     return (
       <div className="min-h-screen">
         <nav className="border-b border-gray-100 bg-white">
-          <div className="mx-auto flex max-w-2xl items-center px-4 py-3">
+          <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
             <button onClick={() => setPreviewData(null)} className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
               <ArrowLeftIcon className="h-4 w-4" />
               Tillbaka
             </button>
           </div>
         </nav>
-        <main className="mx-auto max-w-2xl px-4 py-8">
+        <main className="mx-auto max-w-4xl px-4 py-8">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Granska recept</h1>
           <p className="mt-1 text-sm text-gray-500">Granska och redigera innan du sparar.</p>
           {error && <div className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
@@ -110,7 +110,7 @@ function ImportPage() {
   return (
     <div className="min-h-screen">
       <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-2xl items-center px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
             <ArrowLeftIcon className="h-4 w-4" />
             Tillbaka
@@ -118,7 +118,7 @@ function ImportPage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Lägg till recept</h1>
 
         {/* Tabs */}

@@ -95,14 +95,6 @@ function HomePage() {
             >
               Taggar
             </Link>
-            <form method="post" action="/api/auth/logout">
-              <button
-                type="submit"
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
-              >
-                Logga ut
-              </button>
-            </form>
           </div>
         </div>
       </nav>
@@ -217,6 +209,19 @@ function HomePage() {
           </div>
         )}
       </main>
+
+      <footer className="border-t border-gray-100 py-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-center px-4">
+          <form method="post" action="/api/auth/logout">
+            <button
+              type="submit"
+              className="text-sm text-gray-400 transition hover:text-gray-600"
+            >
+              Logga ut
+            </button>
+          </form>
+        </div>
+      </footer>
     </div>
   )
 }

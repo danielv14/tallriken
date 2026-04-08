@@ -51,7 +51,7 @@ function EditRecipePage() {
   return (
     <div className="min-h-screen">
       <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-2xl items-center px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
           <Link
             to="/recipes/$recipeId"
             params={{ recipeId: String(recipe.id) }}
@@ -63,7 +63,7 @@ function EditRecipePage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Redigera recept</h1>
         {error && <div className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
         <div className="mt-6 rounded-xl bg-white p-5 ring-1 ring-gray-100">
