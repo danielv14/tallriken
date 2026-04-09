@@ -2,7 +2,7 @@ import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
-import { fetchAllRecipes, findRecipes } from '#/recipes/server'
+import { fetchAllRecipes, findRecipes, fetchFavoriteRecipes, fetchStaleRecipes } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
 import { Input } from '#/components/ui/input'
@@ -12,6 +12,8 @@ import {
   ClockIcon,
   UsersIcon,
   CalendarIcon,
+  FireIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/')({
@@ -22,18 +24,20 @@ export const Route = createFileRoute('/')({
     }
   },
   loader: async () => {
-    const [recipes, tags, menuRecipeIds] = await Promise.all([
+    const [recipes, tags, menuRecipeIds, favorites, stale] = await Promise.all([
       fetchAllRecipes(),
       fetchAllTags(),
       fetchMenuRecipeIds(),
+      fetchFavoriteRecipes(),
+      fetchStaleRecipes(),
     ])
-    return { recipes, tags, menuRecipeIds }
+    return { recipes, tags, menuRecipeIds, favorites, stale }
   },
   component: HomePage,
 })
 
 function HomePage() {
-  const { recipes: initialRecipes, tags, menuRecipeIds: initialMenuIds } = Route.useLoaderData()
+  const { recipes: initialRecipes, tags, menuRecipeIds: initialMenuIds, favorites, stale } = Route.useLoaderData()
   const setPageContext = useChatStore((s) => s.setPageContext)
   const [recipes, setRecipes] = useState(initialRecipes)
   const [menuRecipeIds, setMenuRecipeIds] = useState<number[]>(initialMenuIds)
@@ -158,6 +162,60 @@ function HomePage() {
                     {tag.name}
                   </button>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Cooking insights */}
+        {!searchQuery && selectedTagIds.length === 0 && (favorites.length > 0 || stale.length > 0) && (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {favorites.length > 0 && (
+              <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
+                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">
+                  <FireIcon className="h-3.5 w-3.5" />
+                  Favoriter
+                </h2>
+                <ul className="mt-2 space-y-1.5">
+                  {favorites.map((recipe) => (
+                    <li key={recipe.id}>
+                      <Link
+                        to="/recipes/$recipeId"
+                        params={{ recipeId: String(recipe.id) }}
+                        className="flex items-center justify-between text-sm text-gray-700 hover:text-plum-600 transition"
+                      >
+                        <span className="truncate">{recipe.title}</span>
+                        <span className="shrink-0 text-xs text-gray-400">{recipe.cookCount}x</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {stale.length > 0 && (
+              <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
+                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">
+                  <ArrowPathIcon className="h-3.5 w-3.5" />
+                  Inte lagat på ett tag
+                </h2>
+                <ul className="mt-2 space-y-1.5">
+                  {stale.map((recipe) => (
+                    <li key={recipe.id}>
+                      <Link
+                        to="/recipes/$recipeId"
+                        params={{ recipeId: String(recipe.id) }}
+                        className="flex items-center justify-between text-sm text-gray-700 hover:text-plum-600 transition"
+                      >
+                        <span className="truncate">{recipe.title}</span>
+                        {recipe.lastCookedAt && (
+                          <span className="shrink-0 text-xs text-gray-400">
+                            {new Date(recipe.lastCookedAt).toLocaleDateString('sv-SE')}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
-import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes } from '#/recipes/crud'
+import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
 
 const ingredientGroupSchema = z.object({
   group: z.string().nullable(),
@@ -66,3 +66,13 @@ export const findRecipes = createServerFn({ method: 'GET' })
     const db = getDb()
     return searchRecipes(db, data)
   })
+
+export const fetchFavoriteRecipes = createServerFn({ method: 'GET' }).handler(async () => {
+  const db = getDb()
+  return getFavoriteRecipes(db, 5)
+})
+
+export const fetchStaleRecipes = createServerFn({ method: 'GET' }).handler(async () => {
+  const db = getDb()
+  return getStaleRecipes(db, 5)
+})
