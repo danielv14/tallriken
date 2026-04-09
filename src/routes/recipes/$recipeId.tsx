@@ -7,6 +7,7 @@ import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
 import { ImagePicker } from '#/components/image-picker'
+import { Menu } from '@base-ui/react/menu'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
   ArrowLeftIcon,
@@ -18,6 +19,7 @@ import {
   CalendarIcon,
   PencilSquareIcon,
   TrashIcon,
+  EllipsisVerticalIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/$recipeId')({
@@ -158,31 +160,40 @@ function RecipeDetailPage() {
             )}
 
             {/* Actions */}
-            <div className="mt-4 flex flex-wrap justify-end gap-2">
-              <button
-                onClick={handleToggleMenu}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                  inMenu
-                    ? 'text-plum-600 hover:bg-plum-50'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <CalendarIcon className="h-4 w-4" />
-                {inMenu ? 'I veckans meny' : 'Lägg till i menyn'}
-              </button>
-              <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
-                <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:text-gray-700">
-                  <PencilSquareIcon className="h-4 w-4" />
-                  Redigera
-                </button>
-              </Link>
-              <button
-                onClick={() => setShowDeleteDialog(true)}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-500 transition hover:bg-red-50"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Ta bort
-              </button>
+            <div className="mt-4 flex justify-end">
+              <Menu.Root>
+                <Menu.Trigger className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
+                  <EllipsisVerticalIcon className="h-5 w-5" />
+                </Menu.Trigger>
+                <Menu.Portal>
+                  <Menu.Positioner className="z-50" sideOffset={4}>
+                    <Menu.Popup className="min-w-48 rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200">
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                        onClick={handleToggleMenu}
+                      >
+                        <CalendarIcon className="h-4 w-4 text-gray-400" />
+                        {inMenu ? 'Ta bort från veckomenyn' : 'Lägg till i veckomenyn'}
+                      </Menu.Item>
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                        onClick={() => navigate({ to: '/recipes/edit/$recipeId', params: { recipeId: String(recipe.id) } })}
+                      >
+                        <PencilSquareIcon className="h-4 w-4 text-gray-400" />
+                        Redigera
+                      </Menu.Item>
+                      <Menu.Separator className="my-1 border-t border-gray-100" />
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-red-600 data-highlighted:bg-red-50"
+                        onClick={() => setShowDeleteDialog(true)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                        Ta bort
+                      </Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
             </div>
           </div>
 
