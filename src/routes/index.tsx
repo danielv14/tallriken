@@ -6,11 +6,16 @@ import { fetchAllRecipes, findRecipes, fetchFavoriteRecipes, fetchStaleRecipes }
 import { fetchAllTags } from '#/tags/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
 import { RecipeCard } from '#/components/recipe-card'
+import { Menu } from '@base-ui/react/menu'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
   FireIcon,
   ArrowPathIcon,
+  CalendarIcon,
+  EllipsisVerticalIcon,
+  TagIcon,
+  ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/')({
@@ -162,27 +167,54 @@ function HomePage() {
           <div className="flex items-center gap-1">
             <Link
               to="/import"
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
             >
-              Nytt recept
+              <PlusIcon className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">Nytt recept</span>
             </Link>
             <Link
               to="/weekly-menu"
-              className="relative rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+              className="relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
             >
-              Veckans meny
+              <CalendarIcon className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">Veckans meny</span>
               {menuRecipeIds.length > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-plum-600 text-[10px] font-bold text-white">
                   {menuRecipeIds.length}
                 </span>
               )}
             </Link>
-            <Link
-              to="/admin/tags"
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
-            >
-              Taggar
-            </Link>
+            <Menu.Root>
+              <Menu.Trigger className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
+                <EllipsisVerticalIcon className="h-5 w-5" />
+              </Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner className="z-50" sideOffset={4} align="end">
+                  <Menu.Popup className="min-w-44 rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200">
+                    <Menu.Item className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50">
+                      <Link to="/admin/tags" className="flex items-center gap-2.5">
+                        <TagIcon className="h-4 w-4 text-gray-400" />
+                        Taggar
+                      </Link>
+                    </Menu.Item>
+                    <Menu.Separator className="my-1 border-t border-gray-100" />
+                    <Menu.Item
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                      onClick={() => {
+                        const form = document.createElement('form')
+                        form.method = 'POST'
+                        form.action = '/api/auth/logout'
+                        document.body.appendChild(form)
+                        form.submit()
+                      }}
+                    >
+                      <ArrowRightStartOnRectangleIcon className="h-4 w-4 text-gray-400" />
+                      Logga ut
+                    </Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
           </div>
         </div>
       </nav>
@@ -263,18 +295,6 @@ function HomePage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-100 py-6">
-        <div className="mx-auto flex max-w-4xl items-center justify-center px-4">
-          <form method="post" action="/api/auth/logout">
-            <button
-              type="submit"
-              className="text-sm text-gray-400 transition hover:text-gray-600"
-            >
-              Logga ut
-            </button>
-          </form>
-        </div>
-      </footer>
     </div>
   )
 }
