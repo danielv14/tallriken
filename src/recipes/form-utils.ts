@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export type IngredientGroup = {
   group: string | null
   items: string[]
@@ -27,3 +29,35 @@ export type RecipeInput = {
   servings?: number
   tagIds: number[]
 }
+
+const ingredientGroupFormSchema = z.object({
+  group: z.string(),
+  items: z.array(z.string()),
+})
+
+export const recipeFormSchema = z.object({
+  title: z.string().min(1, 'Titel krävs'),
+  description: z.string(),
+  ingredientGroups: z
+    .array(ingredientGroupFormSchema)
+    .refine(
+      (groups) => groups.some((g) => g.items.some((item) => item.trim().length > 0)),
+      { message: 'Minst en ingrediens krävs' },
+    ),
+  steps: z
+    .array(z.string())
+    .refine((steps) => steps.some((s) => s.trim().length > 0), {
+      message: 'Minst ett steg krävs',
+    }),
+  cookingTimeMinutes: z
+    .string()
+    .refine((v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) > 0), {
+      message: 'Måste vara ett positivt heltal',
+    }),
+  servings: z
+    .string()
+    .refine((v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) > 0), {
+      message: 'Måste vara ett positivt heltal',
+    }),
+  tagIds: z.array(z.number()),
+})

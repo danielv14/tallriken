@@ -1,14 +1,16 @@
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { ImagePicker } from '#/components/image-picker'
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { generateImageFromDetails, uploadRecipeImage } from '#/images/server'
-import { useRecipeForm } from '#/hooks/use-recipe-form'
+import { Recipe } from '#/recipes/types'
+import { recipeFormSchema } from '#/recipes/form-utils'
 
 import type { RecipeFormData } from '#/recipes/form-utils'
-import type { IngredientGroupFormData } from '#/recipes/form-utils'
+import type { AnyFieldApi } from '@tanstack/react-form'
 export type { RecipeFormData } from '#/recipes/form-utils'
 
 type RecipeFormProps = {
@@ -20,168 +22,44 @@ type RecipeFormProps = {
   onCancel: () => void
 }
 
-// --- Sub-components (tightly coupled to form, kept in same file) ---
+const hasFieldError = (field: AnyFieldApi) =>
+  field.state.meta.isTouched && field.state.meta.errors.length > 0
 
-type IngredientGroupEditorProps = {
-  ingredientGroups: IngredientGroupFormData[]
-  updateGroupName: (groupIndex: number, name: string) => void
-  updateIngredient: (groupIndex: number, itemIndex: number, value: string) => void
-  addIngredient: (groupIndex: number) => void
-  removeIngredient: (groupIndex: number, itemIndex: number) => void
-  addGroup: () => void
-  removeGroup: (groupIndex: number) => void
-}
-
-const IngredientGroupEditor = ({
-  ingredientGroups,
-  updateGroupName,
-  updateIngredient,
-  addIngredient,
-  removeIngredient,
-  addGroup,
-  removeGroup,
-}: IngredientGroupEditorProps) => {
+const FieldError = ({ field }: { field: AnyFieldApi }) => {
+  if (!hasFieldError(field)) return null
   return (
-    <div>
-      <span className="text-sm font-semibold text-gray-700">Ingredienser *</span>
-      <div className="mt-2 space-y-4">
-        {ingredientGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className={ingredientGroups.length > 1 ? 'rounded-lg border border-gray-200 p-3' : ''}>
-            {ingredientGroups.length > 1 && (
-              <div className="mb-2 flex items-center gap-2">
-                <div className="flex-1">
-                  <label className="mb-1 block text-xs font-semibold text-gray-500">Gruppnamn</label>
-                  <Input
-                    value={group.group}
-                    onChange={(e) => updateGroupName(groupIndex, e.target.value)}
-                    placeholder="T.ex. Deg, Fyllning, Sås..."
-                    className="font-medium"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeGroup(groupIndex)}
-                  className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-            <div className="space-y-2">
-              {group.items.map((ingredient, itemIndex) => (
-                <div key={itemIndex} className="flex gap-2">
-                  <Input
-                    value={ingredient}
-                    onChange={(e) => updateIngredient(groupIndex, itemIndex, e.target.value)}
-                    placeholder={`Ingrediens ${itemIndex + 1}, t.ex. 400g spaghetti`}
-                  />
-                  {group.items.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeIngredient(groupIndex, itemIndex)}
-                      className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-                    >
-                      <XMarkIcon className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => addIngredient(groupIndex)}
-                className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Lägg till ingrediens
-              </button>
-            </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addGroup}
-          className="flex items-center gap-1.5 text-sm font-medium text-gray-500 transition hover:text-gray-700"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Lägg till ingrediensgrupp
-        </button>
-      </div>
-    </div>
+    <p className="mt-1 text-xs text-red-500">
+      {field.state.meta.errors.map((e) => (typeof e === 'string' ? e : e?.message ?? '')).filter(Boolean).join(', ')}
+    </p>
   )
 }
 
-type StepEditorProps = {
-  steps: string[]
-  updateStep: (index: number, value: string) => void
-  addStep: () => void
-  removeStep: (index: number) => void
-}
-
-const StepEditor = ({ steps, updateStep, addStep, removeStep }: StepEditorProps) => {
-  return (
-    <div>
-      <span className="text-sm font-semibold text-gray-700">Steg</span>
-      <div className="mt-2 space-y-2">
-        {steps.map((step, index) => (
-          <div key={index} className="flex gap-2">
-            <div className="flex min-w-0 flex-1 items-start gap-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-plum-600 text-[11px] font-bold text-white">
-                {index + 1}
-              </span>
-              <Input
-                value={step}
-                onChange={(e) => updateStep(index, e.target.value)}
-                placeholder={`Steg ${index + 1}`}
-              />
-            </div>
-            {steps.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeStep(index)}
-                className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addStep}
-          className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Lägg till steg
-        </button>
-      </div>
-    </div>
-  )
-}
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <span className="text-sm font-semibold text-gray-700">
+    {children} <span className="text-red-500">*</span>
+  </span>
+)
 
 // --- Main form component ---
 
 const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel, onCancel }: RecipeFormProps) => {
-  const {
-    form,
-    updateField,
-    updateGroupName,
-    updateIngredient,
-    addIngredient,
-    removeIngredient,
-    addGroup,
-    removeGroup,
-    updateStep,
-    addStep,
-    removeStep,
-    toggleTag,
-    canSubmit,
-  } = useRecipeForm(initialData)
-
   const [imageUrl, setImageUrl] = useState<string | undefined>(initialImageUrl)
 
+  const form = useForm({
+    defaultValues: initialData ?? Recipe.empty(),
+    validators: {
+      onBlur: recipeFormSchema,
+    },
+    onSubmit: ({ value }) => {
+      onSubmit(value, imageUrl)
+    },
+  })
+
   const handleGenerateImage = async (): Promise<string> => {
+    const title = form.getFieldValue('title')
+    const description = form.getFieldValue('description')
     const result = await generateImageFromDetails({
-      data: { title: form.title.trim(), description: form.description.trim() || undefined },
+      data: { title: title.trim(), description: description.trim() || undefined },
     })
     return result.imageUrl
   }
@@ -191,119 +69,322 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
     return result.imageUrl
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canSubmit) return
-    onSubmit(form, imageUrl)
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <label className="block">
-        <span className="text-sm font-semibold text-gray-700">Titel *</span>
-        <Input
-          value={form.title}
-          onChange={(e) => updateField('title', e.target.value)}
-          placeholder="T.ex. Pasta Carbonara"
-          required
-        />
-      </label>
-
-      <label className="block">
-        <span className="text-sm font-semibold text-gray-700">Beskrivning</span>
-        <Textarea
-          value={form.description}
-          onChange={(e) => updateField('description', e.target.value)}
-          placeholder="Kort beskrivning av rätten..."
-          rows={2}
-        />
-      </label>
-
-      <IngredientGroupEditor
-        ingredientGroups={form.ingredientGroups}
-        updateGroupName={updateGroupName}
-        updateIngredient={updateIngredient}
-        addIngredient={addIngredient}
-        removeIngredient={removeIngredient}
-        addGroup={addGroup}
-        removeGroup={removeGroup}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        form.handleSubmit()
+      }}
+      className="space-y-5"
+    >
+      {/* Title */}
+      <form.Field
+        name="title"
+        children={(field) => (
+          <label className="block">
+            <RequiredLabel>Titel</RequiredLabel>
+            <Input
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              onBlur={field.handleBlur}
+              placeholder="T.ex. Pasta Carbonara"
+              hasError={hasFieldError(field)}
+            />
+            <FieldError field={field} />
+          </label>
+        )}
       />
 
-      <StepEditor
-        steps={form.steps}
-        updateStep={updateStep}
-        addStep={addStep}
-        removeStep={removeStep}
+      {/* Description */}
+      <form.Field
+        name="description"
+        children={(field) => (
+          <label className="block">
+            <span className="text-sm font-semibold text-gray-700">Beskrivning</span>
+            <Textarea
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              onBlur={field.handleBlur}
+              placeholder="Kort beskrivning av rätten..."
+              rows={2}
+            />
+          </label>
+        )}
       />
 
+      {/* Ingredient groups */}
+      <form.Field
+        name="ingredientGroups"
+        mode="array"
+        children={(ingredientGroupsField) => (
+          <div>
+            <RequiredLabel>Ingredienser</RequiredLabel>
+            {hasFieldError(ingredientGroupsField) && (
+              <FieldError field={ingredientGroupsField} />
+            )}
+            <div className="mt-2 space-y-4">
+              {ingredientGroupsField.state.value.map((group, groupIndex) => (
+                <div
+                  key={groupIndex}
+                  className={
+                    ingredientGroupsField.state.value.length > 1
+                      ? 'rounded-lg border border-gray-200 p-3'
+                      : ''
+                  }
+                >
+                  {ingredientGroupsField.state.value.length > 1 && (
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex-1">
+                        <label className="mb-1 block text-xs font-semibold text-gray-500">Gruppnamn</label>
+                        <form.Field
+                          name={`ingredientGroups[${groupIndex}].group`}
+                          children={(field) => (
+                            <Input
+                              value={field.state.value}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              onBlur={field.handleBlur}
+                              placeholder="T.ex. Deg, Fyllning, Sås..."
+                              className="font-medium"
+                            />
+                          )}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => ingredientGroupsField.removeValue(groupIndex)}
+                        className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    {group.items.map((_, itemIndex) => (
+                      <div key={itemIndex} className="flex gap-2">
+                        <form.Field
+                          name={`ingredientGroups[${groupIndex}].items[${itemIndex}]`}
+                          children={(field) => (
+                            <Input
+                              value={field.state.value}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              onBlur={field.handleBlur}
+                              placeholder={`Ingrediens ${itemIndex + 1}, t.ex. 400g spaghetti`}
+                            />
+                          )}
+                        />
+                        {group.items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentItems = form.getFieldValue(
+                                `ingredientGroups[${groupIndex}].items`,
+                              ) as string[]
+                              form.setFieldValue(
+                                `ingredientGroups[${groupIndex}].items`,
+                                currentItems.filter((_, j) => j !== itemIndex),
+                              )
+                            }}
+                            className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentItems = form.getFieldValue(
+                          `ingredientGroups[${groupIndex}].items`,
+                        ) as string[]
+                        form.setFieldValue(`ingredientGroups[${groupIndex}].items`, [
+                          ...currentItems,
+                          '',
+                        ])
+                      }}
+                      className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      Lägg till ingrediens
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => ingredientGroupsField.pushValue({ group: '', items: [''] })}
+                className="flex items-center gap-1.5 text-sm font-medium text-gray-500 transition hover:text-gray-700"
+              >
+                <PlusIcon className="h-4 w-4" />
+                Lägg till ingrediensgrupp
+              </button>
+            </div>
+          </div>
+        )}
+      />
+
+      {/* Steps */}
+      <form.Field
+        name="steps"
+        mode="array"
+        children={(stepsField) => (
+          <div>
+            <RequiredLabel>Steg</RequiredLabel>
+            {hasFieldError(stepsField) && (
+              <FieldError field={stepsField} />
+            )}
+            <div className="mt-2 space-y-2">
+              {stepsField.state.value.map((_, index) => (
+                <div key={index} className="flex gap-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="shrink-0 text-sm font-bold text-plum-600">
+                      {index + 1}.
+                    </span>
+                    <form.Field
+                      name={`steps[${index}]`}
+                      children={(field) => (
+                        <Input
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          placeholder={`Steg ${index + 1}`}
+                        />
+                      )}
+                    />
+                  </div>
+                  {stepsField.state.value.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => stepsField.removeValue(index)}
+                      className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => stepsField.pushValue('')}
+                className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
+              >
+                <PlusIcon className="h-4 w-4" />
+                Lägg till steg
+              </button>
+            </div>
+          </div>
+        )}
+      />
+
+      {/* Cooking time & servings */}
       <div className="grid grid-cols-2 gap-4">
-        <label className="block">
-          <span className="text-sm font-semibold text-gray-700">Tillagningstid (min)</span>
-          <Input
-            type="number"
-            value={form.cookingTimeMinutes}
-            onChange={(e) => updateField('cookingTimeMinutes', e.target.value)}
-            placeholder="T.ex. 30"
-            min="1"
-          />
-        </label>
+        <form.Field
+          name="cookingTimeMinutes"
+          children={(field) => (
+            <label className="block">
+              <span className="text-sm font-semibold text-gray-700">Tillagningstid (min)</span>
+              <Input
+                type="number"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+                placeholder="T.ex. 30"
+                min="1"
+                hasError={hasFieldError(field)}
+              />
+              <FieldError field={field} />
+            </label>
+          )}
+        />
 
-        <label className="block">
-          <span className="text-sm font-semibold text-gray-700">Portioner</span>
-          <Input
-            type="number"
-            value={form.servings}
-            onChange={(e) => updateField('servings', e.target.value)}
-            placeholder="T.ex. 4"
-            min="1"
-          />
-        </label>
+        <form.Field
+          name="servings"
+          children={(field) => (
+            <label className="block">
+              <span className="text-sm font-semibold text-gray-700">Portioner</span>
+              <Input
+                type="number"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+                placeholder="T.ex. 4"
+                min="1"
+                hasError={hasFieldError(field)}
+              />
+              <FieldError field={field} />
+            </label>
+          )}
+        />
       </div>
 
+      {/* Tags */}
       {tags.length > 0 && (
-        <div>
-          <span className="text-sm font-semibold text-gray-700">Taggar</span>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <button
-                key={tag.id}
-                type="button"
-                onClick={() => toggleTag(tag.id)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                  form.tagIds.includes(tag.id)
-                    ? 'bg-plum-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {tag.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        <form.Field
+          name="tagIds"
+          children={(field) => (
+            <div>
+              <span className="text-sm font-semibold text-gray-700">Taggar</span>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => {
+                      const current = field.state.value
+                      field.handleChange(
+                        current.includes(tag.id)
+                          ? current.filter((id) => id !== tag.id)
+                          : [...current, tag.id],
+                      )
+                    }}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      field.state.value.includes(tag.id)
+                        ? 'bg-plum-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        />
       )}
 
       {/* Image */}
       <div>
         <span className="text-sm font-semibold text-gray-700">Bild</span>
         <div className="mt-2">
-          <ImagePicker
-            imageUrl={imageUrl}
-            onImageChange={setImageUrl}
-            onUpload={handleUploadImage}
-            onGenerate={handleGenerateImage}
-            canGenerate={!!canSubmit}
+          <form.Subscribe
+            selector={(state) => state.canSubmit}
+            children={(canSubmit) => (
+              <ImagePicker
+                imageUrl={imageUrl}
+                onImageChange={setImageUrl}
+                onUpload={handleUploadImage}
+                onGenerate={handleGenerateImage}
+                canGenerate={canSubmit}
+              />
+            )}
           />
         </div>
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" disabled={!canSubmit}>
-          {submitLabel}
-        </Button>
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          Avbryt
-        </Button>
-      </div>
+      <form.Subscribe
+        selector={(state) => [state.canSubmit, state.isSubmitting] as const}
+        children={([canSubmit, isSubmitting]) => (
+          <div className="flex gap-2 pt-2">
+            <Button type="submit" disabled={!canSubmit || isSubmitting}>
+              {submitLabel}
+            </Button>
+            <Button type="button" variant="ghost" onClick={onCancel}>
+              Avbryt
+            </Button>
+          </div>
+        )}
+      />
     </form>
   )
 }
