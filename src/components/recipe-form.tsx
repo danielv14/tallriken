@@ -4,8 +4,9 @@ import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { PlusIcon, XMarkIcon, SparklesIcon, PhotoIcon } from '@heroicons/react/24/outline'
 import { generateImageFromDetails, uploadRecipeImage } from '#/images/server'
+import { fileToBase64 } from '#/utils/file'
 
-import type { RecipeFormData, IngredientGroupFormData } from '#/recipes/form-utils'
+import type { RecipeFormData } from '#/recipes/form-utils'
 import { Recipe } from '#/recipes/types'
 export type { RecipeFormData } from '#/recipes/form-utils'
 
@@ -135,12 +136,7 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
   const handleUploadImage = async (file: File) => {
     setUploadingImage(true)
     try {
-      const reader = new FileReader()
-      const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve((reader.result as string).split(',')[1])
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      const base64 = await fileToBase64(file)
       const result = await uploadRecipeImage({ data: { base64, mimeType: file.type } })
       setImageUrl(result.imageUrl)
     } catch (err) {

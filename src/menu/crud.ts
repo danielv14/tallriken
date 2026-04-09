@@ -85,6 +85,7 @@ export const getMenu = async (db: Database) => {
       cookingTimeMinutes: schema.recipesTable.cookingTimeMinutes,
       servings: schema.recipesTable.servings,
       imageUrl: schema.recipesTable.imageUrl,
+      ingredients: schema.recipesTable.ingredients,
     })
     .from(schema.weeklyMenuItemsTable)
     .innerJoin(
@@ -104,6 +105,7 @@ export const getMenu = async (db: Database) => {
       cookingTimeMinutes: row.cookingTimeMinutes,
       servings: row.servings,
       imageUrl: row.imageUrl,
+      ingredients: row.ingredients,
     },
   }))
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { getIsAuthenticated } from '#/auth/server'
+import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
 import { fetchMenu, removeRecipeFromMenu, clearAllMenu, toggleRecipeComplete, generateAndSaveShoppingList, fetchShoppingList } from '#/menu/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
@@ -43,7 +44,7 @@ function WeeklyMenuPage() {
   const [shoppingList, setShoppingList] = useState<string | null>(savedShoppingList)
   const [shoppingListOpen, setShoppingListOpen] = useState(!savedShoppingList)
   const [generating, setGenerating] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const { copied, copy: copyToClipboard } = useCopyToClipboard()
 
   const handleGenerateShoppingList = async () => {
     setGenerating(true)
@@ -63,9 +64,7 @@ function WeeklyMenuPage() {
     const plainText = shoppingList
       .replace(/^## /gm, '')
       .replace(/^- /gm, '  ')
-    await navigator.clipboard.writeText(plainText)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    await copyToClipboard(plainText)
   }
 
   const handleToggleComplete = async (recipeId: number) => {
