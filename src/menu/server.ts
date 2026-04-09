@@ -2,8 +2,10 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
 import { env } from 'cloudflare:workers'
-import { addToMenu, removeFromMenu, getMenu, getMenuRecipeIds, clearMenu, toggleComplete, saveShoppingList, getShoppingList } from '#/menu/crud'
-import { generateShoppingList } from '#/menu/generate-shopping-list'
+import { addToMenu, removeFromMenu, getMenu, getMenuRecipeIds, clearMenu, toggleComplete } from '#/menu/crud'
+import { recordCooked, undoCooked } from '#/recipes/cooking-stats'
+import { saveShoppingList, getShoppingList } from '#/shopping-list/crud'
+import { generateShoppingList } from '#/shopping-list/generate'
 import { authMiddleware } from '#/auth/middleware'
 
 export const fetchMenu = createServerFn({ method: 'GET' })
@@ -48,7 +50,15 @@ export const toggleRecipeComplete = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ recipeId: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
-    await toggleComplete(db, data.recipeId)
+    const result = await toggleComplete(db, data.recipeId)
+
+    if (result) {
+      if (result.completed) {
+        await recordCooked(db, result.recipeId)
+      } else {
+        await undoCooked(db, result.recipeId)
+      }
+    }
   })
 
 export const generateAndSaveShoppingList = createServerFn({ method: 'POST' })

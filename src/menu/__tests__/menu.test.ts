@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createTestDb, createTestRecipe } from '#/test-utils'
-import { addToMenu, getMenu, removeFromMenu, clearMenu, toggleComplete, saveShoppingList, getShoppingList } from '#/menu/crud'
-import { getRecipeById } from '#/recipes/crud'
+import { addToMenu, getMenu, removeFromMenu, clearMenu, toggleComplete } from '#/menu/crud'
 
 describe('weekly menu', () => {
   it('adds a recipe to the menu', async () => {
@@ -79,68 +78,36 @@ describe('weekly menu', () => {
     await expect(addToMenu(db, 9999)).rejects.toThrow()
   })
 
-  it('marks a recipe as cooked and updates cooking stats', async () => {
+  it('marks a menu item as completed', async () => {
     const db = createTestDb()
     const recipe = await createTestRecipe(db, { title: 'Pasta' })
     await addToMenu(db, recipe.id)
 
-    await toggleComplete(db, recipe.id)
+    const result = await toggleComplete(db, recipe.id)
 
+    expect(result).toEqual({ recipeId: recipe.id, completed: true })
     const menu = await getMenu(db)
     expect(menu[0].completedAt).toBeInstanceOf(Date)
-
-    const updated = await getRecipeById(db, recipe.id)
-    expect(updated!.cookCount).toBe(1)
-    expect(updated!.lastCookedAt).toBeInstanceOf(Date)
   })
 
-  it('unmarks a cooked recipe and decrements cook count', async () => {
+  it('unmarks a completed menu item', async () => {
     const db = createTestDb()
     const recipe = await createTestRecipe(db, { title: 'Pasta' })
     await addToMenu(db, recipe.id)
 
     await toggleComplete(db, recipe.id)
-    await toggleComplete(db, recipe.id)
+    const result = await toggleComplete(db, recipe.id)
 
+    expect(result).toEqual({ recipeId: recipe.id, completed: false })
     const menu = await getMenu(db)
     expect(menu[0].completedAt).toBeNull()
-
-    const updated = await getRecipeById(db, recipe.id)
-    expect(updated!.cookCount).toBe(0)
   })
 
-  it('saves and retrieves a shopping list', async () => {
-    const db = createTestDb()
-    const content = '## Mejeri\n- 3 dl grädde\n- 2 dl mjölk'
-
-    await saveShoppingList(db, content)
-    const result = await getShoppingList(db)
-
-    expect(result).toBe(content)
-  })
-
-  it('replaces previous shopping list on save', async () => {
+  it('returns undefined when toggling a recipe not in the menu', async () => {
     const db = createTestDb()
 
-    await saveShoppingList(db, 'old list')
-    await saveShoppingList(db, 'new list')
-    const result = await getShoppingList(db)
+    const result = await toggleComplete(db, 9999)
 
-    expect(result).toBe('new list')
-  })
-
-  it('does not decrement cook count below zero', async () => {
-    const db = createTestDb()
-    const recipe = await createTestRecipe(db, { title: 'Pasta' })
-    await addToMenu(db, recipe.id)
-
-    // Complete then uncomplete twice
-    await toggleComplete(db, recipe.id)
-    await toggleComplete(db, recipe.id)
-    await toggleComplete(db, recipe.id)
-    await toggleComplete(db, recipe.id)
-
-    const updated = await getRecipeById(db, recipe.id)
-    expect(updated!.cookCount).toBe(0)
+    expect(result).toBeUndefined()
   })
 })
