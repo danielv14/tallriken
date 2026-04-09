@@ -1,31 +1,7 @@
 import { and, asc, desc, eq, gt, inArray, isNotNull, like, lte, or } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
-
-type IngredientGroup = { group: string | null; items: string[] }
-
-type CreateRecipeInput = {
-  title: string
-  description?: string
-  ingredients: IngredientGroup[]
-  steps?: string[]
-  cookingTimeMinutes?: number
-  servings?: number
-  sourceUrl?: string
-  imageUrl?: string
-  tagIds: number[]
-}
-
-type UpdateRecipeInput = {
-  title: string
-  description?: string
-  ingredients: IngredientGroup[]
-  steps?: string[]
-  cookingTimeMinutes?: number
-  servings?: number
-  imageUrl?: string
-  tagIds: number[]
-}
+import type { RecipeInput } from '#/recipes/recipe'
 
 type SearchFilters = {
   query?: string
@@ -33,7 +9,7 @@ type SearchFilters = {
   maxCookingTimeMinutes?: number
 }
 
-export const createRecipe = async (db: Database, input: CreateRecipeInput) => {
+export const createRecipe = async (db: Database, input: RecipeInput) => {
   const result = await db
     .insert(schema.recipesTable)
     .values({
@@ -63,7 +39,7 @@ export const createRecipe = async (db: Database, input: CreateRecipeInput) => {
   return recipe
 }
 
-export const updateRecipe = async (db: Database, id: number, input: UpdateRecipeInput) => {
+export const updateRecipe = async (db: Database, id: number, input: RecipeInput) => {
   const result = await db
     .update(schema.recipesTable)
     .set({

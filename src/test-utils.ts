@@ -5,8 +5,7 @@ import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import * as schema from '#/db/schema'
 import { createTag } from '#/tags/crud'
 import { createRecipe } from '#/recipes/crud'
-
-type IngredientGroup = { group: string | null; items: string[] }
+import type { IngredientGroup } from '#/recipes/recipe'
 
 export const createTestDb = () => {
   const sqlite = new BetterSqlite3(':memory:')

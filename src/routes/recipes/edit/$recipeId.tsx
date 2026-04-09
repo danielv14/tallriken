@@ -4,7 +4,7 @@ import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, editRecipe } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
-import { Recipe } from '#/recipes/types'
+import { Recipe } from '#/recipes/recipe'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/edit/$recipeId')({
