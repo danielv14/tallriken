@@ -5,9 +5,9 @@ import { Textarea } from '#/components/ui/textarea'
 import { PlusIcon, XMarkIcon, SparklesIcon, PhotoIcon } from '@heroicons/react/24/outline'
 import { generateImageFromDetails, uploadRecipeImage } from '#/images/server'
 
-import { type RecipeFormData, type IngredientGroupFormData, EMPTY_FORM_DATA } from '#/recipes/form-utils'
+import type { RecipeFormData, IngredientGroupFormData } from '#/recipes/form-utils'
+import { Recipe } from '#/recipes/types'
 export type { RecipeFormData } from '#/recipes/form-utils'
-export { EMPTY_FORM_DATA as EMPTY_FORM } from '#/recipes/form-utils'
 
 type RecipeFormProps = {
   initialData?: RecipeFormData
@@ -19,7 +19,7 @@ type RecipeFormProps = {
 }
 
 const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel, onCancel }: RecipeFormProps) => {
-  const [form, setForm] = useState<RecipeFormData>(initialData ?? EMPTY_FORM_DATA)
+  const [form, setForm] = useState<RecipeFormData>(initialData ?? Recipe.empty())
   const [imageUrl, setImageUrl] = useState<string | undefined>(initialImageUrl)
   const [generatingImage, setGeneratingImage] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)

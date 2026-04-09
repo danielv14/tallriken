@@ -4,8 +4,7 @@ import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllTags } from '#/tags/server'
 import { saveRecipe } from '#/recipes/server'
 import { extractRecipeFromUrl, extractRecipeFromPhotos } from '#/import/server'
-import { recipeToFormData } from '#/recipes/form-utils'
-import { formDataToRecipeInput, draftToFormData } from '#/recipes/form-utils'
+import { Recipe } from '#/recipes/types'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
@@ -50,7 +49,7 @@ function ImportPage() {
     try {
       const result = await extractRecipeFromUrl({ data: { url: url.trim() } })
       setImportMeta({ sourceUrl: result.sourceUrl, imageUrl: result.imageUrl ?? undefined })
-      setPreviewData(draftToFormData(result))
+      setPreviewData(Recipe.fromDraft(result))
     } catch (err) {
       console.error('URL extract failed:', err)
       setError('Kunde inte hämta recept från den angivna URL:en. Prova att lägga till manuellt istället.')
@@ -64,7 +63,7 @@ function ImportPage() {
     setSaving(true)
     setError(null)
     try {
-      await saveRecipe({ data: { ...formDataToRecipeInput(previewData), ...importMeta } })
+      await saveRecipe({ data: { ...Recipe.fromForm(previewData), ...importMeta } })
       navigate({ to: '/' })
     } catch (err) {
       console.error('Save recipe failed:', err)
@@ -254,7 +253,7 @@ const PhotoImport = ({ onExtracted, onError }: PhotoImportProps) => {
 
       const result = await extractRecipeFromPhotos({ data: { images } })
 
-      onExtracted(draftToFormData(result))
+      onExtracted(Recipe.fromDraft(result))
     } catch (err) {
       console.error('Photo extract failed:', err)
       onError('Kunde inte extrahera recept från bilderna. Försök med tydligare bilder eller lägg till manuellt.')
