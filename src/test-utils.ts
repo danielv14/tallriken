@@ -1,5 +1,7 @@
+import { resolve } from 'path'
 import BetterSqlite3 from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import * as schema from '#/db/schema'
 import { createTag } from '#/tags/crud'
 import { createRecipe } from '#/recipes/crud'
@@ -8,43 +10,9 @@ type IngredientGroup = { group: string | null; items: string[] }
 
 export const createTestDb = () => {
   const sqlite = new BetterSqlite3(':memory:')
-  sqlite.exec(`
-    CREATE TABLE tags (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE recipes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      description TEXT,
-      ingredients TEXT NOT NULL,
-      steps TEXT,
-      cooking_time_minutes INTEGER,
-      servings INTEGER,
-      source_url TEXT,
-      image_url TEXT,
-      last_cooked_at INTEGER,
-      cook_count INTEGER NOT NULL DEFAULT 0,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE recipe_tags (
-      recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
-      tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE
-    );
-    CREATE TABLE shopping_lists (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      content TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE weekly_menu_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
-      added_at INTEGER NOT NULL,
-      completed_at INTEGER
-    );
-  `)
-  return drizzle(sqlite, { schema })
+  const db = drizzle(sqlite, { schema })
+  migrate(db, { migrationsFolder: resolve(__dirname, '../drizzle') })
+  return db
 }
 
 export const createTestTag = async (db: ReturnType<typeof createTestDb>, name: string) => {
