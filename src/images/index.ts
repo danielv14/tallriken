@@ -4,16 +4,12 @@ import type { Database } from '#/db/types'
 import { putToR2, deleteFromR2, keyToUrl, urlToKey } from '#/images/_r2'
 import { generateRecipeImage } from '#/images/_generate'
 
-// -- Key generation --
-
 const makeKey = {
   forRecipe: (recipeId: number, ext: string) =>
     `recipes/${recipeId}-${Date.now()}.${ext}`,
   forPreview: (ext: string) => `recipes/preview-${Date.now()}.${ext}`,
   forImport: (ext: string) => `recipes/imported-${Date.now()}.${ext}`,
 }
-
-// -- Private helpers --
 
 const extFromMime = (mimeType: string): string =>
   mimeType.includes('png') ? 'png' : 'jpg'
@@ -62,8 +58,6 @@ const getRecipeOrThrow = async (db: Database, recipeId: number) => {
   return recipes[0]
 }
 
-// -- Pattern A: existing recipe, updates DB row --
-
 export const generateImageForRecipe = async (
   db: Database,
   recipeId: number,
@@ -99,8 +93,6 @@ export const uploadImageForRecipe = async (
   return { imageUrl }
 }
 
-// -- Pattern B: recipe form, returns URL only --
-
 export const generateImagePreview = async (
   title: string,
   description: string | null,
@@ -121,8 +113,6 @@ export const uploadImagePreview = async (
   await putToR2(key, data, mimeType)
   return { imageUrl: keyToUrl(key) }
 }
-
-// -- Pattern C: import pipeline --
 
 export const downloadAndStoreImage = async (
   externalUrl: string,

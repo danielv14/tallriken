@@ -56,8 +56,6 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
   </span>
 )
 
-// --- Tab components ---
-
 type TabButtonProps = {
   label: string
   active: boolean
@@ -65,7 +63,7 @@ type TabButtonProps = {
   onClick: () => void
 }
 
-const TabButton = ({ label, active, hasError, onClick }: TabButtonProps) => (
+export const TabButton = ({ label, active, hasError, onClick }: TabButtonProps) => (
   <button
     type="button"
     onClick={onClick}
@@ -81,8 +79,6 @@ const TabButton = ({ label, active, hasError, onClick }: TabButtonProps) => (
     )}
   </button>
 )
-
-// --- Main form component ---
 
 const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel, onCancel }: RecipeFormProps) => {
   const [imageUrl, setImageUrl] = useState<string | undefined>(initialImageUrl)

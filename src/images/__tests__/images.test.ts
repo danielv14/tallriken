@@ -36,7 +36,6 @@ describe('generateImageForRecipe', () => {
   it('deletes old image, stores new one, and updates DB row', async () => {
     const db = createTestDb()
     const recipe = await createTestRecipe(db)
-    // Manually set an existing imageUrl
     await db
       .update(schema.recipesTable)
       .set({ imageUrl: '/api/images/recipes/old-123.png' })
@@ -53,7 +52,6 @@ describe('generateImageForRecipe', () => {
       'fake-key',
     )
 
-    // Verify DB was updated
     const updated = await db
       .select()
       .from(schema.recipesTable)

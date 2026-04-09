@@ -2,8 +2,6 @@ import { z } from 'zod'
 import type { recipesTable } from '#/db/schema'
 import type { RecipeDraft } from '#/import/schema'
 
-// ── Types ──────────────────────────────────────────────────────────
-
 export type IngredientGroup = {
   group: string | null
   items: string[]
@@ -39,8 +37,6 @@ export type RecipeFormData = {
 export type DbRecipe = typeof recipesTable.$inferSelect & {
   tags: { id: number; name: string }[]
 }
-
-// ── Schemas ────────────────────────────────────────────────────────
 
 const ingredientGroupSchema = z.object({
   group: z.string().nullable(),
@@ -91,8 +87,6 @@ export const recipeFormSchema = z.object({
   tagIds: z.array(z.number()),
 })
 
-// ── Converters ─────────────────────────────────────────────────────
-
 type NullableRecipeCore = {
   title: string
   description: string | null
@@ -110,12 +104,10 @@ type RecipeWithTags = NullableRecipeCore & {
 
 const nullableToForm = (source: NullableRecipeFields): RecipeFormData => {
   const ingredientGroups: IngredientGroupFormData[] =
-    source.ingredients.length > 0
-      ? source.ingredients.map((g) => ({
-          group: g.group ?? '',
-          items: g.items.length > 0 ? g.items : [''],
-        }))
-      : [{ group: '', items: [''] }]
+    source.ingredients.map((g) => ({
+      group: g.group ?? '',
+      items: g.items.length > 0 ? g.items : [''],
+    }))
 
   return {
     title: source.title,

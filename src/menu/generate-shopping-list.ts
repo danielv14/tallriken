@@ -45,5 +45,5 @@ export const generateShoppingList = async (
     temperature: 0.3,
   })
 
-  return response.choices[0]?.message?.content ?? ''
+  return response.choices[0].message.content ?? ''
 }

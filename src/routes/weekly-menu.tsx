@@ -37,8 +37,6 @@ export const Route = createFileRoute('/weekly-menu')({
   component: WeeklyMenuPage,
 })
 
-// --- Sub-components ---
-
 type ShoppingListSectionProps = {
   shoppingList: string | null
   shoppingListOpen: boolean
@@ -125,8 +123,6 @@ const ShoppingListSection = ({
   )
 }
 
-// --- Page component ---
-
 function WeeklyMenuPage() {
   const { menu: initialMenu, savedShoppingList } = Route.useLoaderData()
   const [menu, setMenu] = useState(initialMenu)
@@ -134,15 +130,17 @@ function WeeklyMenuPage() {
   const [shoppingList, setShoppingList] = useState<string | null>(savedShoppingList)
   const [shoppingListOpen, setShoppingListOpen] = useState(!savedShoppingList)
   const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleGenerateShoppingList = async () => {
     setGenerating(true)
+    setError(null)
     try {
       const content = await generateAndSaveShoppingList()
       setShoppingList(content)
       setShoppingListOpen(true)
-    } catch (err) {
-      console.error('Failed to generate shopping list:', err)
+    } catch {
+      setError('Kunde inte generera inköpslistan. Försök igen.')
     } finally {
       setGenerating(false)
     }
@@ -194,7 +192,8 @@ function WeeklyMenuPage() {
           )}
         </div>
 
-        {/* Shopping list */}
+        {error && <div className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
+
         {menu.length > 0 && (
           <ShoppingListSection
             shoppingList={shoppingList}

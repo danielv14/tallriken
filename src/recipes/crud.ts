@@ -54,7 +54,6 @@ export const updateRecipe = async (db: Database, id: number, input: RecipeInput)
     .where(eq(schema.recipesTable.id, id))
     .returning()
 
-  // Replace tag associations
   await db.delete(schema.recipeTagsTable).where(eq(schema.recipeTagsTable.recipeId, id))
   if (input.tagIds.length > 0) {
     await db.insert(schema.recipeTagsTable).values(
@@ -69,7 +68,6 @@ export const updateRecipe = async (db: Database, id: number, input: RecipeInput)
 }
 
 export const deleteRecipe = async (db: Database, id: number) => {
-  await db.delete(schema.recipeTagsTable).where(eq(schema.recipeTagsTable.recipeId, id))
   await db.delete(schema.recipesTable).where(eq(schema.recipesTable.id, id))
 }
 
@@ -147,7 +145,6 @@ export const getRecipeById = async (db: Database, id: number) => {
   return { ...recipe, tags: tagRows }
 }
 
-// Shared helper to attach tags to a list of recipes
 const attachTags = async (db: Database, recipes: (typeof schema.recipesTable.$inferSelect)[]) => {
   if (recipes.length === 0) return []
 

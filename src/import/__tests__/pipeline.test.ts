@@ -175,10 +175,8 @@ describe("importRecipe", () => {
       }),
     );
 
-    // JSON-LD was used for the recipe itself
     expect(result.extraction).toBe("json-ld");
     expect(result.draft.title).toBe("Pannkakor");
-    // But AI was called once for tag classification
     expect(aiCallCount).toBe(1);
     expect(result.tagIds).toEqual([fisk.id]);
   });

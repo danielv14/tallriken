@@ -49,12 +49,13 @@ export const generateAndSaveShoppingList = createServerFn({ method: 'POST' }).ha
     throw new Error('Inga recept i menyn')
   }
 
-  const recipesWithIngredients = menu.map((item) => ({
-    title: item.recipe.title,
-    ingredients: item.recipe.ingredients,
-  }))
-
-  const content = await generateShoppingList(recipesWithIngredients, env.OPENAI_API_KEY)
+  const content = await generateShoppingList(
+    menu.map((item) => ({
+      title: item.recipe.title,
+      ingredients: item.recipe.ingredients,
+    })),
+    env.OPENAI_API_KEY,
+  )
   await saveShoppingList(db, content)
   return content
 })
