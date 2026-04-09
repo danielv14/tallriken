@@ -17,11 +17,6 @@ const TOOL_LABELS: Record<string, string> = {
   add_to_weekly_menu: 'Lägger till i veckomenyn...',
 }
 
-const getToolLabel = (toolName: string): string => {
-  return TOOL_LABELS[toolName] ?? 'Arbetar...'
-}
-
-// --- Sub-components ---
 
 type ChatMessageProps = {
   message: {
@@ -45,20 +40,18 @@ const ChatMessage = ({ message, isLoading, copiedId, onCopy }: ChatMessageProps)
   const toolCallParts = message.parts.filter((p) => p.type === 'tool-call')
   const hasOnlyToolParts = textContent === '' && toolCallParts.length > 0
 
-  // Show tool call status only while loading, hide when done
   if (isAssistant && hasOnlyToolParts) {
     if (!isLoading) return null
     const lastToolCall = toolCallParts[toolCallParts.length - 1]
     return (
       <div className="mb-4">
         <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm text-gray-400">
-          {getToolLabel(lastToolCall.name ?? '')}
+          {TOOL_LABELS[lastToolCall.name ?? ''] ?? 'Arbetar...'}
         </div>
       </div>
     )
   }
 
-  // Skip assistant messages with no content at all
   if (isAssistant && textContent === '') {
     return null
   }
@@ -73,8 +66,8 @@ const ChatMessage = ({ message, isLoading, copiedId, onCopy }: ChatMessageProps)
         }`}
       >
         {textParts.map((part, idx) => {
-          const rawContent = 'content' in part ? part.content : ''
-          const content = stripContextPrefix(rawContent ?? '')
+          const rawContent = 'content' in part ? part.content ?? '' : ''
+          const content = stripContextPrefix(rawContent)
           if (!content) return null
           return isAssistant ? (
             <Markdown key={idx} content={content} />
@@ -105,8 +98,6 @@ const ChatMessage = ({ message, isLoading, copiedId, onCopy }: ChatMessageProps)
   )
 }
 
-// --- Main component ---
-
 const ChatPanel = () => {
   const { isOpen, close, pageContext } = useChatStore()
   const [input, setInput] = useState('')
@@ -121,17 +112,13 @@ const ChatPanel = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const buildMessageWithContext = (text: string): string => {
-    if (pageContext.type === 'recipe') {
-      return `[KONTEXT: Användaren tittar på receptet "${pageContext.recipeTitle}" (ID: ${pageContext.recipeId}, URL: /recipes/${pageContext.recipeId})]\n${text}`
-    }
-    return text
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim() && !isLoading) {
-      sendMessage(buildMessageWithContext(input))
+      const message = pageContext.type === 'recipe'
+        ? `[KONTEXT: Användaren tittar på receptet "${pageContext.recipeTitle}" (ID: ${pageContext.recipeId}, URL: /recipes/${pageContext.recipeId})]\n${input}`
+        : input
+      sendMessage(message)
       setInput('')
     }
   }

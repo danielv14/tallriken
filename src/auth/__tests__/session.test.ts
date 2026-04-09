@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { describe, it, expect } from 'vitest'
 import { createSessionToken, validateSessionToken, verifyPassword } from '#/auth/session'
 
@@ -40,8 +41,6 @@ describe('validateSessionToken', () => {
   })
 
   it('returns false for an expired token', () => {
-    // Manually craft an expired token
-    const crypto = require('node:crypto')
     const expiredTimestamp = `${Date.now() - 1000}`
     const signature = crypto.createHmac('sha256', TEST_SECRET).update(expiredTimestamp).digest('hex')
     const expiredToken = `${expiredTimestamp}.${signature}`
