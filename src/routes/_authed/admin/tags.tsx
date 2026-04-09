@@ -13,6 +13,7 @@ import {
 
 export const Route = createFileRoute('/_authed/admin/tags')({
   loader: () => fetchAllTags(),
+  head: () => ({ meta: [{ title: 'Taggar | Tallriken' }] }),
   component: TagsAdminPage,
 })
 

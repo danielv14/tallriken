@@ -27,6 +27,7 @@ export const Route = createFileRoute('/_authed/weekly-menu')({
     ])
     return { menu, savedShoppingList }
   },
+  head: () => ({ meta: [{ title: 'Veckans meny | Tallriken' }] }),
   component: WeeklyMenuPage,
 })
 
