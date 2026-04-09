@@ -158,13 +158,13 @@ function RecipeDetailPage() {
             )}
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {recipe.cookingTimeMinutes && (
-                <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                <span className="flex items-center gap-1.5 text-sm tabular-nums text-gray-500">
                   <ClockIcon className="h-4 w-4 text-gray-400" />
                   {recipe.cookingTimeMinutes} min
                 </span>
               )}
               {recipe.servings && (
-                <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                <span className="flex items-center gap-1.5 text-sm tabular-nums text-gray-500">
                   <UsersIcon className="h-4 w-4 text-gray-400" />
                   {recipe.servings} portioner
                 </span>
@@ -247,7 +247,7 @@ function RecipeDetailPage() {
                 <ol className="mt-3 space-y-4">
                   {recipe.steps.map((step, i) => (
                     <li key={i} className="flex gap-3">
-                      <span className="shrink-0 text-sm font-bold text-plum-600">
+                      <span className="shrink-0 text-sm font-bold tabular-nums text-plum-600">
                         {i + 1}.
                       </span>
                       <p className="text-base leading-relaxed text-gray-700">{step}</p>

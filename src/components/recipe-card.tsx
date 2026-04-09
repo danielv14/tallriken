@@ -53,13 +53,13 @@ const RecipeCard = ({ recipe, isInMenu, onToggleMenu }: RecipeCardProps) => {
         )}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {recipe.cookingTimeMinutes && (
-            <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="flex items-center gap-1 text-xs tabular-nums text-gray-400">
               <ClockIcon className="h-3.5 w-3.5" />
               {recipe.cookingTimeMinutes} min
             </span>
           )}
           {recipe.servings && (
-            <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="flex items-center gap-1 text-xs tabular-nums text-gray-400">
               <UsersIcon className="h-3.5 w-3.5" />
               {recipe.servings} portioner
             </span>
