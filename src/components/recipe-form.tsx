@@ -238,8 +238,8 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
               {stepsField.state.value.map((_, index) => (
                 <div key={index} className="flex gap-2">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-plum-600 text-[11px] font-bold text-white">
-                      {index + 1}
+                    <span className="shrink-0 text-sm font-bold text-plum-600">
+                      {index + 1}.
                     </span>
                     <form.Field
                       name={`steps[${index}]`}
