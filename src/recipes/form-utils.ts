@@ -44,7 +44,11 @@ export const recipeFormSchema = z.object({
       (groups) => groups.some((g) => g.items.some((item) => item.trim().length > 0)),
       { message: 'Minst en ingrediens krävs' },
     ),
-  steps: z.array(z.string()),
+  steps: z
+    .array(z.string())
+    .refine((steps) => steps.some((s) => s.trim().length > 0), {
+      message: 'Minst ett steg krävs',
+    }),
   cookingTimeMinutes: z
     .string()
     .refine((v) => v === '' || (/^\d+$/.test(v) && parseInt(v, 10) > 0), {

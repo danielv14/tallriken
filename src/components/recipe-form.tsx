@@ -230,7 +230,10 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
         mode="array"
         children={(stepsField) => (
           <div>
-            <span className="text-sm font-semibold text-gray-700">Steg</span>
+            <RequiredLabel>Steg</RequiredLabel>
+            {hasFieldError(stepsField) && (
+              <FieldError field={stepsField} />
+            )}
             <div className="mt-2 space-y-2">
               {stepsField.state.value.map((_, index) => (
                 <div key={index} className="flex gap-2">
