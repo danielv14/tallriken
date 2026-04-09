@@ -44,8 +44,6 @@ export const Route = createFileRoute('/')({
   component: HomePage,
 })
 
-// --- Sub-components ---
-
 type CookingInsightsProps = {
   favorites: { id: number; title: string; cookCount: number }[]
   stale: { id: number; title: string; lastCookedAt: Date | null }[]
@@ -105,8 +103,6 @@ const CookingInsights = ({ favorites, stale }: CookingInsightsProps) => {
     </div>
   )
 }
-
-// --- Page component ---
 
 function HomePage() {
   const { recipes: initialRecipes, tags, menuRecipeIds: initialMenuIds, favorites, stale } = Route.useLoaderData()

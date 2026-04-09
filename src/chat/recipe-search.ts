@@ -23,17 +23,10 @@ type SearchFilters = {
 
 export const createRecipeSearch = (db: Database) => ({
   search: async (query: string, filters?: SearchFilters): Promise<CompactRecipeResult[]> => {
-    // Step 1: Resolve explicit tag filters
     const explicitTagIds = await resolveTagNames(db, filters?.tags)
-
-    // Step 2: Fuzzy-match query against tag names
     const fuzzyTagIds = query ? await fuzzyMatchTags(db, query) : []
-
-    // Step 3: Merge tag IDs
     const allTagIds = [...new Set([...explicitTagIds, ...fuzzyTagIds])]
 
-    // Step 4: Search with two strategies and merge results
-    // Strategy A: text search (query against title/description/ingredients)
     const textResults = query
       ? await searchRecipes(db, {
           query,
@@ -41,7 +34,6 @@ export const createRecipeSearch = (db: Database) => ({
         })
       : []
 
-    // Strategy B: tag search (fuzzy-matched tags)
     const tagResults = allTagIds.length > 0
       ? await searchRecipes(db, {
           tagIds: allTagIds,
@@ -49,7 +41,6 @@ export const createRecipeSearch = (db: Database) => ({
         })
       : []
 
-    // If no query and no tags, return all
     if (!query && allTagIds.length === 0) {
       const all = await searchRecipes(db, {
         maxCookingTimeMinutes: filters?.maxCookingTimeMinutes,
@@ -57,7 +48,6 @@ export const createRecipeSearch = (db: Database) => ({
       return all.map(formatResult)
     }
 
-    // Merge and deduplicate
     const seen = new Set<number>()
     const merged = [...tagResults, ...textResults].filter((r) => {
       if (seen.has(r.id)) return false

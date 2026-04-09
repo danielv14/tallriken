@@ -99,7 +99,6 @@ function RecipeDetailPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Compact header */}
       <nav className="border-b border-gray-100 bg-white">
         <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
@@ -111,7 +110,6 @@ function RecipeDetailPage() {
 
       <main className="mx-auto max-w-4xl px-4 py-8">
         <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
-          {/* Recipe image */}
           <ImagePicker
             imageUrl={currentImageUrl ?? undefined}
             onImageChange={(url) => setCurrentImageUrl(url ?? null)}
@@ -121,7 +119,6 @@ function RecipeDetailPage() {
           />
 
           <div className="p-6">
-          {/* Title & meta */}
           <div>
             <div className="flex items-start gap-2">
               <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{recipe.title}</h1>
@@ -196,7 +193,6 @@ function RecipeDetailPage() {
 
           <hr className="my-6 border-gray-100" />
 
-          {/* Ingredients */}
           <section>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wide text-gray-400">Ingredienser</h2>
@@ -236,7 +232,6 @@ function RecipeDetailPage() {
             </div>
           </section>
 
-          {/* Steps */}
           {recipe.steps && recipe.steps.length > 0 && (
             <>
               <hr className="my-6 border-gray-100" />
