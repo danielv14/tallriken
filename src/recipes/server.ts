@@ -2,23 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
 import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
-
-const ingredientGroupSchema = z.object({
-  group: z.string().nullable(),
-  items: z.array(z.string().min(1)).min(1),
-})
-
-const recipeInputSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().optional(),
-  ingredients: z.array(ingredientGroupSchema).min(1),
-  steps: z.array(z.string().min(1)).optional(),
-  cookingTimeMinutes: z.number().positive().optional(),
-  servings: z.number().positive().optional(),
-  tagIds: z.array(z.number()),
-  sourceUrl: z.string().optional(),
-  imageUrl: z.string().optional(),
-})
+import { recipeInputSchema } from '#/recipes/recipe'
 
 export const saveRecipe = createServerFn({ method: 'POST' })
   .inputValidator(recipeInputSchema)

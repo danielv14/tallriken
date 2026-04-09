@@ -6,12 +6,11 @@ import { Textarea } from '#/components/ui/textarea'
 import { ImagePicker } from '#/components/image-picker'
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { generateImageFromDetails, uploadRecipeImage } from '#/images/server'
-import { Recipe } from '#/recipes/types'
-import { recipeFormSchema } from '#/recipes/form-utils'
+import { Recipe, recipeFormSchema } from '#/recipes/recipe'
 
-import type { RecipeFormData } from '#/recipes/form-utils'
+import type { RecipeFormData } from '#/recipes/recipe'
 import type { AnyFieldApi } from '@tanstack/react-form'
-export type { RecipeFormData } from '#/recipes/form-utils'
+export type { RecipeFormData } from '#/recipes/recipe'
 
 type RecipeFormProps = {
   initialData?: RecipeFormData
