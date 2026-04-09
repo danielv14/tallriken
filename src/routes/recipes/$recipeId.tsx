@@ -4,6 +4,7 @@ import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
+import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
@@ -15,6 +16,7 @@ import {
   CheckIcon,
   SparklesIcon,
   PhotoIcon,
+  CalendarIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/$recipeId')({
@@ -25,17 +27,20 @@ export const Route = createFileRoute('/recipes/$recipeId')({
     }
   },
   loader: async ({ params }) => {
-    const recipe = await fetchRecipeById({ data: { id: parseInt(params.recipeId, 10) } })
+    const [recipe, menuRecipeIds] = await Promise.all([
+      fetchRecipeById({ data: { id: parseInt(params.recipeId, 10) } }),
+      fetchMenuRecipeIds(),
+    ])
     if (!recipe) {
       throw new Error('Receptet hittades inte')
     }
-    return recipe
+    return { recipe, menuRecipeIds }
   },
   component: RecipeDetailPage,
 })
 
 function RecipeDetailPage() {
-  const recipe = Route.useLoaderData()
+  const { recipe, menuRecipeIds } = Route.useLoaderData()
   const navigate = useNavigate()
   const setPageContext = useChatStore((s) => s.setPageContext)
   const [copied, setCopied] = useState(false)
@@ -43,6 +48,7 @@ function RecipeDetailPage() {
   const [generatingImage, setGeneratingImage] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState(recipe.imageUrl)
+  const [inMenu, setInMenu] = useState(menuRecipeIds.includes(recipe.id))
 
   useEffect(() => {
     setPageContext({ type: 'recipe', recipeId: recipe.id, recipeTitle: recipe.title })
@@ -91,6 +97,16 @@ function RecipeDetailPage() {
     }
   }
 
+  const handleToggleMenu = async () => {
+    if (inMenu) {
+      setInMenu(false)
+      await removeRecipeFromMenu({ data: { recipeId: recipe.id } })
+    } else {
+      setInMenu(true)
+      await addRecipeToMenu({ data: { recipeId: recipe.id } })
+    }
+  }
+
   const handleDelete = async () => {
     await removeRecipe({ data: { id: recipe.id } })
     navigate({ to: '/' })
@@ -106,6 +122,10 @@ function RecipeDetailPage() {
             Tillbaka
           </Link>
           <div className="flex gap-1">
+            <Button variant="ghost" size="sm" onClick={handleToggleMenu}>
+              <CalendarIcon className="mr-1 h-4 w-4" />
+              {inMenu ? 'I veckans meny' : 'Lägg till i menyn'}
+            </Button>
             <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
               <Button variant="ghost" size="sm">Redigera</Button>
             </Link>

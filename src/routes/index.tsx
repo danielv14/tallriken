@@ -4,12 +4,14 @@ import { useChatStore } from '#/chat/store'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllRecipes, findRecipes } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
+import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
 import { Input } from '#/components/ui/input'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
   ClockIcon,
   UsersIcon,
+  CalendarIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/')({
@@ -20,16 +22,21 @@ export const Route = createFileRoute('/')({
     }
   },
   loader: async () => {
-    const [recipes, tags] = await Promise.all([fetchAllRecipes(), fetchAllTags()])
-    return { recipes, tags }
+    const [recipes, tags, menuRecipeIds] = await Promise.all([
+      fetchAllRecipes(),
+      fetchAllTags(),
+      fetchMenuRecipeIds(),
+    ])
+    return { recipes, tags, menuRecipeIds }
   },
   component: HomePage,
 })
 
 function HomePage() {
-  const { recipes: initialRecipes, tags } = Route.useLoaderData()
+  const { recipes: initialRecipes, tags, menuRecipeIds: initialMenuIds } = Route.useLoaderData()
   const setPageContext = useChatStore((s) => s.setPageContext)
   const [recipes, setRecipes] = useState(initialRecipes)
+  const [menuRecipeIds, setMenuRecipeIds] = useState<number[]>(initialMenuIds)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [searching, setSearching] = useState(false)
@@ -63,6 +70,18 @@ function HomePage() {
     handleSearch(value, selectedTagIds)
   }
 
+  const handleToggleMenu = async (e: React.MouseEvent, recipeId: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (menuRecipeIds.includes(recipeId)) {
+      setMenuRecipeIds((prev) => prev.filter((id) => id !== recipeId))
+      await removeRecipeFromMenu({ data: { recipeId } })
+    } else {
+      setMenuRecipeIds((prev) => [...prev, recipeId])
+      await addRecipeToMenu({ data: { recipeId } })
+    }
+  }
+
   const toggleTag = (tagId: number) => {
     const newTagIds = selectedTagIds.includes(tagId)
       ? selectedTagIds.filter((id) => id !== tagId)
@@ -91,9 +110,14 @@ function HomePage() {
             </Link>
             <Link
               to="/weekly-menu"
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+              className="relative rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
             >
               Veckans meny
+              {menuRecipeIds.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-plum-600 text-[10px] font-bold text-white">
+                  {menuRecipeIds.length}
+                </span>
+              )}
             </Link>
             <Link
               to="/admin/tags"
@@ -179,7 +203,20 @@ function HomePage() {
                   />
                 )}
                 <div className="p-4">
-                <h2 className="font-bold text-gray-900 group-hover:text-plum-600">{recipe.title}</h2>
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="font-bold text-gray-900 group-hover:text-plum-600">{recipe.title}</h2>
+                  <button
+                    onClick={(e) => handleToggleMenu(e, recipe.id)}
+                    className={`shrink-0 rounded-lg p-1.5 transition ${
+                      menuRecipeIds.includes(recipe.id)
+                        ? 'text-plum-600 bg-plum-50'
+                        : 'text-gray-300 hover:text-plum-500 hover:bg-plum-50'
+                    }`}
+                    title={menuRecipeIds.includes(recipe.id) ? 'Ta bort från veckans meny' : 'Lägg till i veckans meny'}
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                  </button>
+                </div>
                 {recipe.description && (
                   <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-gray-500">{recipe.description}</p>
                 )}
