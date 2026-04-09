@@ -49,23 +49,10 @@ export const generateAndSaveShoppingList = createServerFn({ method: 'POST' }).ha
     throw new Error('Inga recept i menyn')
   }
 
-  const recipes = menu.map((item) => ({
+  const recipesWithIngredients = menu.map((item) => ({
     title: item.recipe.title,
-    ingredients: [] as Array<{ group: string | null; items: string[] }>,
+    ingredients: item.recipe.ingredients,
   }))
-
-  // getMenu doesn't return ingredients, so fetch full recipes
-  const { getAllRecipes } = await import('#/recipes/crud')
-  const allRecipes = await getAllRecipes(db)
-  const recipeMap = new Map(allRecipes.map((r) => [r.id, r]))
-
-  const recipesWithIngredients = menu.map((item) => {
-    const fullRecipe = recipeMap.get(item.recipe.id)
-    return {
-      title: item.recipe.title,
-      ingredients: fullRecipe?.ingredients ?? [],
-    }
-  })
 
   const content = await generateShoppingList(recipesWithIngredients, env.OPENAI_API_KEY)
   await saveShoppingList(db, content)

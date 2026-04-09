@@ -8,6 +8,7 @@ import { Recipe } from '#/recipes/types'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
+import { fileToBase64 } from '#/utils/file'
 import {
   ArrowLeftIcon,
   CameraIcon,
@@ -215,19 +216,6 @@ function ImportPage() {
 type PhotoImportProps = {
   onExtracted: (data: RecipeFormData) => void
   onError: (message: string) => void
-}
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      // Remove data:image/...;base64, prefix
-      resolve(result.split(',')[1])
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
 }
 
 const PhotoImport = ({ onExtracted, onError }: PhotoImportProps) => {

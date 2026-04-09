@@ -1,6 +1,8 @@
 import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
+import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
+import { fileToBase64 } from '#/utils/file'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
@@ -43,7 +45,7 @@ function RecipeDetailPage() {
   const { recipe, menuRecipeIds } = Route.useLoaderData()
   const navigate = useNavigate()
   const setPageContext = useChatStore((s) => s.setPageContext)
-  const [copied, setCopied] = useState(false)
+  const { copied, copy: copyToClipboard } = useCopyToClipboard()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [generatingImage, setGeneratingImage] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -62,9 +64,7 @@ function RecipeDetailPage() {
         return header + g.items.join('\n')
       })
       .join('\n\n')
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    await copyToClipboard(text)
   }
 
   const handleGenerateImage = async () => {
@@ -82,12 +82,7 @@ function RecipeDetailPage() {
   const handleUploadImage = async (file: File) => {
     setUploadingImage(true)
     try {
-      const reader = new FileReader()
-      const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve((reader.result as string).split(',')[1])
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      const base64 = await fileToBase64(file)
       const result = await uploadImageForRecipe({ data: { recipeId: recipe.id, base64, mimeType: file.type } })
       setCurrentImageUrl(result.imageUrl)
     } catch (err) {
