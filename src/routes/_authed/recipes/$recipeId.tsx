@@ -1,8 +1,7 @@
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
-import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
@@ -28,13 +27,7 @@ import {
   EllipsisVerticalIcon,
 } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/recipes/$recipeId')({
-  beforeLoad: async () => {
-    const isAuthenticated = await getIsAuthenticated()
-    if (!isAuthenticated) {
-      throw redirect({ to: '/login', search: { error: undefined } })
-    }
-  },
+export const Route = createFileRoute('/_authed/recipes/$recipeId')({
   loader: async ({ params }) => {
     const [recipe, menuRecipeIds] = await Promise.all([
       fetchRecipeById({ data: { id: parseInt(params.recipeId, 10) } }),

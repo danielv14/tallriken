@@ -1,6 +1,5 @@
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllTags } from '#/tags/server'
 import { saveRecipe } from '#/recipes/server'
 import { extractRecipeFromUrl, extractRecipeFromPhotos } from '#/import/server'
@@ -11,13 +10,7 @@ import { RecipeForm, TabButton, type RecipeFormData } from '#/components/recipe-
 import { fileToBase64 } from '#/utils/file'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/import')({
-  beforeLoad: async () => {
-    const isAuthenticated = await getIsAuthenticated()
-    if (!isAuthenticated) {
-      throw redirect({ to: '/login', search: { error: undefined } })
-    }
-  },
+export const Route = createFileRoute('/_authed/import')({
   loader: () => fetchAllTags(),
   component: ImportPage,
 })

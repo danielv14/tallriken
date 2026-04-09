@@ -3,8 +3,10 @@ import { importRecipe } from "#/import/pipeline";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
+import { authMiddleware } from "#/auth/middleware";
 
 export const extractRecipeFromUrl = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .inputValidator(z.object({ url: z.string().url() }))
   .handler(async ({ data }) => {
     const result = await importRecipe(
@@ -20,6 +22,7 @@ export const extractRecipeFromUrl = createServerFn({ method: "POST" })
   });
 
 export const extractRecipeFromPhotos = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .inputValidator(
     z.object({
       images: z

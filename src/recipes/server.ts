@@ -3,8 +3,10 @@ import { z } from 'zod'
 import { getDb } from '#/db/client'
 import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
 import { recipeInputSchema } from '#/recipes/recipe'
+import { authMiddleware } from '#/auth/middleware'
 
 export const saveRecipe = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
   .inputValidator(recipeInputSchema)
   .handler(async ({ data }) => {
     const db = getDb()
@@ -12,6 +14,7 @@ export const saveRecipe = createServerFn({ method: 'POST' })
   })
 
 export const editRecipe = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
   .inputValidator(recipeInputSchema.extend({ id: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
@@ -20,18 +23,22 @@ export const editRecipe = createServerFn({ method: 'POST' })
   })
 
 export const removeRecipe = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
     await deleteRecipe(db, data.id)
   })
 
-export const fetchAllRecipes = createServerFn({ method: 'GET' }).handler(async () => {
+export const fetchAllRecipes = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   return getAllRecipes(db)
 })
 
 export const fetchRecipeById = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
@@ -39,6 +46,7 @@ export const fetchRecipeById = createServerFn({ method: 'GET' })
   })
 
 export const findRecipes = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
   .inputValidator(
     z.object({
       query: z.string().optional(),
@@ -51,12 +59,16 @@ export const findRecipes = createServerFn({ method: 'GET' })
     return searchRecipes(db, data)
   })
 
-export const fetchFavoriteRecipes = createServerFn({ method: 'GET' }).handler(async () => {
+export const fetchFavoriteRecipes = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   return getFavoriteRecipes(db, 5)
 })
 
-export const fetchStaleRecipes = createServerFn({ method: 'GET' }).handler(async () => {
+export const fetchStaleRecipes = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   return getStaleRecipes(db, 5)
 })

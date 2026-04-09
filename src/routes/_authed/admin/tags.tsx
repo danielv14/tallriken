@@ -1,6 +1,5 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllTags, addTag, updateTagName, removeTag } from '#/tags/server'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -12,13 +11,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/admin/tags')({
-  beforeLoad: async () => {
-    const isAuthenticated = await getIsAuthenticated()
-    if (!isAuthenticated) {
-      throw redirect({ to: '/login', search: { error: undefined } })
-    }
-  },
+export const Route = createFileRoute('/_authed/admin/tags')({
   loader: () => fetchAllTags(),
   component: TagsAdminPage,
 })
