@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WeeklyMenuRouteImport } from './routes/weekly-menu'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 
+const WeeklyMenuRoute = WeeklyMenuRouteImport.update({
+  id: '/weekly-menu',
+  path: '/weekly-menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
+  '/weekly-menu': typeof WeeklyMenuRoute
   '/admin/tags': typeof AdminTagsRoute
   '/api/chat': typeof ApiChatRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
+  '/weekly-menu': typeof WeeklyMenuRoute
   '/admin/tags': typeof AdminTagsRoute
   '/api/chat': typeof ApiChatRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
+  '/weekly-menu': typeof WeeklyMenuRoute
   '/admin/tags': typeof AdminTagsRoute
   '/api/chat': typeof ApiChatRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/import'
     | '/login'
+    | '/weekly-menu'
     | '/admin/tags'
     | '/api/chat'
     | '/recipes/$recipeId'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/import'
     | '/login'
+    | '/weekly-menu'
     | '/admin/tags'
     | '/api/chat'
     | '/recipes/$recipeId'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/import'
     | '/login'
+    | '/weekly-menu'
     | '/admin/tags'
     | '/api/chat'
     | '/recipes/$recipeId'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRoute
+  WeeklyMenuRoute: typeof WeeklyMenuRoute
   AdminTagsRoute: typeof AdminTagsRoute
   ApiChatRoute: typeof ApiChatRoute
   RecipesRecipeIdRoute: typeof RecipesRecipeIdRoute
@@ -162,6 +175,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/weekly-menu': {
+      id: '/weekly-menu'
+      path: '/weekly-menu'
+      fullPath: '/weekly-menu'
+      preLoaderRoute: typeof WeeklyMenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ImportRoute: ImportRoute,
   LoginRoute: LoginRoute,
+  WeeklyMenuRoute: WeeklyMenuRoute,
   AdminTagsRoute: AdminTagsRoute,
   ApiChatRoute: ApiChatRoute,
   RecipesRecipeIdRoute: RecipesRecipeIdRoute,

@@ -15,6 +15,13 @@
       "when": 1775571352099,
       "tag": "0001_shallow_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1775715721707,
+      "tag": "0002_aspiring_gideon",
+      "breakpoints": true
     }
   ]
 }

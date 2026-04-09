@@ -90,6 +90,12 @@ function HomePage() {
               Importera
             </Link>
             <Link
+              to="/weekly-menu"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+            >
+              Veckans meny
+            </Link>
+            <Link
               to="/admin/tags"
               className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
             >

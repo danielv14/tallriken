@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm'
+import { inArray } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
 import { searchRecipes } from '#/recipes/crud'
