@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { getIsAuthenticated } from '#/auth/server'
-import { fetchMenu, removeRecipeFromMenu, clearAllMenu } from '#/menu/server'
+import { fetchMenu, removeRecipeFromMenu, clearAllMenu, toggleRecipeComplete } from '#/menu/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
@@ -10,7 +10,9 @@ import {
   ClockIcon,
   UsersIcon,
   CalendarIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
+import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid'
 
 export const Route = createFileRoute('/weekly-menu')({
   beforeLoad: async () => {
@@ -27,6 +29,17 @@ function WeeklyMenuPage() {
   const initialMenu = Route.useLoaderData()
   const [menu, setMenu] = useState(initialMenu)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+
+  const handleToggleComplete = async (recipeId: number) => {
+    setMenu((prev) =>
+      prev.map((item) =>
+        item.recipe.id === recipeId
+          ? { ...item, completedAt: item.completedAt ? null : new Date() }
+          : item,
+      ),
+    )
+    await toggleRecipeComplete({ data: { recipeId } })
+  }
 
   const handleRemove = async (recipeId: number) => {
     setMenu((prev) => prev.filter((item) => item.recipe.id !== recipeId))
@@ -78,49 +91,71 @@ function WeeklyMenuPage() {
           </div>
         ) : (
           <div className="mt-6 space-y-2">
-            {menu.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-4 rounded-xl bg-white p-4 ring-1 ring-gray-100"
-              >
-                {item.recipe.imageUrl && (
-                  <img
-                    src={item.recipe.imageUrl}
-                    alt={item.recipe.title}
-                    className="h-16 w-16 shrink-0 rounded-lg object-cover"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <Link
-                    to="/recipes/$recipeId"
-                    params={{ recipeId: String(item.recipe.id) }}
-                    className="font-bold text-gray-900 hover:text-plum-600 transition"
-                  >
-                    {item.recipe.title}
-                  </Link>
-                  <div className="mt-1 flex flex-wrap items-center gap-3">
-                    {item.recipe.cookingTimeMinutes && (
-                      <span className="flex items-center gap-1 text-xs text-gray-400">
-                        <ClockIcon className="h-3.5 w-3.5" />
-                        {item.recipe.cookingTimeMinutes} min
-                      </span>
-                    )}
-                    {item.recipe.servings && (
-                      <span className="flex items-center gap-1 text-xs text-gray-400">
-                        <UsersIcon className="h-3.5 w-3.5" />
-                        {item.recipe.servings} portioner
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleRemove(item.recipe.id)}
-                  className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+            {menu.map((item) => {
+              const isCooked = !!item.completedAt
+              return (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-4 rounded-xl bg-white p-4 ring-1 ring-gray-100 transition ${
+                    isCooked ? 'opacity-50' : ''
+                  }`}
                 >
-                  <TrashIcon className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+                  <button
+                    onClick={() => handleToggleComplete(item.recipe.id)}
+                    className={`shrink-0 transition ${
+                      isCooked ? 'text-green-500' : 'text-gray-300 hover:text-green-400'
+                    }`}
+                    title={isCooked ? 'Markera som ej tillagad' : 'Markera som tillagad'}
+                  >
+                    {isCooked ? (
+                      <CheckCircleIconSolid className="h-6 w-6" />
+                    ) : (
+                      <CheckCircleIcon className="h-6 w-6" />
+                    )}
+                  </button>
+                  {item.recipe.imageUrl && (
+                    <img
+                      src={item.recipe.imageUrl}
+                      alt={item.recipe.title}
+                      className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to="/recipes/$recipeId"
+                      params={{ recipeId: String(item.recipe.id) }}
+                      className={`font-bold transition ${
+                        isCooked
+                          ? 'text-gray-400 line-through'
+                          : 'text-gray-900 hover:text-plum-600'
+                      }`}
+                    >
+                      {item.recipe.title}
+                    </Link>
+                    <div className="mt-1 flex flex-wrap items-center gap-3">
+                      {item.recipe.cookingTimeMinutes && (
+                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                          <ClockIcon className="h-3.5 w-3.5" />
+                          {item.recipe.cookingTimeMinutes} min
+                        </span>
+                      )}
+                      {item.recipe.servings && (
+                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                          <UsersIcon className="h-3.5 w-3.5" />
+                          {item.recipe.servings} portioner
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRemove(item.recipe.id)}
+                    className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              )
+            })}
           </div>
         )}
 

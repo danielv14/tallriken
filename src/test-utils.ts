@@ -24,6 +24,8 @@ export const createTestDb = () => {
       servings INTEGER,
       source_url TEXT,
       image_url TEXT,
+      last_cooked_at INTEGER,
+      cook_count INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL
     );
     CREATE TABLE recipe_tags (
@@ -33,7 +35,8 @@ export const createTestDb = () => {
     CREATE TABLE weekly_menu_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
-      added_at INTEGER NOT NULL
+      added_at INTEGER NOT NULL,
+      completed_at INTEGER
     );
   `)
   return drizzle(sqlite, { schema })
