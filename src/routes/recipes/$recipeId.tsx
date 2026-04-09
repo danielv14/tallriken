@@ -117,7 +117,42 @@ function RecipeDetailPage() {
           <div className="p-6">
           {/* Title & meta */}
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{recipe.title}</h1>
+            <div className="flex items-start gap-2">
+              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{recipe.title}</h1>
+              <Menu.Root>
+                <Menu.Trigger className="mt-1 shrink-0 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
+                  <EllipsisVerticalIcon className="h-5 w-5" />
+                </Menu.Trigger>
+                <Menu.Portal>
+                  <Menu.Positioner className="z-50" sideOffset={4}>
+                    <Menu.Popup className="min-w-48 rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200">
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                        onClick={handleToggleMenu}
+                      >
+                        <CalendarIcon className="h-4 w-4 text-gray-400" />
+                        {inMenu ? 'Ta bort från veckomenyn' : 'Lägg till i veckomenyn'}
+                      </Menu.Item>
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                        onClick={() => navigate({ to: '/recipes/edit/$recipeId', params: { recipeId: String(recipe.id) } })}
+                      >
+                        <PencilSquareIcon className="h-4 w-4 text-gray-400" />
+                        Redigera
+                      </Menu.Item>
+                      <Menu.Separator className="my-1 border-t border-gray-100" />
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-red-600 data-highlighted:bg-red-50"
+                        onClick={() => setShowDeleteDialog(true)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                        Ta bort
+                      </Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            </div>
             {recipe.description && (
               <p className="mt-2 leading-relaxed text-gray-500">{recipe.description}</p>
             )}
@@ -159,42 +194,6 @@ function RecipeDetailPage() {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="mt-4 flex justify-end">
-              <Menu.Root>
-                <Menu.Trigger className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
-                  <EllipsisVerticalIcon className="h-5 w-5" />
-                </Menu.Trigger>
-                <Menu.Portal>
-                  <Menu.Positioner className="z-50" sideOffset={4}>
-                    <Menu.Popup className="min-w-48 rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200">
-                      <Menu.Item
-                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
-                        onClick={handleToggleMenu}
-                      >
-                        <CalendarIcon className="h-4 w-4 text-gray-400" />
-                        {inMenu ? 'Ta bort från veckomenyn' : 'Lägg till i veckomenyn'}
-                      </Menu.Item>
-                      <Menu.Item
-                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
-                        onClick={() => navigate({ to: '/recipes/edit/$recipeId', params: { recipeId: String(recipe.id) } })}
-                      >
-                        <PencilSquareIcon className="h-4 w-4 text-gray-400" />
-                        Redigera
-                      </Menu.Item>
-                      <Menu.Separator className="my-1 border-t border-gray-100" />
-                      <Menu.Item
-                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-red-600 data-highlighted:bg-red-50"
-                        onClick={() => setShowDeleteDialog(true)}
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                        Ta bort
-                      </Menu.Item>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.Root>
-            </div>
           </div>
 
           <hr className="my-6 border-gray-100" />
