@@ -42,6 +42,14 @@ function HomePage() {
   const [menuRecipeIds, setMenuRecipeIds] = useState<number[]>(initialMenuIds)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
+
+  useEffect(() => {
+    setRecipes(initialRecipes)
+  }, [initialRecipes])
+
+  useEffect(() => {
+    setMenuRecipeIds(initialMenuIds)
+  }, [initialMenuIds])
   useEffect(() => {
     setPageContext({ type: 'home' })
     return () => setPageContext({ type: 'other' })
