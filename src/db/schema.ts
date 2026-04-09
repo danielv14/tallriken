@@ -31,3 +31,13 @@ export const recipeTagsTable = sqliteTable('recipe_tags', {
     .notNull()
     .references(() => tagsTable.id, { onDelete: 'cascade' }),
 })
+
+export const weeklyMenuItemsTable = sqliteTable('weekly_menu_items', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  recipeId: integer('recipe_id')
+    .notNull()
+    .references(() => recipesTable.id, { onDelete: 'cascade' }),
+  addedAt: integer('added_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
