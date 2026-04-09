@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, like, lte, or } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, inArray, isNotNull, like, lte, or } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
 
@@ -190,4 +190,26 @@ const attachTags = async (db: Database, recipes: (typeof schema.recipesTable.$in
     ...recipe,
     tags: tagsByRecipeId.get(recipe.id) ?? [],
   }))
+}
+
+export const getFavoriteRecipes = async (db: Database, limit: number) => {
+  const recipes = await db
+    .select()
+    .from(schema.recipesTable)
+    .where(gt(schema.recipesTable.cookCount, 0))
+    .orderBy(desc(schema.recipesTable.cookCount))
+    .limit(limit)
+
+  return recipes
+}
+
+export const getStaleRecipes = async (db: Database, limit: number) => {
+  const recipes = await db
+    .select()
+    .from(schema.recipesTable)
+    .where(isNotNull(schema.recipesTable.lastCookedAt))
+    .orderBy(asc(schema.recipesTable.lastCookedAt))
+    .limit(limit)
+
+  return recipes
 }
