@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { chat, toServerSentEventsResponse, maxIterations } from '@tanstack/ai'
-import { openaiText } from '@tanstack/ai-openai'
+import { createOpenaiChat } from '@tanstack/ai-openai'
 import { env } from 'cloudflare:workers'
 import { searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool } from '#/chat/tools'
 import { getDb } from '#/db/client'
@@ -44,10 +44,8 @@ export const Route = createFileRoute('/api/chat')({
           : ''
 
         const stream = chat({
-          adapter: openaiText('gpt-4o-mini', {
-            apiKey: env.OPENAI_API_KEY,
-          }),
-          system: SYSTEM_PROMPT + tagSection,
+          adapter: createOpenaiChat('gpt-4o-mini', env.OPENAI_API_KEY),
+          systemPrompts: [SYSTEM_PROMPT + tagSection],
           messages,
           conversationId,
           tools: [searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool],

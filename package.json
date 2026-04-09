@@ -43,6 +43,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@standard-schema/spec": "^1.1.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",

@@ -21,7 +21,7 @@ describe('cooking insights', () => {
     const db = createTestDb()
     const pasta = await createTestRecipe(db, { title: 'Pasta' })
     const curry = await createTestRecipe(db, { title: 'Curry' })
-    const salad = await createTestRecipe(db, { title: 'Salad' })
+    await createTestRecipe(db, { title: 'Salad' })
 
     await setCookingStats(db, pasta.id, 5, new Date())
     await setCookingStats(db, curry.id, 2, new Date())
@@ -38,7 +38,7 @@ describe('cooking insights', () => {
     const db = createTestDb()
     const pasta = await createTestRecipe(db, { title: 'Pasta' })
     const curry = await createTestRecipe(db, { title: 'Curry' })
-    const salad = await createTestRecipe(db, { title: 'Salad' })
+    await createTestRecipe(db, { title: 'Salad' })
 
     const longAgo = new Date('2024-01-01')
     const recent = new Date('2025-04-01')
