@@ -1,9 +1,9 @@
 import crypto from 'node:crypto'
 
-const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+export const SESSION_DURATION_SECONDS = 30 * 24 * 60 * 60 // 30 days
 
 export const createSessionToken = (secret: string): string => {
-  const expiresAt = Date.now() + SESSION_DURATION_MS
+  const expiresAt = Date.now() + SESSION_DURATION_SECONDS * 1000
   const payload = `${expiresAt}`
   const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
   return `${payload}.${signature}`

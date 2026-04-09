@@ -1,18 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { serializeBlankSessionCookie } from '#/auth/cookies'
+import { logoutSession } from '#/auth/responses'
 
 export const Route = createFileRoute('/api/auth/logout')({
   server: {
     handlers: {
-      POST: async () => {
-        return new Response(null, {
-          status: 302,
-          headers: {
-            Location: '/login',
-            'Set-Cookie': serializeBlankSessionCookie(),
-          },
-        })
-      },
+      POST: async () => logoutSession(),
     },
   },
 })

@@ -1,16 +1,11 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { getIsAuthenticated } from '#/auth/server'
+import { createFileRoute } from '@tanstack/react-router'
+import { requireGuest } from '#/auth/guards'
 
 export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
     error: search.error as string | undefined,
   }),
-  beforeLoad: async () => {
-    const isAuthenticated = await getIsAuthenticated()
-    if (isAuthenticated) {
-      throw redirect({ to: '/' })
-    }
-  },
+  beforeLoad: requireGuest,
   component: LoginPage,
 })
 
