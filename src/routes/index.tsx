@@ -199,7 +199,7 @@ function HomePage() {
                     </Menu.Item>
                     <Menu.Separator className="my-1 border-t border-gray-100" />
                     <Menu.Item
-                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-red-600 data-highlighted:bg-red-50"
                       onClick={() => {
                         const form = document.createElement('form')
                         form.method = 'POST'
