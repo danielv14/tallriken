@@ -18,6 +18,7 @@ export const Route = createFileRoute('/_authed/recipes/edit/$recipeId')({
     }
     return { recipe, tags }
   },
+  head: ({ loaderData }) => ({ meta: [{ title: `Redigera ${loaderData.recipe.title} | Tallriken` }] }),
   component: EditRecipePage,
 })
 

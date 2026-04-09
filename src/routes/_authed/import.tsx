@@ -12,6 +12,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/_authed/import')({
   loader: () => fetchAllTags(),
+  head: () => ({ meta: [{ title: 'Nytt recept | Tallriken' }] }),
   component: ImportPage,
 })
 

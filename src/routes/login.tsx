@@ -5,6 +5,7 @@ export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
     error: search.error as string | undefined,
   }),
+  head: () => ({ meta: [{ title: 'Logga in | Tallriken' }] }),
   beforeLoad: requireGuest,
   component: LoginPage,
 })
