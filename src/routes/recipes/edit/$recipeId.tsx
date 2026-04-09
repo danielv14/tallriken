@@ -4,7 +4,7 @@ import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, editRecipe } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
-import { formDataToRecipeInput, recipeToFormData } from '#/recipes/form-utils'
+import { Recipe } from '#/recipes/types'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/edit/$recipeId')({
@@ -33,13 +33,13 @@ function EditRecipePage() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
 
-  const initialData = recipeToFormData(recipe)
+  const initialData = Recipe.toForm(recipe)
 
   const handleSubmit = async (form: RecipeFormData, formImageUrl?: string) => {
     setError(null)
     try {
       await editRecipe({
-        data: { id: recipe.id, ...formDataToRecipeInput(form), imageUrl: formImageUrl },
+        data: { id: recipe.id, ...Recipe.fromForm(form), imageUrl: formImageUrl },
       })
       navigate({ to: '/recipes/$recipeId', params: { recipeId: String(recipe.id) } })
     } catch (err) {

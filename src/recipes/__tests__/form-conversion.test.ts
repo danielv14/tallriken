@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { formDataToRecipeInput, recipeToFormData, type IngredientGroupFormData } from '#/recipes/form-utils'
+import { Recipe } from '#/recipes/types'
 
-describe('formDataToRecipeInput', () => {
+describe('Recipe.fromForm', () => {
   it('converts a single ungrouped ingredient group', () => {
-    const result = formDataToRecipeInput({
+    const result = Recipe.fromForm({
       title: 'Pasta',
       description: 'Gott',
       ingredientGroups: [{ group: '', items: ['400g pasta', '2 ägg'] }],
@@ -19,7 +19,7 @@ describe('formDataToRecipeInput', () => {
   })
 
   it('converts multiple named ingredient groups', () => {
-    const result = formDataToRecipeInput({
+    const result = Recipe.fromForm({
       title: 'Pizza',
       description: '',
       ingredientGroups: [
@@ -39,7 +39,7 @@ describe('formDataToRecipeInput', () => {
   })
 
   it('filters out empty items and empty groups', () => {
-    const result = formDataToRecipeInput({
+    const result = Recipe.fromForm({
       title: 'Test',
       description: '',
       ingredientGroups: [
@@ -58,7 +58,7 @@ describe('formDataToRecipeInput', () => {
   })
 
   it('handles empty optional fields', () => {
-    const result = formDataToRecipeInput({
+    const result = Recipe.fromForm({
       title: 'Pasta',
       description: '',
       ingredientGroups: [{ group: '', items: ['pasta'] }],
@@ -75,7 +75,7 @@ describe('formDataToRecipeInput', () => {
   })
 
   it('trims whitespace', () => {
-    const result = formDataToRecipeInput({
+    const result = Recipe.fromForm({
       title: '  Pasta  ',
       description: '  Gott  ',
       ingredientGroups: [{ group: '  Deg  ', items: ['  mjöl  '] }],
@@ -92,9 +92,9 @@ describe('formDataToRecipeInput', () => {
   })
 })
 
-describe('recipeToFormData', () => {
+describe('Recipe.toForm', () => {
   it('converts grouped ingredients to form data', () => {
-    const result = recipeToFormData({
+    const result = Recipe.toForm({
       title: 'Pizza',
       description: null,
       ingredients: [
@@ -114,7 +114,7 @@ describe('recipeToFormData', () => {
   })
 
   it('converts ungrouped ingredients', () => {
-    const result = recipeToFormData({
+    const result = Recipe.toForm({
       title: 'Pasta',
       description: null,
       ingredients: [{ group: null, items: ['pasta', 'ägg'] }],
@@ -130,7 +130,7 @@ describe('recipeToFormData', () => {
   })
 
   it('handles null/missing fields', () => {
-    const result = recipeToFormData({
+    const result = Recipe.toForm({
       title: 'Pasta',
       description: null,
       ingredients: [{ group: null, items: ['pasta'] }],
