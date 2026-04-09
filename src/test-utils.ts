@@ -32,6 +32,11 @@ export const createTestDb = () => {
       recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
       tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE
     );
+    CREATE TABLE shopping_lists (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      content TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
     CREATE TABLE weekly_menu_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,

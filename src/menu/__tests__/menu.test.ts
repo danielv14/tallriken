@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createTestDb, createTestRecipe } from '#/test-utils'
-import { addToMenu, getMenu, removeFromMenu, clearMenu, toggleComplete } from '#/menu/crud'
+import { addToMenu, getMenu, removeFromMenu, clearMenu, toggleComplete, saveShoppingList, getShoppingList } from '#/menu/crud'
 import { getRecipeById } from '#/recipes/crud'
 
 describe('weekly menu', () => {
@@ -107,6 +107,26 @@ describe('weekly menu', () => {
 
     const updated = await getRecipeById(db, recipe.id)
     expect(updated!.cookCount).toBe(0)
+  })
+
+  it('saves and retrieves a shopping list', async () => {
+    const db = createTestDb()
+    const content = '## Mejeri\n- 3 dl grädde\n- 2 dl mjölk'
+
+    await saveShoppingList(db, content)
+    const result = await getShoppingList(db)
+
+    expect(result).toBe(content)
+  })
+
+  it('replaces previous shopping list on save', async () => {
+    const db = createTestDb()
+
+    await saveShoppingList(db, 'old list')
+    await saveShoppingList(db, 'new list')
+    const result = await getShoppingList(db)
+
+    expect(result).toBe('new list')
   })
 
   it('does not decrement cook count below zero', async () => {
