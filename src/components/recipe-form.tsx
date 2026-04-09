@@ -312,7 +312,7 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
                 <FieldError field={ingredientGroupsField} />
               )}
               <div className="mt-2 space-y-4">
-                {ingredientGroupsField.state.value.map((group, groupIndex) => (
+                {ingredientGroupsField.state.value.map((_, groupIndex) => (
                   <div
                     key={groupIndex}
                     className={
@@ -347,56 +347,46 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
                         </button>
                       </div>
                     )}
-                    <div className="space-y-2">
-                      {group.items.map((_, itemIndex) => (
-                        <div key={itemIndex} className="flex gap-2">
-                          <form.Field
-                            name={`ingredientGroups[${groupIndex}].items[${itemIndex}]`}
-                            children={(field) => (
-                              <Input
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value)}
-                                onBlur={field.handleBlur}
-                                placeholder={`Ingrediens ${itemIndex + 1}, t.ex. 400g spaghetti`}
+                    <form.Field
+                      name={`ingredientGroups[${groupIndex}].items`}
+                      mode="array"
+                      children={(itemsField) => (
+                        <div className="space-y-2">
+                          {itemsField.state.value.map((_, itemIndex) => (
+                            <div key={itemIndex} className="flex gap-2">
+                              <form.Field
+                                name={`ingredientGroups[${groupIndex}].items[${itemIndex}]`}
+                                children={(field) => (
+                                  <Input
+                                    value={field.state.value}
+                                    onChange={(e) => field.handleChange(e.target.value)}
+                                    onBlur={field.handleBlur}
+                                    placeholder={`Ingrediens ${itemIndex + 1}, t.ex. 400g spaghetti`}
+                                  />
+                                )}
                               />
-                            )}
-                          />
-                          {group.items.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const currentItems = form.getFieldValue(
-                                  `ingredientGroups[${groupIndex}].items`,
-                                ) as string[]
-                                form.setFieldValue(
-                                  `ingredientGroups[${groupIndex}].items`,
-                                  currentItems.filter((_, j) => j !== itemIndex),
-                                )
-                              }}
-                              className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-                            >
-                              <XMarkIcon className="h-4 w-4" />
-                            </button>
-                          )}
+                              {itemsField.state.value.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => itemsField.removeValue(itemIndex)}
+                                  className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                                >
+                                  <XMarkIcon className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => itemsField.pushValue('')}
+                            className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
+                          >
+                            <PlusIcon className="h-4 w-4" />
+                            Lägg till ingrediens
+                          </button>
                         </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentItems = form.getFieldValue(
-                            `ingredientGroups[${groupIndex}].items`,
-                          ) as string[]
-                          form.setFieldValue(`ingredientGroups[${groupIndex}].items`, [
-                            ...currentItems,
-                            '',
-                          ])
-                        }}
-                        className="flex items-center gap-1.5 text-sm font-medium text-plum-600 transition hover:text-plum-700"
-                      >
-                        <PlusIcon className="h-4 w-4" />
-                        Lägg till ingrediens
-                      </button>
-                    </div>
+                      )}
+                    />
                   </div>
                 ))}
                 <button
