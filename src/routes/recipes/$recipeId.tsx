@@ -2,12 +2,12 @@ import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-ro
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
-import { fileToBase64 } from '#/utils/file'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
-import { Button } from '#/components/ui/button'
+import { ImagePicker } from '#/components/image-picker'
+import { Menu } from '@base-ui/react/menu'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
   ArrowLeftIcon,
@@ -16,9 +16,10 @@ import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
   CheckIcon,
-  SparklesIcon,
-  PhotoIcon,
   CalendarIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  EllipsisVerticalIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/$recipeId')({
@@ -47,8 +48,6 @@ function RecipeDetailPage() {
   const setPageContext = useChatStore((s) => s.setPageContext)
   const { copied, copy: copyToClipboard } = useCopyToClipboard()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [generatingImage, setGeneratingImage] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState(recipe.imageUrl)
   const [inMenu, setInMenu] = useState(menuRecipeIds.includes(recipe.id))
 
@@ -67,29 +66,14 @@ function RecipeDetailPage() {
     await copyToClipboard(text)
   }
 
-  const handleGenerateImage = async () => {
-    setGeneratingImage(true)
-    try {
-      const result = await generateAndSaveImage({ data: { recipeId: recipe.id } })
-      setCurrentImageUrl(result.imageUrl)
-    } catch (err) {
-      console.error('Image generation failed:', err)
-    } finally {
-      setGeneratingImage(false)
-    }
+  const handleGenerateImage = async (): Promise<string> => {
+    const result = await generateAndSaveImage({ data: { recipeId: recipe.id } })
+    return result.imageUrl
   }
 
-  const handleUploadImage = async (file: File) => {
-    setUploadingImage(true)
-    try {
-      const base64 = await fileToBase64(file)
-      const result = await uploadImageForRecipe({ data: { recipeId: recipe.id, base64, mimeType: file.type } })
-      setCurrentImageUrl(result.imageUrl)
-    } catch (err) {
-      console.error('Image upload failed:', err)
-    } finally {
-      setUploadingImage(false)
-    }
+  const handleUploadImage = async (base64: string, mimeType: string): Promise<string> => {
+    const result = await uploadImageForRecipe({ data: { recipeId: recipe.id, base64, mimeType } })
+    return result.imageUrl
   }
 
   const handleToggleMenu = async () => {
@@ -111,66 +95,64 @@ function RecipeDetailPage() {
     <div className="min-h-screen">
       {/* Compact header */}
       <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
             <ArrowLeftIcon className="h-4 w-4" />
             Tillbaka
           </Link>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={handleToggleMenu}>
-              <CalendarIcon className="mr-1 h-4 w-4" />
-              {inMenu ? 'I veckans meny' : 'Lägg till i menyn'}
-            </Button>
-            <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
-              <Button variant="ghost" size="sm">Redigera</Button>
-            </Link>
-            <Button variant="ghost" size="sm" onClick={() => setShowDeleteDialog(true)}>
-              <span className="text-red-500">Ta bort</span>
-            </Button>
-          </div>
         </div>
       </nav>
 
       <main className="mx-auto max-w-4xl px-4 py-8">
         <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
           {/* Recipe image */}
-          {currentImageUrl ? (
-            <img
-              src={currentImageUrl}
-              alt={recipe.title}
-              className="max-h-96 w-full object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center gap-3 border-b border-dashed border-gray-200 bg-gray-50 py-10">
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100">
-                <PhotoIcon className="h-4 w-4" />
-                {uploadingImage ? 'Laddar upp...' : 'Ladda upp bild'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploadingImage}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleUploadImage(file)
-                  }}
-                />
-              </label>
-              <button
-                onClick={handleGenerateImage}
-                disabled={generatingImage}
-                className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
-              >
-                <SparklesIcon className="h-4 w-4" />
-                {generatingImage ? 'Genererar...' : 'Generera med AI'}
-              </button>
-            </div>
-          )}
+          <ImagePicker
+            imageUrl={currentImageUrl ?? undefined}
+            onImageChange={(url) => setCurrentImageUrl(url ?? null)}
+            onUpload={handleUploadImage}
+            onGenerate={handleGenerateImage}
+            variant="banner"
+          />
 
           <div className="p-6">
           {/* Title & meta */}
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{recipe.title}</h1>
+            <div className="flex items-start gap-2">
+              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{recipe.title}</h1>
+              <Menu.Root>
+                <Menu.Trigger className="mt-1 shrink-0 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
+                  <EllipsisVerticalIcon className="h-5 w-5" />
+                </Menu.Trigger>
+                <Menu.Portal>
+                  <Menu.Positioner className="z-50" sideOffset={4}>
+                    <Menu.Popup className="min-w-48 rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200">
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                        onClick={handleToggleMenu}
+                      >
+                        <CalendarIcon className="h-4 w-4 text-gray-400" />
+                        {inMenu ? 'Ta bort från veckomenyn' : 'Lägg till i veckomenyn'}
+                      </Menu.Item>
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50"
+                        onClick={() => navigate({ to: '/recipes/edit/$recipeId', params: { recipeId: String(recipe.id) } })}
+                      >
+                        <PencilSquareIcon className="h-4 w-4 text-gray-400" />
+                        Redigera
+                      </Menu.Item>
+                      <Menu.Separator className="my-1 border-t border-gray-100" />
+                      <Menu.Item
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-red-600 data-highlighted:bg-red-50"
+                        onClick={() => setShowDeleteDialog(true)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                        Ta bort
+                      </Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            </div>
             {recipe.description && (
               <p className="mt-2 leading-relaxed text-gray-500">{recipe.description}</p>
             )}
@@ -211,6 +193,7 @@ function RecipeDetailPage() {
                 ))}
               </div>
             )}
+
           </div>
 
           <hr className="my-6 border-gray-100" />

@@ -93,13 +93,15 @@ function TagsAdminPage() {
 
         {error && <div className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
 
-        <form onSubmit={handleAddTag} className="mt-6 flex gap-2">
-          <Input
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            placeholder="Ny tagg..."
-          />
-          <Button type="submit">Lägg till</Button>
+        <form onSubmit={handleAddTag} className="mt-6 flex items-center gap-2">
+          <div className="flex-1">
+            <Input
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              placeholder="Ny tagg..."
+            />
+          </div>
+          <Button type="submit" className="shrink-0">Lägg till</Button>
         </form>
 
         <div className="mt-6 rounded-xl bg-white ring-1 ring-gray-100">

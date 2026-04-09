@@ -21,6 +21,92 @@ const getToolLabel = (toolName: string): string => {
   return TOOL_LABELS[toolName] ?? 'Arbetar...'
 }
 
+// --- Sub-components ---
+
+type ChatMessageProps = {
+  message: {
+    id: string
+    role: string
+    parts: Array<{ type: string; name?: string; content?: string }>
+  }
+  isLoading: boolean
+  copiedId: string | null
+  onCopy: (text: string, messageId: string) => void
+}
+
+const ChatMessage = ({ message, isLoading, copiedId, onCopy }: ChatMessageProps) => {
+  const isAssistant = message.role === 'assistant'
+  const textParts = message.parts.filter((p) => p.type === 'text')
+  const textContent = textParts
+    .map((p) => ('content' in p ? p.content : ''))
+    .join('')
+    .trim()
+
+  const toolCallParts = message.parts.filter((p) => p.type === 'tool-call')
+  const hasOnlyToolParts = textContent === '' && toolCallParts.length > 0
+
+  // Show tool call status only while loading, hide when done
+  if (isAssistant && hasOnlyToolParts) {
+    if (!isLoading) return null
+    const lastToolCall = toolCallParts[toolCallParts.length - 1]
+    return (
+      <div className="mb-4">
+        <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm text-gray-400">
+          {getToolLabel(lastToolCall.name ?? '')}
+        </div>
+      </div>
+    )
+  }
+
+  // Skip assistant messages with no content at all
+  if (isAssistant && textContent === '') {
+    return null
+  }
+
+  return (
+    <div className={`${isAssistant ? 'mb-8' : 'mb-4 flex justify-end'}`}>
+      <div
+        className={`relative max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+          isAssistant
+            ? 'bg-gray-100 text-gray-800'
+            : 'bg-gray-900 text-white'
+        }`}
+      >
+        {textParts.map((part, idx) => {
+          const rawContent = 'content' in part ? part.content : ''
+          const content = stripContextPrefix(rawContent ?? '')
+          if (!content) return null
+          return isAssistant ? (
+            <Markdown key={idx} content={content} />
+          ) : (
+            <div key={idx} className="whitespace-pre-wrap">{content}</div>
+          )
+        })}
+        {isAssistant && textContent && (
+          <button
+            onClick={() => onCopy(textContent, message.id)}
+            className="absolute -bottom-6 right-0 flex items-center gap-1 text-xs text-gray-400 transition hover:text-gray-600"
+          >
+            {copiedId === message.id ? (
+              <>
+                <CheckIcon className="h-3 w-3" />
+                Kopierat
+              </>
+            ) : (
+              <>
+                <ClipboardDocumentIcon className="h-3 w-3" />
+                Kopiera
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// --- Main component ---
+
 const ChatPanel = () => {
   const { isOpen, close, pageContext } = useChatStore()
   const [input, setInput] = useState('')
@@ -107,79 +193,15 @@ const ChatPanel = () => {
               </ul>
             </div>
           )}
-          {messages.map((message) => {
-            const isAssistant = message.role === 'assistant'
-            const textParts = message.parts.filter((p) => p.type === 'text')
-            const textContent = textParts
-              .map((p) => ('content' in p ? p.content : ''))
-              .join('')
-              .trim()
-
-            const toolCallParts = message.parts.filter((p) => p.type === 'tool-call')
-            const hasOnlyToolParts = textContent === '' && toolCallParts.length > 0
-
-            // Show tool call status only while loading, hide when done
-            if (isAssistant && hasOnlyToolParts) {
-              if (!isLoading) return null
-              const lastToolCall = toolCallParts[toolCallParts.length - 1]
-              return (
-                <div key={message.id} className="mb-4">
-                  <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm text-gray-400">
-                    {getToolLabel(lastToolCall.name)}
-                  </div>
-                </div>
-              )
-            }
-
-            // Skip assistant messages with no content at all
-            if (isAssistant && textContent === '') {
-              return null
-            }
-
-            return (
-              <div
-                key={message.id}
-                className={`${isAssistant ? 'mb-8' : 'mb-4 flex justify-end'}`}
-              >
-                <div
-                  className={`relative max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
-                    isAssistant
-                      ? 'bg-gray-100 text-gray-800'
-                      : 'bg-gray-900 text-white'
-                  }`}
-                >
-                  {textParts.map((part, idx) => {
-                    const rawContent = 'content' in part ? part.content : ''
-                    const content = stripContextPrefix(rawContent)
-                    if (!content) return null
-                    return isAssistant ? (
-                      <Markdown key={idx} content={content} />
-                    ) : (
-                      <div key={idx} className="whitespace-pre-wrap">{content}</div>
-                    )
-                  })}
-                  {isAssistant && textContent && (
-                    <button
-                      onClick={() => handleCopy(textContent, message.id)}
-                      className="absolute -bottom-6 right-0 flex items-center gap-1 text-xs text-gray-400 transition hover:text-gray-600"
-                    >
-                      {copiedId === message.id ? (
-                        <>
-                          <CheckIcon className="h-3 w-3" />
-                          Kopierat
-                        </>
-                      ) : (
-                        <>
-                          <ClipboardDocumentIcon className="h-3 w-3" />
-                          Kopiera
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+          {messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              isLoading={isLoading}
+              copiedId={copiedId}
+              onCopy={handleCopy}
+            />
+          ))}
           {isLoading && !messages.some((m) =>
             m.role === 'assistant' &&
             m.parts.some((p) => p.type === 'tool-call') &&

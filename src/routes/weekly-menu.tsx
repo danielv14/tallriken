@@ -37,6 +37,96 @@ export const Route = createFileRoute('/weekly-menu')({
   component: WeeklyMenuPage,
 })
 
+// --- Sub-components ---
+
+type ShoppingListSectionProps = {
+  shoppingList: string | null
+  shoppingListOpen: boolean
+  onToggleOpen: () => void
+  onGenerate: () => void
+  generating: boolean
+}
+
+const ShoppingListSection = ({
+  shoppingList,
+  shoppingListOpen,
+  onToggleOpen,
+  onGenerate,
+  generating,
+}: ShoppingListSectionProps) => {
+  const { copied, copy: copyToClipboard } = useCopyToClipboard()
+
+  const handleCopy = async () => {
+    if (!shoppingList) return
+    const plainText = shoppingList
+      .replace(/^## /gm, '')
+      .replace(/^- /gm, '  ')
+    await copyToClipboard(plainText)
+  }
+
+  return (
+    <div className="mt-6 rounded-xl bg-white ring-1 ring-gray-100">
+      <div className="flex items-center justify-between px-4 py-3">
+        <button
+          onClick={() => shoppingList && onToggleOpen()}
+          className="flex items-center gap-2 text-sm font-bold text-gray-700"
+          disabled={!shoppingList}
+        >
+          {shoppingList && (shoppingListOpen ? (
+            <ChevronUpIcon className="h-4 w-4" />
+          ) : (
+            <ChevronDownIcon className="h-4 w-4" />
+          ))}
+          Inköpslista
+        </button>
+        <div className="flex items-center gap-2">
+          {shoppingList && (
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            >
+              {copied ? (
+                <>
+                  <CheckIcon className="h-3.5 w-3.5 text-green-500" />
+                  Kopierat
+                </>
+              ) : (
+                <>
+                  <ClipboardDocumentIcon className="h-3.5 w-3.5" />
+                  Kopiera
+                </>
+              )}
+            </button>
+          )}
+          <Button
+            size="sm"
+            onClick={onGenerate}
+            disabled={generating}
+          >
+            <SparklesIcon className="mr-1 h-4 w-4" />
+            {generating ? 'Genererar...' : shoppingList ? 'Generera ny' : 'Generera'}
+          </Button>
+        </div>
+      </div>
+      {shoppingList && shoppingListOpen && (
+        <div className="border-t border-gray-100 px-4 py-4 prose prose-sm prose-gray max-w-none">
+          {shoppingList.split('\n').map((line, i) => {
+            if (line.startsWith('## ')) {
+              return <h3 key={i} className="mt-3 first:mt-0 mb-1 text-xs font-bold uppercase tracking-wide text-gray-400">{line.replace('## ', '')}</h3>
+            }
+            if (line.startsWith('- ')) {
+              return <p key={i} className="my-0.5 text-sm text-gray-700">{line}</p>
+            }
+            return line ? <p key={i} className="my-0.5 text-sm text-gray-500">{line}</p> : null
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Page component ---
+
 function WeeklyMenuPage() {
   const { menu: initialMenu, savedShoppingList } = Route.useLoaderData()
   const [menu, setMenu] = useState(initialMenu)
@@ -44,7 +134,6 @@ function WeeklyMenuPage() {
   const [shoppingList, setShoppingList] = useState<string | null>(savedShoppingList)
   const [shoppingListOpen, setShoppingListOpen] = useState(!savedShoppingList)
   const [generating, setGenerating] = useState(false)
-  const { copied, copy: copyToClipboard } = useCopyToClipboard()
 
   const handleGenerateShoppingList = async () => {
     setGenerating(true)
@@ -57,14 +146,6 @@ function WeeklyMenuPage() {
     } finally {
       setGenerating(false)
     }
-  }
-
-  const handleCopyShoppingList = async () => {
-    if (!shoppingList) return
-    const plainText = shoppingList
-      .replace(/^## /gm, '')
-      .replace(/^- /gm, '  ')
-    await copyToClipboard(plainText)
   }
 
   const handleToggleComplete = async (recipeId: number) => {
@@ -115,63 +196,13 @@ function WeeklyMenuPage() {
 
         {/* Shopping list */}
         {menu.length > 0 && (
-          <div className="mt-6 rounded-xl bg-white ring-1 ring-gray-100">
-            <div className="flex items-center justify-between px-4 py-3">
-              <button
-                onClick={() => shoppingList && setShoppingListOpen(!shoppingListOpen)}
-                className="flex items-center gap-2 text-sm font-bold text-gray-700"
-                disabled={!shoppingList}
-              >
-                {shoppingList && (shoppingListOpen ? (
-                  <ChevronUpIcon className="h-4 w-4" />
-                ) : (
-                  <ChevronDownIcon className="h-4 w-4" />
-                ))}
-                Inköpslista
-              </button>
-              <div className="flex items-center gap-2">
-                {shoppingList && (
-                  <button
-                    onClick={handleCopyShoppingList}
-                    className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-                  >
-                    {copied ? (
-                      <>
-                        <CheckIcon className="h-3.5 w-3.5 text-green-500" />
-                        Kopierat
-                      </>
-                    ) : (
-                      <>
-                        <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-                        Kopiera
-                      </>
-                    )}
-                  </button>
-                )}
-                <Button
-                  size="sm"
-                  onClick={handleGenerateShoppingList}
-                  disabled={generating}
-                >
-                  <SparklesIcon className="mr-1 h-4 w-4" />
-                  {generating ? 'Genererar...' : shoppingList ? 'Generera ny' : 'Generera'}
-                </Button>
-              </div>
-            </div>
-            {shoppingList && shoppingListOpen && (
-              <div className="border-t border-gray-100 px-4 py-4 prose prose-sm prose-gray max-w-none">
-                {shoppingList.split('\n').map((line, i) => {
-                  if (line.startsWith('## ')) {
-                    return <h3 key={i} className="mt-3 first:mt-0 mb-1 text-xs font-bold uppercase tracking-wide text-gray-400">{line.replace('## ', '')}</h3>
-                  }
-                  if (line.startsWith('- ')) {
-                    return <p key={i} className="my-0.5 text-sm text-gray-700">{line}</p>
-                  }
-                  return line ? <p key={i} className="my-0.5 text-sm text-gray-500">{line}</p> : null
-                })}
-              </div>
-            )}
-          </div>
+          <ShoppingListSection
+            shoppingList={shoppingList}
+            shoppingListOpen={shoppingListOpen}
+            onToggleOpen={() => setShoppingListOpen(!shoppingListOpen)}
+            onGenerate={handleGenerateShoppingList}
+            generating={generating}
+          />
         )}
 
         {menu.length === 0 ? (

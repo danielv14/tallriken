@@ -5,14 +5,17 @@ import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllRecipes, findRecipes, fetchFavoriteRecipes, fetchStaleRecipes } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
+import { RecipeCard } from '#/components/recipe-card'
+import { Menu } from '@base-ui/react/menu'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
-  ClockIcon,
-  UsersIcon,
-  CalendarIcon,
   FireIcon,
   ArrowPathIcon,
+  CalendarIcon,
+  EllipsisVerticalIcon,
+  TagIcon,
+  ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/')({
@@ -34,6 +37,70 @@ export const Route = createFileRoute('/')({
   },
   component: HomePage,
 })
+
+// --- Sub-components ---
+
+type CookingInsightsProps = {
+  favorites: { id: number; title: string; cookCount: number }[]
+  stale: { id: number; title: string; lastCookedAt: Date | null }[]
+}
+
+const CookingInsights = ({ favorites, stale }: CookingInsightsProps) => {
+  return (
+    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      {favorites.length > 0 && (
+        <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
+          <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">
+            <FireIcon className="h-3.5 w-3.5" />
+            Favoriter
+          </h2>
+          <ul className="mt-2 space-y-1.5">
+            {favorites.map((recipe) => (
+              <li key={recipe.id}>
+                <Link
+                  to="/recipes/$recipeId"
+                  params={{ recipeId: String(recipe.id) }}
+                  className="flex items-center justify-between text-sm text-gray-700 hover:text-plum-600 transition"
+                >
+                  <span className="truncate">{recipe.title}</span>
+                  <span className="shrink-0 text-xs text-gray-400">{recipe.cookCount}x</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {stale.length > 0 && (
+        <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
+          <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">
+            <ArrowPathIcon className="h-3.5 w-3.5" />
+            Inte lagat på ett tag
+          </h2>
+          <ul className="mt-2 space-y-1.5">
+            {stale.map((recipe) => (
+              <li key={recipe.id}>
+                <Link
+                  to="/recipes/$recipeId"
+                  params={{ recipeId: String(recipe.id) }}
+                  className="flex items-center justify-between text-sm text-gray-700 hover:text-plum-600 transition"
+                >
+                  <span className="truncate">{recipe.title}</span>
+                  {recipe.lastCookedAt && (
+                    <span className="shrink-0 text-xs text-gray-400">
+                      {new Date(recipe.lastCookedAt).toLocaleDateString('sv-SE')}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Page component ---
 
 function HomePage() {
   const { recipes: initialRecipes, tags, menuRecipeIds: initialMenuIds, favorites, stale } = Route.useLoaderData()
@@ -108,27 +175,54 @@ function HomePage() {
           <div className="flex items-center gap-1">
             <Link
               to="/import"
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
             >
-              Importera
+              <PlusIcon className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">Nytt recept</span>
             </Link>
             <Link
               to="/weekly-menu"
-              className="relative rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
+              className="relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
             >
-              Veckans meny
+              <CalendarIcon className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">Veckans meny</span>
               {menuRecipeIds.length > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-plum-600 text-[10px] font-bold text-white">
                   {menuRecipeIds.length}
                 </span>
               )}
             </Link>
-            <Link
-              to="/admin/tags"
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-800"
-            >
-              Taggar
-            </Link>
+            <Menu.Root>
+              <Menu.Trigger className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
+                <EllipsisVerticalIcon className="h-5 w-5" />
+              </Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner className="z-50" sideOffset={4} align="end">
+                  <Menu.Popup className="min-w-44 rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200">
+                    <Menu.Item className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50">
+                      <Link to="/admin/tags" className="flex items-center gap-2.5">
+                        <TagIcon className="h-4 w-4 text-gray-400" />
+                        Taggar
+                      </Link>
+                    </Menu.Item>
+                    <Menu.Separator className="my-1 border-t border-gray-100" />
+                    <Menu.Item
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-red-600 data-highlighted:bg-red-50"
+                      onClick={() => {
+                        const form = document.createElement('form')
+                        form.method = 'POST'
+                        form.action = '/api/auth/logout'
+                        document.body.appendChild(form)
+                        form.submit()
+                      }}
+                    >
+                      <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+                      Logga ut
+                    </Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
           </div>
         </div>
       </nav>
@@ -169,56 +263,7 @@ function HomePage() {
 
         {/* Cooking insights */}
         {!searchQuery && selectedTagIds.length === 0 && (favorites.length > 0 || stale.length > 0) && (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {favorites.length > 0 && (
-              <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
-                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">
-                  <FireIcon className="h-3.5 w-3.5" />
-                  Favoriter
-                </h2>
-                <ul className="mt-2 space-y-1.5">
-                  {favorites.map((recipe) => (
-                    <li key={recipe.id}>
-                      <Link
-                        to="/recipes/$recipeId"
-                        params={{ recipeId: String(recipe.id) }}
-                        className="flex items-center justify-between text-sm text-gray-700 hover:text-plum-600 transition"
-                      >
-                        <span className="truncate">{recipe.title}</span>
-                        <span className="shrink-0 text-xs text-gray-400">{recipe.cookCount}x</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {stale.length > 0 && (
-              <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
-                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-gray-400">
-                  <ArrowPathIcon className="h-3.5 w-3.5" />
-                  Inte lagat på ett tag
-                </h2>
-                <ul className="mt-2 space-y-1.5">
-                  {stale.map((recipe) => (
-                    <li key={recipe.id}>
-                      <Link
-                        to="/recipes/$recipeId"
-                        params={{ recipeId: String(recipe.id) }}
-                        className="flex items-center justify-between text-sm text-gray-700 hover:text-plum-600 transition"
-                      >
-                        <span className="truncate">{recipe.title}</span>
-                        {recipe.lastCookedAt && (
-                          <span className="shrink-0 text-xs text-gray-400">
-                            {new Date(recipe.lastCookedAt).toLocaleDateString('sv-SE')}
-                          </span>
-                        )}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          <CookingInsights favorites={favorites} stale={stale} />
         )}
 
         {/* Recipe grid */}
@@ -247,82 +292,17 @@ function HomePage() {
         ) : (
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {recipes.map((recipe) => (
-              <Link
+              <RecipeCard
                 key={recipe.id}
-                to="/recipes/$recipeId"
-                params={{ recipeId: String(recipe.id) }}
-                className="group overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 transition hover:ring-plum-200 hover:shadow-md"
-              >
-                {recipe.imageUrl && (
-                  <img
-                    src={recipe.imageUrl}
-                    alt={recipe.title}
-                    className="aspect-[16/10] w-full object-cover"
-                  />
-                )}
-                <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="font-bold text-gray-900 group-hover:text-plum-600">{recipe.title}</h2>
-                  <button
-                    onClick={(e) => handleToggleMenu(e, recipe.id)}
-                    className={`shrink-0 rounded-lg p-1.5 transition ${
-                      menuRecipeIds.includes(recipe.id)
-                        ? 'text-plum-600 bg-plum-50'
-                        : 'text-gray-300 hover:text-plum-500 hover:bg-plum-50'
-                    }`}
-                    title={menuRecipeIds.includes(recipe.id) ? 'Ta bort från veckans meny' : 'Lägg till i veckans meny'}
-                  >
-                    <CalendarIcon className="h-4 w-4" />
-                  </button>
-                </div>
-                {recipe.description && (
-                  <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-gray-500">{recipe.description}</p>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {recipe.cookingTimeMinutes && (
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
-                      <ClockIcon className="h-3.5 w-3.5" />
-                      {recipe.cookingTimeMinutes} min
-                    </span>
-                  )}
-                  {recipe.servings && (
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
-                      <UsersIcon className="h-3.5 w-3.5" />
-                      {recipe.servings} portioner
-                    </span>
-                  )}
-                </div>
-                {recipe.tags.length > 0 && (
-                  <div className="mt-2.5 flex flex-wrap gap-1">
-                    {recipe.tags.map((tag) => (
-                      <span
-                        key={tag.id}
-                        className="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
-                      >
-                        {tag.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                </div>
-              </Link>
+                recipe={recipe}
+                isInMenu={menuRecipeIds.includes(recipe.id)}
+                onToggleMenu={handleToggleMenu}
+              />
             ))}
           </div>
         )}
       </main>
 
-      <footer className="border-t border-gray-100 py-6">
-        <div className="mx-auto flex max-w-4xl items-center justify-center px-4">
-          <form method="post" action="/api/auth/logout">
-            <button
-              type="submit"
-              className="text-sm text-gray-400 transition hover:text-gray-600"
-            >
-              Logga ut
-            </button>
-          </form>
-        </div>
-      </footer>
     </div>
   )
 }
