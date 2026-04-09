@@ -158,20 +158,20 @@ function RecipeDetailPage() {
             )}
 
             {/* Actions */}
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
                 onClick={handleToggleMenu}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                   inMenu
-                    ? 'bg-plum-50 text-plum-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'text-plum-600 hover:bg-plum-50'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 <CalendarIcon className="h-4 w-4" />
                 {inMenu ? 'I veckans meny' : 'Lägg till i menyn'}
               </button>
               <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
-                <button className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-200">
+                <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:text-gray-700">
                   <PencilSquareIcon className="h-4 w-4" />
                   Redigera
                 </button>
