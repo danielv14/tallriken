@@ -34,6 +34,14 @@ export const recipeTagsTable = sqliteTable('recipe_tags', {
     .references(() => tagsTable.id, { onDelete: 'cascade' }),
 })
 
+export const shoppingListsTable = sqliteTable('shopping_lists', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  content: text('content').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+})
+
 export const weeklyMenuItemsTable = sqliteTable('weekly_menu_items', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   recipeId: integer('recipe_id')
