@@ -7,14 +7,9 @@ import { extractRecipeFromUrl, extractRecipeFromPhotos } from '#/import/server'
 import { Recipe } from '#/recipes/recipe'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
+import { RecipeForm, TabButton, type RecipeFormData } from '#/components/recipe-form'
 import { fileToBase64 } from '#/utils/file'
-import {
-  ArrowLeftIcon,
-  CameraIcon,
-  GlobeAltIcon,
-  PencilIcon,
-} from '@heroicons/react/24/outline'
+import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/import')({
   beforeLoad: async () => {
@@ -51,8 +46,7 @@ function ImportPage() {
       const result = await extractRecipeFromUrl({ data: { url: url.trim() } })
       setImportMeta({ sourceUrl: result.sourceUrl, imageUrl: result.imageUrl ?? undefined })
       setPreviewData(Recipe.fromDraft(result))
-    } catch (err) {
-      console.error('URL extract failed:', err)
+    } catch {
       setError('Kunde inte hämta recept från den angivna URL:en. Prova att lägga till manuellt istället.')
     } finally {
       setExtracting(false)
@@ -66,8 +60,7 @@ function ImportPage() {
     try {
       await saveRecipe({ data: { ...Recipe.fromForm(previewData), ...importMeta } })
       navigate({ to: '/' })
-    } catch (err) {
-      console.error('Save recipe failed:', err)
+    } catch {
       setError('Kunde inte spara receptet. Försök igen.')
       setSaving(false)
     }
@@ -121,44 +114,10 @@ function ImportPage() {
       <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Lägg till recept</h1>
 
-        {/* Tabs */}
         <div className="mt-5 flex gap-4 border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => setTab('url')}
-            className={`flex items-center gap-2 border-b-2 pb-2.5 text-sm font-semibold transition ${
-              tab === 'url'
-                ? 'border-plum-600 text-plum-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <GlobeAltIcon className="h-4 w-4" />
-            Från URL
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('photo')}
-            className={`flex items-center gap-2 border-b-2 pb-2.5 text-sm font-semibold transition ${
-              tab === 'photo'
-                ? 'border-plum-600 text-plum-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <CameraIcon className="h-4 w-4" />
-            Från foto
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('manual')}
-            className={`flex items-center gap-2 border-b-2 pb-2.5 text-sm font-semibold transition ${
-              tab === 'manual'
-                ? 'border-plum-600 text-plum-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <PencilIcon className="h-4 w-4" />
-            Manuellt
-          </button>
+          <TabButton label="Från URL" active={tab === 'url'} hasError={false} onClick={() => setTab('url')} />
+          <TabButton label="Från foto" active={tab === 'photo'} hasError={false} onClick={() => setTab('photo')} />
+          <TabButton label="Manuellt" active={tab === 'manual'} hasError={false} onClick={() => setTab('manual')} />
         </div>
 
         {error && <div className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
@@ -207,8 +166,7 @@ function ImportPage() {
                     data: { ...Recipe.fromForm(form), imageUrl: formImageUrl },
                   })
                   navigate({ to: '/' })
-                } catch (err) {
-                  console.error('Save recipe failed:', err)
+                } catch {
                   setError('Kunde inte spara receptet. Försök igen.')
                   setSaving(false)
                 }
@@ -252,8 +210,7 @@ const PhotoImport = ({ onExtracted, onError }: PhotoImportProps) => {
       const result = await extractRecipeFromPhotos({ data: { images } })
 
       onExtracted(Recipe.fromDraft(result))
-    } catch (err) {
-      console.error('Photo extract failed:', err)
+    } catch {
       onError('Kunde inte extrahera recept från bilderna. Försök med tydligare bilder eller lägg till manuellt.')
     } finally {
       setExtracting(false)

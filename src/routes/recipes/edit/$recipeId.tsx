@@ -42,8 +42,7 @@ function EditRecipePage() {
         data: { id: recipe.id, ...Recipe.fromForm(form), imageUrl: formImageUrl },
       })
       navigate({ to: '/recipes/$recipeId', params: { recipeId: String(recipe.id) } })
-    } catch (err) {
-      console.error('Edit recipe failed:', err)
+    } catch {
       setError('Kunde inte spara ändringarna. Försök igen.')
     }
   }

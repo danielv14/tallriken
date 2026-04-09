@@ -23,13 +23,16 @@ const ImagePicker = ({
   const [generatingImage, setGeneratingImage] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
+  const [error, setError] = useState<string | null>(null)
+
   const handleGenerate = async () => {
     setGeneratingImage(true)
+    setError(null)
     try {
       const url = await onGenerate()
       onImageChange(url)
-    } catch (err) {
-      console.error('Image generation failed:', err)
+    } catch {
+      setError('Kunde inte generera bild. Försök igen.')
     } finally {
       setGeneratingImage(false)
     }
@@ -37,12 +40,13 @@ const ImagePicker = ({
 
   const handleUpload = async (file: File) => {
     setUploadingImage(true)
+    setError(null)
     try {
       const base64 = await fileToBase64(file)
       const url = await onUpload(base64, file.type)
       onImageChange(url)
-    } catch (err) {
-      console.error('Image upload failed:', err)
+    } catch {
+      setError('Kunde inte ladda upp bilden. Försök igen.')
     } finally {
       setUploadingImage(false)
     }
@@ -110,19 +114,29 @@ const ImagePicker = ({
     )
   }
 
+  const errorMessage = error && (
+    <p className="text-xs text-red-500">{error}</p>
+  )
+
   if (variant === 'banner') {
     return (
-      <div className="flex items-center justify-center gap-3 border-b border-dashed border-gray-200 bg-gray-50 py-10">
-        {uploadButton}
-        {generateButton}
+      <div className="flex flex-col items-center gap-3 border-b border-dashed border-gray-200 bg-gray-50 py-10">
+        <div className="flex items-center gap-3">
+          {uploadButton}
+          {generateButton}
+        </div>
+        {errorMessage}
       </div>
     )
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {uploadButton}
-      {generateButton}
+    <div className="space-y-1">
+      <div className="flex flex-wrap gap-2">
+        {uploadButton}
+        {generateButton}
+      </div>
+      {errorMessage}
     </div>
   )
 }
