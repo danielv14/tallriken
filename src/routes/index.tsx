@@ -42,29 +42,22 @@ function HomePage() {
   const [menuRecipeIds, setMenuRecipeIds] = useState<number[]>(initialMenuIds)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
-  const [, setSearching] = useState(false)
-
   useEffect(() => {
     setPageContext({ type: 'home' })
     return () => setPageContext({ type: 'other' })
   }, [setPageContext])
 
   const handleSearch = async (query: string, tagIds: number[]) => {
-    setSearching(true)
-    try {
-      if (!query.trim() && tagIds.length === 0) {
-        setRecipes(initialRecipes)
-      } else {
-        const results = await findRecipes({
-          data: {
-            query: query.trim() || undefined,
-            tagIds: tagIds.length > 0 ? tagIds : undefined,
-          },
-        })
-        setRecipes(results)
-      }
-    } finally {
-      setSearching(false)
+    if (!query.trim() && tagIds.length === 0) {
+      setRecipes(initialRecipes)
+    } else {
+      const results = await findRecipes({
+        data: {
+          query: query.trim() || undefined,
+          tagIds: tagIds.length > 0 ? tagIds : undefined,
+        },
+      })
+      setRecipes(results)
     }
   }
 
