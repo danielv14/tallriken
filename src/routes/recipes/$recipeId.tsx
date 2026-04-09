@@ -7,7 +7,6 @@ import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
 import { ImagePicker } from '#/components/image-picker'
-import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
   ArrowLeftIcon,
@@ -17,6 +16,8 @@ import {
   ClipboardDocumentIcon,
   CheckIcon,
   CalendarIcon,
+  PencilSquareIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/recipes/$recipeId')({
@@ -92,23 +93,11 @@ function RecipeDetailPage() {
     <div className="min-h-screen">
       {/* Compact header */}
       <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
             <ArrowLeftIcon className="h-4 w-4" />
             Tillbaka
           </Link>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={handleToggleMenu}>
-              <CalendarIcon className="mr-1 h-4 w-4" />
-              {inMenu ? 'I veckans meny' : 'Lägg till i menyn'}
-            </Button>
-            <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
-              <Button variant="ghost" size="sm">Redigera</Button>
-            </Link>
-            <Button variant="ghost" size="sm" onClick={() => setShowDeleteDialog(true)}>
-              <span className="text-red-500">Ta bort</span>
-            </Button>
-          </div>
         </div>
       </nav>
 
@@ -167,6 +156,34 @@ function RecipeDetailPage() {
                 ))}
               </div>
             )}
+
+            {/* Actions */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                onClick={handleToggleMenu}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                  inMenu
+                    ? 'bg-plum-50 text-plum-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <CalendarIcon className="h-4 w-4" />
+                {inMenu ? 'I veckans meny' : 'Lägg till i menyn'}
+              </button>
+              <Link to="/recipes/edit/$recipeId" params={{ recipeId: String(recipe.id) }}>
+                <button className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-200">
+                  <PencilSquareIcon className="h-4 w-4" />
+                  Redigera
+                </button>
+              </Link>
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-500 transition hover:bg-red-50"
+              >
+                <TrashIcon className="h-4 w-4" />
+                Ta bort
+              </button>
+            </div>
           </div>
 
           <hr className="my-6 border-gray-100" />
