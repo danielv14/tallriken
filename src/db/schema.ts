@@ -18,6 +18,8 @@ export const recipesTable = sqliteTable('recipes', {
   servings: integer('servings'),
   sourceUrl: text('source_url'),
   imageUrl: text('image_url'),
+  lastCookedAt: integer('last_cooked_at', { mode: 'timestamp' }),
+  cookCount: integer('cook_count').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -40,4 +42,5 @@ export const weeklyMenuItemsTable = sqliteTable('weekly_menu_items', {
   addedAt: integer('added_at', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),
+  completedAt: integer('completed_at', { mode: 'timestamp' }),
 })

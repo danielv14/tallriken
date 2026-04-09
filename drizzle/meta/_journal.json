@@ -22,6 +22,13 @@
       "when": 1775715721707,
       "tag": "0002_aspiring_gideon",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1775716553458,
+      "tag": "0003_careless_lizard",
+      "breakpoints": true
     }
   ]
 }
