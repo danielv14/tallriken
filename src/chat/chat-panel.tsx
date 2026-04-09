@@ -11,6 +11,16 @@ const stripContextPrefix = (text: string): string => {
   return text.replace(CONTEXT_PREFIX_REGEX, '')
 }
 
+const TOOL_LABELS: Record<string, string> = {
+  search_recipes: 'Söker recept...',
+  get_weekly_menu: 'Hämtar veckomenyn...',
+  add_to_weekly_menu: 'Lägger till i veckomenyn...',
+}
+
+const getToolLabel = (toolName: string): string => {
+  return TOOL_LABELS[toolName] ?? 'Arbetar...'
+}
+
 const ChatPanel = () => {
   const { isOpen, close, pageContext } = useChatStore()
   const [input, setInput] = useState('')
@@ -105,12 +115,20 @@ const ChatPanel = () => {
               .join('')
               .trim()
 
-            const hasToolCall = message.parts.some((p) => p.type === 'tool-call')
-            const hasOnlyToolParts = textContent === '' && hasToolCall
+            const toolCallParts = message.parts.filter((p) => p.type === 'tool-call')
+            const hasOnlyToolParts = textContent === '' && toolCallParts.length > 0
 
-            // Skip rendering messages that only contain tool calls (no visible text)
+            // Show tool call status only while loading, hide when done
             if (isAssistant && hasOnlyToolParts) {
-              return null
+              if (!isLoading) return null
+              const lastToolCall = toolCallParts[toolCallParts.length - 1]
+              return (
+                <div key={message.id} className="mb-4">
+                  <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm text-gray-400">
+                    {getToolLabel(lastToolCall.name)}
+                  </div>
+                </div>
+              )
             }
 
             // Skip assistant messages with no content at all
@@ -162,7 +180,11 @@ const ChatPanel = () => {
               </div>
             )
           })}
-          {isLoading && (
+          {isLoading && !messages.some((m) =>
+            m.role === 'assistant' &&
+            m.parts.some((p) => p.type === 'tool-call') &&
+            m.parts.filter((p) => p.type === 'text').every((p) => !('content' in p) || !p.content.trim()),
+          ) && (
             <div className="mb-4">
               <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm text-gray-400">
                 Tänker...
