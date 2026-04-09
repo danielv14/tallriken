@@ -199,11 +199,21 @@ function ImportPage() {
           <div className="mt-5 rounded-xl bg-white p-5 ring-1 ring-gray-100">
             <RecipeForm
               tags={tags}
-              onSubmit={(form, formImageUrl) => {
-                setImportMeta((prev) => ({ ...prev, imageUrl: formImageUrl }))
-                setPreviewData(form)
+              onSubmit={async (form, formImageUrl) => {
+                setSaving(true)
+                setError(null)
+                try {
+                  await saveRecipe({
+                    data: { ...Recipe.fromForm(form), imageUrl: formImageUrl },
+                  })
+                  navigate({ to: '/' })
+                } catch (err) {
+                  console.error('Save recipe failed:', err)
+                  setError('Kunde inte spara receptet. Försök igen.')
+                  setSaving(false)
+                }
               }}
-              submitLabel="Förhandsgranska"
+              submitLabel={saving ? 'Sparar...' : 'Spara recept'}
               onCancel={() => navigate({ to: '/' })}
             />
           </div>
