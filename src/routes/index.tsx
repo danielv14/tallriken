@@ -208,7 +208,7 @@ function HomePage() {
                         form.submit()
                       }}
                     >
-                      <ArrowRightStartOnRectangleIcon className="h-4 w-4 text-gray-400" />
+                      <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
                       Logga ut
                     </Menu.Item>
                   </Menu.Popup>
