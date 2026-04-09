@@ -2,15 +2,19 @@ import { createFileRoute } from '@tanstack/react-router'
 import { chat, toServerSentEventsResponse, maxIterations } from '@tanstack/ai'
 import { openaiText } from '@tanstack/ai-openai'
 import { env } from 'cloudflare:workers'
-import { searchRecipesTool } from '#/chat/tools'
+import { searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool } from '#/chat/tools'
 
 const SYSTEM_PROMPT = `Du är Tallrikens receptassistent. Du hjälper användaren att hitta recept, planera veckomenyer, skapa inköpslistor och skala recept.
 
 VIKTIGT om sökning:
-- Verktyget search_recipes hämtar ALLA recept i användarens samling med ingredienslistor, tillagningstid och taggar.
-- Du analyserar och filtrerar resultaten själv baserat på användarens fråga.
+- Verktyget search_recipes söker efter recept med sökfras, taggar och max tillagningstid. Resultaten inkluderar cookCount och lastCookedAt.
 - Du kan bedöma kosttyp (vegetariskt, veganskt etc) genom att titta på ingredienserna.
 - Du kan filtrera på tillagningstid, antal portioner, ingredienser etc.
+- Använd cookCount och lastCookedAt för att svara på frågor om matlagningshistorik.
+
+VIKTIGT om veckomenyn:
+- Verktyget get_weekly_menu hämtar aktuella planerade recept.
+- Verktyget add_to_weekly_menu lägger till ett recept via dess ID. Använd det när du rekommenderar ett recept och användaren vill lägga till det.
 
 Regler:
 - Svara alltid på svenska
@@ -35,7 +39,7 @@ export const Route = createFileRoute('/api/chat')({
           system: SYSTEM_PROMPT,
           messages,
           conversationId,
-          tools: [searchRecipesTool],
+          tools: [searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool],
           agentLoopStrategy: maxIterations(5),
         })
 

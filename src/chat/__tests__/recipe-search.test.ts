@@ -52,6 +52,8 @@ describe('recipe search', () => {
       cookingTimeMinutes: 30,
       servings: 4,
       tags: ['Italian'],
+      cookCount: 0,
+      lastCookedAt: null,
       url: `/recipes/${results[0].id}`,
     })
   })
@@ -80,5 +82,16 @@ describe('recipe search', () => {
 
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('Quick Salad')
+  })
+
+  it('includes cooking stats in results', async () => {
+    const db = createTestDb()
+    await createTestRecipe(db, { title: 'Pasta Carbonara' })
+
+    const search = createRecipeSearch(db)
+    const results = await search.search('pasta')
+
+    expect(results[0].cookCount).toBe(0)
+    expect(results[0].lastCookedAt).toBeNull()
   })
 })

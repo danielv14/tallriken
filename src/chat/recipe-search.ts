@@ -11,6 +11,8 @@ export type CompactRecipeResult = {
   cookingTimeMinutes: number | null
   servings: number | null
   tags: string[]
+  cookCount: number
+  lastCookedAt: Date | null
   url: string
 }
 
@@ -39,6 +41,8 @@ export const createRecipeSearch = (db: Database) => ({
       cookingTimeMinutes: r.cookingTimeMinutes,
       servings: r.servings,
       tags: r.tags.map((t) => t.name),
+      cookCount: r.cookCount,
+      lastCookedAt: r.lastCookedAt,
       url: `/recipes/${r.id}`,
     }))
   },
