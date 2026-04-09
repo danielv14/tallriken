@@ -3,7 +3,7 @@ import { extractJsonLdRecipe, extractImageUrl } from '#/import/extract'
 import { extractRecipeWithAi } from '#/import/ai-extract'
 import { extractRecipeFromImages } from '#/import/ocr-extract'
 import { resolveTagIds } from '#/import/auto-tag'
-import { uploadImageToR2, getImageUrl } from '#/images/r2'
+import { downloadAndStore } from '#/images/image-ops'
 import type { RecipeDraft } from '#/import/schema'
 import type { Database } from '#/db/types'
 
@@ -32,7 +32,7 @@ export const importRecipeFromUrl = async (
   const tagIds = await resolveTagIds(draft, tags, context.openaiApiKey)
 
   const originalImageUrl = extractImageUrl(html)
-  const imageUrl = originalImageUrl ? await downloadAndStoreImage(originalImageUrl) : null
+  const imageUrl = originalImageUrl ? await downloadAndStore(originalImageUrl) : null
 
   return { draft, tagIds, imageUrl, sourceUrl: url }
 }
@@ -84,20 +84,3 @@ const extractRecipe = async (
   throw new Error('Kunde inte extrahera något recept från den angivna sidan')
 }
 
-const downloadAndStoreImage = async (imageUrl: string): Promise<string | null> => {
-  try {
-    const response = await fetch(imageUrl)
-    if (!response.ok) return null
-
-    const contentType = response.headers.get('Content-Type') ?? 'image/jpeg'
-    const data = await response.arrayBuffer()
-
-    const extension = contentType.includes('png') ? 'png' : 'jpg'
-    const key = `recipes/imported-${Date.now()}.${extension}`
-    await uploadImageToR2(key, data, contentType)
-
-    return getImageUrl(key)
-  } catch {
-    return null
-  }
-}
