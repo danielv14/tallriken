@@ -54,7 +54,7 @@ export const extractRecipeFromImages = async (
     response_format: zodResponseFormat(recipeDraftSchema, 'recipe_draft'),
   })
 
-  const message = completion.choices[0]?.message
+  const message = completion.choices[0].message
   if (!message?.parsed) return null
 
   return message.parsed
