@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { createTestDb, createTestRecipe } from '#/test-utils'
-import { addToMenu, getMenu, removeFromMenu, clearMenu } from '#/menu/crud'
+import { addToMenu, getMenu, removeFromMenu, clearMenu, toggleComplete } from '#/menu/crud'
+import { getRecipeById } from '#/recipes/crud'
 
 describe('weekly menu', () => {
   it('adds a recipe to the menu', async () => {
@@ -76,5 +77,50 @@ describe('weekly menu', () => {
     const db = createTestDb()
 
     await expect(addToMenu(db, 9999)).rejects.toThrow()
+  })
+
+  it('marks a recipe as cooked and updates cooking stats', async () => {
+    const db = createTestDb()
+    const recipe = await createTestRecipe(db, { title: 'Pasta' })
+    await addToMenu(db, recipe.id)
+
+    await toggleComplete(db, recipe.id)
+
+    const menu = await getMenu(db)
+    expect(menu[0].completedAt).toBeInstanceOf(Date)
+
+    const updated = await getRecipeById(db, recipe.id)
+    expect(updated!.cookCount).toBe(1)
+    expect(updated!.lastCookedAt).toBeInstanceOf(Date)
+  })
+
+  it('unmarks a cooked recipe and decrements cook count', async () => {
+    const db = createTestDb()
+    const recipe = await createTestRecipe(db, { title: 'Pasta' })
+    await addToMenu(db, recipe.id)
+
+    await toggleComplete(db, recipe.id)
+    await toggleComplete(db, recipe.id)
+
+    const menu = await getMenu(db)
+    expect(menu[0].completedAt).toBeNull()
+
+    const updated = await getRecipeById(db, recipe.id)
+    expect(updated!.cookCount).toBe(0)
+  })
+
+  it('does not decrement cook count below zero', async () => {
+    const db = createTestDb()
+    const recipe = await createTestRecipe(db, { title: 'Pasta' })
+    await addToMenu(db, recipe.id)
+
+    // Complete then uncomplete twice
+    await toggleComplete(db, recipe.id)
+    await toggleComplete(db, recipe.id)
+    await toggleComplete(db, recipe.id)
+    await toggleComplete(db, recipe.id)
+
+    const updated = await getRecipeById(db, recipe.id)
+    expect(updated!.cookCount).toBe(0)
   })
 })
