@@ -165,8 +165,8 @@ const resolveImageUrl = async (
 };
 
 const defaultStoreImage = async (url: string): Promise<string | null> => {
-  const { downloadAndStore } = await import("#/images/image-ops");
-  return downloadAndStore(url);
+  const { downloadAndStoreImage } = await import("#/images");
+  return downloadAndStoreImage(url);
 };
 
 const defaultExtractWithAi =
