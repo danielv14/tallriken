@@ -8,6 +8,8 @@ A personal recipe bank with an integrated AI assistant. Save recipes from URLs, 
 - **Auto-tagging** -- AI assigns tags from your taxonomy during import
 - **Grouped ingredients** -- supports ingredient sections (e.g. "Dough", "Filling", "Sauce")
 - **Search and filter** -- free text search combined with tag filtering
+- **Weekly menus** -- plan meals for the week from your recipe collection
+- **Shopping lists** -- auto-generate shopping lists from your weekly menu
 - **AI chat** -- persistent side panel with recipe search, dietary filtering, meal planning
 - **Image support** -- save original images from URLs, upload your own, or generate with DALL-E 3
 - **Mobile-first** -- responsive design that works in the kitchen

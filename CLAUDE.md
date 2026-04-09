@@ -20,10 +20,14 @@ Personal recipe bank with AI assistant, built with TanStack Start on Cloudflare 
 - `src/chat/` -- AI chat panel, Zustand store, tool definitions
 - `src/components/` -- shared UI components and recipe form
 - `src/db/` -- Drizzle schema, client, shared Database type
+- `src/hooks/` -- shared React hooks (e.g. clipboard)
 - `src/images/` -- R2 upload/retrieval, DALL-E generation
 - `src/import/` -- URL/OCR/AI recipe extraction pipeline
+- `src/menu/` -- weekly menu CRUD and server functions
 - `src/recipes/` -- recipe CRUD, server functions, form utilities
+- `src/shopping-list/` -- shopping list generation from menus
 - `src/tags/` -- tag CRUD and server functions
+- `src/utils/` -- shared utility functions
 - `src/routes/` -- TanStack file-based routes
 
 ## Development
@@ -61,6 +65,6 @@ Tests use in-memory SQLite via better-sqlite3. Shared utilities in `src/test-uti
 
 - Path alias `#/*` maps to `src/*`
 - Server functions use Zod validation via `.inputValidator()`
-- Recipe form data uses strings for numbers (converted via `formDataToRecipeInput`/`recipeToFormData`)
+- Recipe form data uses `RecipeFormData` type with string values for numbers (converted via `Recipe.fromForm`/`Recipe.toForm`/`Recipe.fromDraft`)
 - AI extraction returns `RecipeDraft` with nullable fields (OpenAI structured outputs requirement)
 - Chat page context injected as `[KONTEXT: ...]` prefix in user messages, stripped on render
