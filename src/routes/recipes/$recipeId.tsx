@@ -247,10 +247,10 @@ function RecipeDetailPage() {
                 <ol className="mt-3 space-y-4">
                   {recipe.steps.map((step, i) => (
                     <li key={i} className="flex gap-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-plum-600 text-xs font-bold text-white">
-                        {i + 1}
+                      <span className="shrink-0 text-sm font-bold text-plum-600">
+                        {i + 1}.
                       </span>
-                      <p className="pt-0.5 text-base leading-relaxed text-gray-700">{step}</p>
+                      <p className="text-base leading-relaxed text-gray-700">{step}</p>
                     </li>
                   ))}
                 </ol>
