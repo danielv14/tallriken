@@ -139,17 +139,17 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
   }
 
   const handleFormSubmit = async () => {
-    // Validate all fields using the 'change' cause so errors live in errorMap.onChange
-    // This ensures they get properly cleared when the user fixes them
+    // Touch all fields so errors become visible
     await form.validateAllFields('change')
+    // Run form-level schema validator with 'change' cause so errors land in
+    // errorMap.onChange - the same bucket that clears reactively as the user types
+    await form.validate('change')
 
-    const hasErrors = !form.state.isFieldsValid
-    if (hasErrors) {
+    if (!form.state.isValid) {
       navigateToFirstTabWithError()
       return
     }
 
-    // All valid - submit
     onSubmit(form.state.values, imageUrl)
   }
 
