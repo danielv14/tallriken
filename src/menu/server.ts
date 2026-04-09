@@ -4,13 +4,17 @@ import { getDb } from '#/db/client'
 import { env } from 'cloudflare:workers'
 import { addToMenu, removeFromMenu, getMenu, getMenuRecipeIds, clearMenu, toggleComplete, saveShoppingList, getShoppingList } from '#/menu/crud'
 import { generateShoppingList } from '#/menu/generate-shopping-list'
+import { authMiddleware } from '#/auth/middleware'
 
-export const fetchMenu = createServerFn({ method: 'GET' }).handler(async () => {
+export const fetchMenu = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   return getMenu(db)
 })
 
 export const addRecipeToMenu = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
   .inputValidator(z.object({ recipeId: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
@@ -18,30 +22,38 @@ export const addRecipeToMenu = createServerFn({ method: 'POST' })
   })
 
 export const removeRecipeFromMenu = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
   .inputValidator(z.object({ recipeId: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
     await removeFromMenu(db, data.recipeId)
   })
 
-export const clearAllMenu = createServerFn({ method: 'POST' }).handler(async () => {
+export const clearAllMenu = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   await clearMenu(db)
 })
 
-export const fetchMenuRecipeIds = createServerFn({ method: 'GET' }).handler(async () => {
+export const fetchMenuRecipeIds = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   return getMenuRecipeIds(db)
 })
 
 export const toggleRecipeComplete = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
   .inputValidator(z.object({ recipeId: z.number() }))
   .handler(async ({ data }) => {
     const db = getDb()
     await toggleComplete(db, data.recipeId)
   })
 
-export const generateAndSaveShoppingList = createServerFn({ method: 'POST' }).handler(async () => {
+export const generateAndSaveShoppingList = createServerFn({ method: 'POST' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   const menu = await getMenu(db)
 
@@ -60,7 +72,9 @@ export const generateAndSaveShoppingList = createServerFn({ method: 'POST' }).ha
   return content
 })
 
-export const fetchShoppingList = createServerFn({ method: 'GET' }).handler(async () => {
+export const fetchShoppingList = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async () => {
   const db = getDb()
   return getShoppingList(db)
 })

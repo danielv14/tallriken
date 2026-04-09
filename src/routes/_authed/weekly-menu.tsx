@@ -1,6 +1,5 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { getIsAuthenticated } from '#/auth/server'
 import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
 import { fetchMenu, removeRecipeFromMenu, clearAllMenu, toggleRecipeComplete, generateAndSaveShoppingList, fetchShoppingList } from '#/menu/server'
 import { Button } from '#/components/ui/button'
@@ -20,13 +19,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid'
 
-export const Route = createFileRoute('/weekly-menu')({
-  beforeLoad: async () => {
-    const isAuthenticated = await getIsAuthenticated()
-    if (!isAuthenticated) {
-      throw redirect({ to: '/login', search: { error: undefined } })
-    }
-  },
+export const Route = createFileRoute('/_authed/weekly-menu')({
   loader: async () => {
     const [menu, savedShoppingList] = await Promise.all([
       fetchMenu(),

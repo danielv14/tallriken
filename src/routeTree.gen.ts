@@ -9,57 +9,47 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WeeklyMenuRouteImport } from './routes/weekly-menu'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as ImportRouteImport } from './routes/import'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as RecipesRecipeIdRouteImport } from './routes/recipes/$recipeId'
+import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as AdminTagsRouteImport } from './routes/admin/tags'
-import { Route as RecipesEditRecipeIdRouteImport } from './routes/recipes/edit/$recipeId'
+import { Route as AuthedWeeklyMenuRouteImport } from './routes/_authed/weekly-menu'
+import { Route as AuthedImportRouteImport } from './routes/_authed/import'
 import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
+import { Route as AuthedRecipesRecipeIdRouteImport } from './routes/_authed/recipes/$recipeId'
+import { Route as AuthedAdminTagsRouteImport } from './routes/_authed/admin/tags'
+import { Route as AuthedRecipesEditRecipeIdRouteImport } from './routes/_authed/recipes/edit/$recipeId'
 
-const WeeklyMenuRoute = WeeklyMenuRouteImport.update({
-  id: '/weekly-menu',
-  path: '/weekly-menu',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ImportRoute = ImportRouteImport.update({
-  id: '/import',
-  path: '/import',
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AuthedIndexRoute = AuthedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecipesRecipeIdRoute = RecipesRecipeIdRouteImport.update({
-  id: '/recipes/$recipeId',
-  path: '/recipes/$recipeId',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthedRoute,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminTagsRoute = AdminTagsRouteImport.update({
-  id: '/admin/tags',
-  path: '/admin/tags',
-  getParentRoute: () => rootRouteImport,
+const AuthedWeeklyMenuRoute = AuthedWeeklyMenuRouteImport.update({
+  id: '/weekly-menu',
+  path: '/weekly-menu',
+  getParentRoute: () => AuthedRoute,
 } as any)
-const RecipesEditRecipeIdRoute = RecipesEditRecipeIdRouteImport.update({
-  id: '/recipes/edit/$recipeId',
-  path: '/recipes/edit/$recipeId',
-  getParentRoute: () => rootRouteImport,
+const AuthedImportRoute = AuthedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const ApiImagesSplatRoute = ApiImagesSplatRouteImport.update({
   id: '/api/images/$',
@@ -76,56 +66,73 @@ const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
   path: '/api/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedRecipesRecipeIdRoute = AuthedRecipesRecipeIdRouteImport.update({
+  id: '/recipes/$recipeId',
+  path: '/recipes/$recipeId',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAdminTagsRoute = AuthedAdminTagsRouteImport.update({
+  id: '/admin/tags',
+  path: '/admin/tags',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedRecipesEditRecipeIdRoute =
+  AuthedRecipesEditRecipeIdRouteImport.update({
+    id: '/recipes/edit/$recipeId',
+    path: '/recipes/edit/$recipeId',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/import': typeof ImportRoute
+  '/': typeof AuthedIndexRoute
   '/login': typeof LoginRoute
-  '/weekly-menu': typeof WeeklyMenuRoute
-  '/admin/tags': typeof AdminTagsRoute
+  '/import': typeof AuthedImportRoute
+  '/weekly-menu': typeof AuthedWeeklyMenuRoute
   '/api/chat': typeof ApiChatRoute
-  '/recipes/$recipeId': typeof RecipesRecipeIdRoute
+  '/admin/tags': typeof AuthedAdminTagsRoute
+  '/recipes/$recipeId': typeof AuthedRecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/images/$': typeof ApiImagesSplatRoute
-  '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
+  '/recipes/edit/$recipeId': typeof AuthedRecipesEditRecipeIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
-  '/weekly-menu': typeof WeeklyMenuRoute
-  '/admin/tags': typeof AdminTagsRoute
+  '/import': typeof AuthedImportRoute
+  '/weekly-menu': typeof AuthedWeeklyMenuRoute
   '/api/chat': typeof ApiChatRoute
-  '/recipes/$recipeId': typeof RecipesRecipeIdRoute
+  '/': typeof AuthedIndexRoute
+  '/admin/tags': typeof AuthedAdminTagsRoute
+  '/recipes/$recipeId': typeof AuthedRecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/images/$': typeof ApiImagesSplatRoute
-  '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
+  '/recipes/edit/$recipeId': typeof AuthedRecipesEditRecipeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/import': typeof ImportRoute
+  '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
-  '/weekly-menu': typeof WeeklyMenuRoute
-  '/admin/tags': typeof AdminTagsRoute
+  '/_authed/import': typeof AuthedImportRoute
+  '/_authed/weekly-menu': typeof AuthedWeeklyMenuRoute
   '/api/chat': typeof ApiChatRoute
-  '/recipes/$recipeId': typeof RecipesRecipeIdRoute
+  '/_authed/': typeof AuthedIndexRoute
+  '/_authed/admin/tags': typeof AuthedAdminTagsRoute
+  '/_authed/recipes/$recipeId': typeof AuthedRecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/images/$': typeof ApiImagesSplatRoute
-  '/recipes/edit/$recipeId': typeof RecipesEditRecipeIdRoute
+  '/_authed/recipes/edit/$recipeId': typeof AuthedRecipesEditRecipeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/import'
     | '/login'
+    | '/import'
     | '/weekly-menu'
-    | '/admin/tags'
     | '/api/chat'
+    | '/admin/tags'
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -133,12 +140,12 @@ export interface FileRouteTypes {
     | '/recipes/edit/$recipeId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/import'
     | '/login'
+    | '/import'
     | '/weekly-menu'
-    | '/admin/tags'
     | '/api/chat'
+    | '/'
+    | '/admin/tags'
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -146,42 +153,31 @@ export interface FileRouteTypes {
     | '/recipes/edit/$recipeId'
   id:
     | '__root__'
-    | '/'
-    | '/import'
+    | '/_authed'
     | '/login'
-    | '/weekly-menu'
-    | '/admin/tags'
+    | '/_authed/import'
+    | '/_authed/weekly-menu'
     | '/api/chat'
-    | '/recipes/$recipeId'
+    | '/_authed/'
+    | '/_authed/admin/tags'
+    | '/_authed/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/images/$'
-    | '/recipes/edit/$recipeId'
+    | '/_authed/recipes/edit/$recipeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ImportRoute: typeof ImportRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  WeeklyMenuRoute: typeof WeeklyMenuRoute
-  AdminTagsRoute: typeof AdminTagsRoute
   ApiChatRoute: typeof ApiChatRoute
-  RecipesRecipeIdRoute: typeof RecipesRecipeIdRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiImagesSplatRoute: typeof ApiImagesSplatRoute
-  RecipesEditRecipeIdRoute: typeof RecipesEditRecipeIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/weekly-menu': {
-      id: '/weekly-menu'
-      path: '/weekly-menu'
-      fullPath: '/weekly-menu'
-      preLoaderRoute: typeof WeeklyMenuRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -189,26 +185,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/import': {
-      id: '/import'
-      path: '/import'
-      fullPath: '/import'
-      preLoaderRoute: typeof ImportRouteImport
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_authed/': {
+      id: '/_authed/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recipes/$recipeId': {
-      id: '/recipes/$recipeId'
-      path: '/recipes/$recipeId'
-      fullPath: '/recipes/$recipeId'
-      preLoaderRoute: typeof RecipesRecipeIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthedIndexRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/api/chat': {
       id: '/api/chat'
@@ -217,19 +206,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/tags': {
-      id: '/admin/tags'
-      path: '/admin/tags'
-      fullPath: '/admin/tags'
-      preLoaderRoute: typeof AdminTagsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authed/weekly-menu': {
+      id: '/_authed/weekly-menu'
+      path: '/weekly-menu'
+      fullPath: '/weekly-menu'
+      preLoaderRoute: typeof AuthedWeeklyMenuRouteImport
+      parentRoute: typeof AuthedRoute
     }
-    '/recipes/edit/$recipeId': {
-      id: '/recipes/edit/$recipeId'
-      path: '/recipes/edit/$recipeId'
-      fullPath: '/recipes/edit/$recipeId'
-      preLoaderRoute: typeof RecipesEditRecipeIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authed/import': {
+      id: '/_authed/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthedImportRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/api/images/$': {
       id: '/api/images/$'
@@ -252,21 +241,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/recipes/$recipeId': {
+      id: '/_authed/recipes/$recipeId'
+      path: '/recipes/$recipeId'
+      fullPath: '/recipes/$recipeId'
+      preLoaderRoute: typeof AuthedRecipesRecipeIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/admin/tags': {
+      id: '/_authed/admin/tags'
+      path: '/admin/tags'
+      fullPath: '/admin/tags'
+      preLoaderRoute: typeof AuthedAdminTagsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/recipes/edit/$recipeId': {
+      id: '/_authed/recipes/edit/$recipeId'
+      path: '/recipes/edit/$recipeId'
+      fullPath: '/recipes/edit/$recipeId'
+      preLoaderRoute: typeof AuthedRecipesEditRecipeIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
 
+interface AuthedRouteChildren {
+  AuthedImportRoute: typeof AuthedImportRoute
+  AuthedWeeklyMenuRoute: typeof AuthedWeeklyMenuRoute
+  AuthedIndexRoute: typeof AuthedIndexRoute
+  AuthedAdminTagsRoute: typeof AuthedAdminTagsRoute
+  AuthedRecipesRecipeIdRoute: typeof AuthedRecipesRecipeIdRoute
+  AuthedRecipesEditRecipeIdRoute: typeof AuthedRecipesEditRecipeIdRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedImportRoute: AuthedImportRoute,
+  AuthedWeeklyMenuRoute: AuthedWeeklyMenuRoute,
+  AuthedIndexRoute: AuthedIndexRoute,
+  AuthedAdminTagsRoute: AuthedAdminTagsRoute,
+  AuthedRecipesRecipeIdRoute: AuthedRecipesRecipeIdRoute,
+  AuthedRecipesEditRecipeIdRoute: AuthedRecipesEditRecipeIdRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ImportRoute: ImportRoute,
+  AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
-  WeeklyMenuRoute: WeeklyMenuRoute,
-  AdminTagsRoute: AdminTagsRoute,
   ApiChatRoute: ApiChatRoute,
-  RecipesRecipeIdRoute: RecipesRecipeIdRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiImagesSplatRoute: ApiImagesSplatRoute,
-  RecipesEditRecipeIdRoute: RecipesEditRecipeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

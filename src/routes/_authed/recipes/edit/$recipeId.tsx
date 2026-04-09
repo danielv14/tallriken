@@ -1,19 +1,12 @@
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, editRecipe } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
 import { Recipe } from '#/recipes/recipe'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/recipes/edit/$recipeId')({
-  beforeLoad: async () => {
-    const isAuthenticated = await getIsAuthenticated()
-    if (!isAuthenticated) {
-      throw redirect({ to: '/login', search: { error: undefined } })
-    }
-  },
+export const Route = createFileRoute('/_authed/recipes/edit/$recipeId')({
   loader: async ({ params }) => {
     const recipeId = parseInt(params.recipeId, 10)
     const [recipe, tags] = await Promise.all([
