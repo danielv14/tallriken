@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useSearch } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { getIsAuthenticated } from '#/auth/server'
 
 export const Route = createFileRoute('/login')({

@@ -5,7 +5,6 @@ import { getIsAuthenticated } from '#/auth/server'
 import { fetchAllRecipes, findRecipes, fetchFavoriteRecipes, fetchStaleRecipes } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
-import { Input } from '#/components/ui/input'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -20,7 +19,7 @@ export const Route = createFileRoute('/')({
   beforeLoad: async () => {
     const isAuthenticated = await getIsAuthenticated()
     if (!isAuthenticated) {
-      throw redirect({ to: '/login' })
+      throw redirect({ to: '/login', search: { error: undefined } })
     }
   },
   loader: async () => {
@@ -43,7 +42,7 @@ function HomePage() {
   const [menuRecipeIds, setMenuRecipeIds] = useState<number[]>(initialMenuIds)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
-  const [searching, setSearching] = useState(false)
+  const [, setSearching] = useState(false)
 
   useEffect(() => {
     setPageContext({ type: 'home' })

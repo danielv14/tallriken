@@ -25,7 +25,7 @@ export const Route = createFileRoute('/recipes/$recipeId')({
   beforeLoad: async () => {
     const isAuthenticated = await getIsAuthenticated()
     if (!isAuthenticated) {
-      throw redirect({ to: '/login' })
+      throw redirect({ to: '/login', search: { error: undefined } })
     }
   },
   loader: async ({ params }) => {
