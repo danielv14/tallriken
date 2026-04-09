@@ -6,7 +6,13 @@ import { fetchAllRecipes, findRecipes, fetchFavoriteRecipes, fetchStaleRecipes }
 import { fetchAllTags } from '#/tags/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
 import { RecipeCard } from '#/components/recipe-card'
-import { Menu } from '@base-ui/react/menu'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '#/components/ui/dropdown-menu'
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -192,37 +198,33 @@ function HomePage() {
                 </span>
               )}
             </Link>
-            <Menu.Root>
-              <Menu.Trigger className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600">
+            <DropdownMenu>
+              <DropdownMenuTrigger>
                 <EllipsisVerticalIcon className="h-5 w-5" />
-              </Menu.Trigger>
-              <Menu.Portal>
-                <Menu.Positioner className="z-50" sideOffset={4} align="end">
-                  <Menu.Popup className="min-w-44 rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200">
-                    <Menu.Item className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-gray-700 data-highlighted:bg-gray-50">
-                      <Link to="/admin/tags" className="flex items-center gap-2.5">
-                        <TagIcon className="h-4 w-4 text-gray-400" />
-                        Taggar
-                      </Link>
-                    </Menu.Item>
-                    <Menu.Separator className="my-1 border-t border-gray-100" />
-                    <Menu.Item
-                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-red-600 data-highlighted:bg-red-50"
-                      onClick={() => {
-                        const form = document.createElement('form')
-                        form.method = 'POST'
-                        form.action = '/api/auth/logout'
-                        document.body.appendChild(form)
-                        form.submit()
-                      }}
-                    >
-                      <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
-                      Logga ut
-                    </Menu.Item>
-                  </Menu.Popup>
-                </Menu.Positioner>
-              </Menu.Portal>
-            </Menu.Root>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <Link to="/admin/tags" className="flex items-center gap-2.5">
+                    <TagIcon className="h-4 w-4 text-gray-400" />
+                    Taggar
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600 data-highlighted:bg-red-50"
+                  onClick={() => {
+                    const form = document.createElement('form')
+                    form.method = 'POST'
+                    form.action = '/api/auth/logout'
+                    document.body.appendChild(form)
+                    form.submit()
+                  }}
+                >
+                  <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+                  Logga ut
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </nav>
