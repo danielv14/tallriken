@@ -30,14 +30,23 @@ const TAB_FIELDS: Record<FormTab, string[]> = {
   steps: ['steps'],
 }
 
+// Only show errors from the onChange bucket to avoid stale errors from other event sources
+const getOnChangeErrors = (field: AnyFieldApi): string[] => {
+  const error = field.state.meta.errorMap.onChange
+  if (!error) return []
+  if (typeof error === 'string') return [error]
+  if (Array.isArray(error)) return error.map((e) => (typeof e === 'string' ? e : e?.message ?? '')).filter(Boolean)
+  return []
+}
+
 const hasFieldError = (field: AnyFieldApi) =>
-  field.state.meta.isTouched && field.state.meta.errors.length > 0
+  field.state.meta.isTouched && getOnChangeErrors(field).length > 0
 
 const FieldError = ({ field }: { field: AnyFieldApi }) => {
   if (!hasFieldError(field)) return null
   return (
     <p className="mt-1 text-xs text-red-500">
-      {field.state.meta.errors.map((e) => (typeof e === 'string' ? e : e?.message ?? '')).filter(Boolean).join(', ')}
+      {getOnChangeErrors(field).join(', ')}
     </p>
   )
 }
@@ -84,18 +93,17 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
     defaultValues: initialData ?? Recipe.empty(),
     validators: {
       onChange: recipeFormSchema,
-      onSubmit: recipeFormSchema,
     },
     onSubmit: ({ value }) => {
       onSubmit(value, imageUrl)
     },
   })
 
-  const getTabErrors = (fieldMeta: Record<string, { errors: unknown[] }>) => {
+  const getTabErrors = (fieldMeta: Record<string, { errorMap?: { onChange?: unknown } }>) => {
     const tabHasError = (tab: FormTab) =>
       TAB_FIELDS[tab].some((fieldName) => {
         return Object.entries(fieldMeta).some(
-          ([key, meta]) => key.startsWith(fieldName) && meta.errors.length > 0,
+          ([key, meta]) => key.startsWith(fieldName) && meta.errorMap?.onChange,
         )
       })
 
@@ -106,7 +114,8 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
     }
   }
 
-  const navigateToFirstTabWithError = (fieldMeta: Record<string, { errors: unknown[] }>) => {
+  const navigateToFirstTabWithError = () => {
+    const fieldMeta = form.state.fieldMeta as Record<string, { errorMap?: { onChange?: unknown } }>
     const errors = getTabErrors(fieldMeta)
     const tabOrder: FormTab[] = ['basics', 'ingredients', 'steps']
     const firstErrorTab = tabOrder.find((tab) => errors[tab])
@@ -129,16 +138,27 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
     return result.imageUrl
   }
 
+  const handleFormSubmit = async () => {
+    // Validate all fields using the 'change' cause so errors live in errorMap.onChange
+    // This ensures they get properly cleared when the user fixes them
+    await form.validateAllFields('change')
+
+    const hasErrors = !form.state.isFieldsValid
+    if (hasErrors) {
+      navigateToFirstTabWithError()
+      return
+    }
+
+    // All valid - submit
+    onSubmit(form.state.values, imageUrl)
+  }
+
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault()
         e.stopPropagation()
-        form.handleSubmit().then(() => {
-          // If there are errors after submit, navigate to the first tab with errors
-          const fieldMeta = form.state.fieldMeta as Record<string, { errors: unknown[] }>
-          navigateToFirstTabWithError(fieldMeta)
-        })
+        handleFormSubmit()
       }}
       className="space-y-5"
     >
@@ -146,7 +166,7 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
       <form.Subscribe
         selector={(state) => state.fieldMeta}
         children={(fieldMeta) => {
-          const errors = getTabErrors(fieldMeta as Record<string, { errors: unknown[] }>)
+          const errors = getTabErrors(fieldMeta as Record<string, { errorMap?: { onChange?: unknown } }>)
           return (
             <div className="flex gap-4 border-b border-gray-200">
               <TabButton
@@ -284,17 +304,12 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
         <div>
           <span className="text-sm font-semibold text-gray-700">Bild</span>
           <div className="mt-2">
-            <form.Subscribe
-              selector={(state) => state.canSubmit}
-              children={(canSubmit) => (
-                <ImagePicker
-                  imageUrl={imageUrl}
-                  onImageChange={setImageUrl}
-                  onUpload={handleUploadImage}
-                  onGenerate={handleGenerateImage}
-                  canGenerate={canSubmit}
-                />
-              )}
+            <ImagePicker
+              imageUrl={imageUrl}
+              onImageChange={setImageUrl}
+              onUpload={handleUploadImage}
+              onGenerate={handleGenerateImage}
+              canGenerate={!!form.getFieldValue('title').trim()}
             />
           </div>
         </div>
@@ -458,20 +473,15 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
         />
       </div>
 
-      {/* Submit */}
-      <form.Subscribe
-        selector={(state) => [state.canSubmit, state.isSubmitting] as const}
-        children={([canSubmit, isSubmitting]) => (
-          <div className="flex gap-2 pt-2">
-            <Button type="submit" disabled={!canSubmit || isSubmitting}>
-              {submitLabel}
-            </Button>
-            <Button type="button" variant="ghost" onClick={onCancel}>
-              Avbryt
-            </Button>
-          </div>
-        )}
-      />
+      {/* Submit - always enabled, validation happens on submit */}
+      <div className="flex gap-2 pt-2">
+        <Button type="submit">
+          {submitLabel}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Avbryt
+        </Button>
+      </div>
     </form>
   )
 }
