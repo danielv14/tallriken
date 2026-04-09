@@ -2,11 +2,11 @@ import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-ro
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
-import { fileToBase64 } from '#/utils/file'
 import { getIsAuthenticated } from '#/auth/server'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
+import { ImagePicker } from '#/components/image-picker'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
@@ -16,8 +16,6 @@ import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
   CheckIcon,
-  SparklesIcon,
-  PhotoIcon,
   CalendarIcon,
 } from '@heroicons/react/24/outline'
 
@@ -47,8 +45,6 @@ function RecipeDetailPage() {
   const setPageContext = useChatStore((s) => s.setPageContext)
   const { copied, copy: copyToClipboard } = useCopyToClipboard()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [generatingImage, setGeneratingImage] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState(recipe.imageUrl)
   const [inMenu, setInMenu] = useState(menuRecipeIds.includes(recipe.id))
 
@@ -67,29 +63,14 @@ function RecipeDetailPage() {
     await copyToClipboard(text)
   }
 
-  const handleGenerateImage = async () => {
-    setGeneratingImage(true)
-    try {
-      const result = await generateAndSaveImage({ data: { recipeId: recipe.id } })
-      setCurrentImageUrl(result.imageUrl)
-    } catch (err) {
-      console.error('Image generation failed:', err)
-    } finally {
-      setGeneratingImage(false)
-    }
+  const handleGenerateImage = async (): Promise<string> => {
+    const result = await generateAndSaveImage({ data: { recipeId: recipe.id } })
+    return result.imageUrl
   }
 
-  const handleUploadImage = async (file: File) => {
-    setUploadingImage(true)
-    try {
-      const base64 = await fileToBase64(file)
-      const result = await uploadImageForRecipe({ data: { recipeId: recipe.id, base64, mimeType: file.type } })
-      setCurrentImageUrl(result.imageUrl)
-    } catch (err) {
-      console.error('Image upload failed:', err)
-    } finally {
-      setUploadingImage(false)
-    }
+  const handleUploadImage = async (base64: string, mimeType: string): Promise<string> => {
+    const result = await uploadImageForRecipe({ data: { recipeId: recipe.id, base64, mimeType } })
+    return result.imageUrl
   }
 
   const handleToggleMenu = async () => {
@@ -134,38 +115,13 @@ function RecipeDetailPage() {
       <main className="mx-auto max-w-4xl px-4 py-8">
         <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
           {/* Recipe image */}
-          {currentImageUrl ? (
-            <img
-              src={currentImageUrl}
-              alt={recipe.title}
-              className="max-h-96 w-full object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center gap-3 border-b border-dashed border-gray-200 bg-gray-50 py-10">
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-100">
-                <PhotoIcon className="h-4 w-4" />
-                {uploadingImage ? 'Laddar upp...' : 'Ladda upp bild'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploadingImage}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleUploadImage(file)
-                  }}
-                />
-              </label>
-              <button
-                onClick={handleGenerateImage}
-                disabled={generatingImage}
-                className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:opacity-50"
-              >
-                <SparklesIcon className="h-4 w-4" />
-                {generatingImage ? 'Genererar...' : 'Generera med AI'}
-              </button>
-            </div>
-          )}
+          <ImagePicker
+            imageUrl={currentImageUrl ?? undefined}
+            onImageChange={(url) => setCurrentImageUrl(url ?? null)}
+            onUpload={handleUploadImage}
+            onGenerate={handleGenerateImage}
+            variant="banner"
+          />
 
           <div className="p-6">
           {/* Title & meta */}
