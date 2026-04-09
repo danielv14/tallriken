@@ -111,11 +111,19 @@ export const searchRecipes = async (db: Database, filters: SearchFilters) => {
 
   if (filters.query) {
     const pattern = `%${filters.query}%`
+
+    const recipeIdsWithMatchingTags = db
+      .select({ recipeId: schema.recipeTagsTable.recipeId })
+      .from(schema.recipeTagsTable)
+      .innerJoin(schema.tagsTable, eq(schema.recipeTagsTable.tagId, schema.tagsTable.id))
+      .where(like(schema.tagsTable.name, pattern))
+
     conditions.push(
       or(
         like(schema.recipesTable.title, pattern),
         like(schema.recipesTable.description, pattern),
         like(schema.recipesTable.ingredients, pattern),
+        inArray(schema.recipesTable.id, recipeIdsWithMatchingTags),
       ),
     )
   }

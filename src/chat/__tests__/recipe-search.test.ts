@@ -94,4 +94,17 @@ describe('recipe search', () => {
     expect(results[0].cookCount).toBe(0)
     expect(results[0].lastCookedAt).toBeNull()
   })
+
+  it('finds recipes by fuzzy tag match (different word forms)', async () => {
+    const db = createTestDb()
+    const tag = await createTestTag(db, 'Barnvänligt')
+    await createTestRecipe(db, { title: 'Ugnspannkaka', tagIds: [tag.id] })
+    await createTestRecipe(db, { title: 'Pad Thai' })
+
+    const search = createRecipeSearch(db)
+    const results = await search.search('barnvänliga')
+
+    expect(results.map((r) => r.title)).toContain('Ugnspannkaka')
+    expect(results.map((r) => r.title)).not.toContain('Pad Thai')
+  })
 })

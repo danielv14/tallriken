@@ -3,12 +3,16 @@ import { chat, toServerSentEventsResponse, maxIterations } from '@tanstack/ai'
 import { openaiText } from '@tanstack/ai-openai'
 import { env } from 'cloudflare:workers'
 import { searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool } from '#/chat/tools'
+import { getDb } from '#/db/client'
+import { getAllTags } from '#/tags/crud'
 
 const SYSTEM_PROMPT = `Du är Tallrikens receptassistent. Du hjälper användaren att hitta recept, planera veckomenyer, skapa inköpslistor och skala recept.
 
 VIKTIGT om sökning:
 - Verktyget search_recipes söker efter recept med sökfras, taggar och max tillagningstid. Resultaten inkluderar cookCount och lastCookedAt.
-- Du kan bedöma kosttyp (vegetariskt, veganskt etc) genom att titta på ingredienserna.
+- ALLTID sök med search_recipes INNAN du svarar på frågor om recept. Svara ALDRIG att recept inte finns utan att först ha sökt.
+- När användaren nämner en kategori (t.ex. "barnvänligt", "vegetariskt"), matcha mot de tillgängliga taggarna (listas i slutet av denna prompt) och skicka det EXAKTA taggnamnet i tags-parametern. Lämna query tom vid ren tagg-sökning.
+- Du kan bedöma kosttyp genom att titta på ingredienserna.
 - Du kan filtrera på tillagningstid, antal portioner, ingredienser etc.
 - Använd cookCount och lastCookedAt för att svara på frågor om matlagningshistorik.
 
@@ -32,11 +36,18 @@ export const Route = createFileRoute('/api/chat')({
       POST: async ({ request }) => {
         const { messages, conversationId } = await request.json()
 
+        const db = getDb()
+        const tags = await getAllTags(db)
+        const tagNames = tags.map((t) => t.name)
+        const tagSection = tagNames.length > 0
+          ? `\n\nTillgängliga taggar i användarens samling: ${tagNames.join(', ')}\nAnvänd EXAKT dessa taggnamn i tags-parametern vid sökning.`
+          : ''
+
         const stream = chat({
           adapter: openaiText('gpt-4o-mini', {
             apiKey: env.OPENAI_API_KEY,
           }),
-          system: SYSTEM_PROMPT,
+          system: SYSTEM_PROMPT + tagSection,
           messages,
           conversationId,
           tools: [searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool],
