@@ -84,6 +84,7 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
     defaultValues: initialData ?? Recipe.empty(),
     validators: {
       onBlur: recipeFormSchema,
+      onChange: recipeFormSchema,
       onSubmit: recipeFormSchema,
     },
     onSubmit: ({ value }) => {
