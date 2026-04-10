@@ -6,7 +6,7 @@ import { syncRecipeVector, type SyncRecipe } from '#/vector/sync'
 import { getAllRecipes, getRecipesByIds } from '#/recipes/crud'
 
 export type RecipeIndex = {
-  onRecipeSaved: (recipe: SyncRecipe, tagIds: number[]) => Promise<void>
+  onRecipeSaved: (recipe: SyncRecipe, tagNames: string[]) => Promise<void>
   onRecipeDeleted: (recipeId: number) => Promise<void>
   onTagRenamed: (tagId: number) => Promise<void>
   backfillAll: () => Promise<{ total: number }>
@@ -25,8 +25,8 @@ export const createRecipeIndex = (
   vectorSearch: VectorSearch,
   apiKey: string,
 ): RecipeIndex => ({
-  onRecipeSaved: async (recipe, tagIds) => {
-    await syncRecipeVector(vectorSearch, apiKey, db, recipe, tagIds)
+  onRecipeSaved: async (recipe, tagNames) => {
+    await syncRecipeVector({ vectorSearch, apiKey, recipe, tagNames })
   },
 
   onRecipeDeleted: async (recipeId) => {
@@ -46,7 +46,12 @@ export const createRecipeIndex = (
 
     await Promise.all(
       recipes.map((recipe) =>
-        syncRecipeVector(vectorSearch, apiKey, db, recipe, recipe.tags.map((t) => t.id)),
+        syncRecipeVector({
+          vectorSearch,
+          apiKey,
+          recipe,
+          tagNames: recipe.tags.map((t) => t.name),
+        }),
       ),
     )
   },
@@ -57,7 +62,12 @@ export const createRecipeIndex = (
     for (const batch of chunk(recipes, 10)) {
       await Promise.all(
         batch.map((recipe) =>
-          syncRecipeVector(vectorSearch, apiKey, db, recipe, recipe.tags.map((t) => t.id)),
+          syncRecipeVector({
+            vectorSearch,
+            apiKey,
+            recipe,
+            tagNames: recipe.tags.map((t) => t.name),
+          }),
         ),
       )
     }

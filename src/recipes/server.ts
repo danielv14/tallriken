@@ -1,6 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { inArray } from 'drizzle-orm'
 import { getDb } from '#/db/client'
+import * as schema from '#/db/schema'
 import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
 import { recipeInputSchema } from '#/recipes/recipe'
 import { createRecipeSearch } from '#/recipes/search'
@@ -8,6 +10,16 @@ import { authMiddleware } from '#/auth/middleware'
 import { getVectorSearch } from '#/vector/client'
 import { createRecipeIndex } from '#/vector/recipe-index'
 import { env } from 'cloudflare:workers'
+import type { Database } from '#/db/types'
+
+const getTagNamesByIds = async (db: Database, tagIds: number[]): Promise<string[]> => {
+  if (tagIds.length === 0) return []
+  const tags = await db
+    .select({ name: schema.tagsTable.name })
+    .from(schema.tagsTable)
+    .where(inArray(schema.tagsTable.id, tagIds))
+  return tags.map((t) => t.name)
+}
 
 export const saveRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
@@ -15,8 +27,9 @@ export const saveRecipe = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const db = getDb()
     const recipe = await createRecipe(db, data)
+    const tagNames = await getTagNamesByIds(db, data.tagIds)
     const index = createRecipeIndex(db, getVectorSearch(), env.OPENAI_API_KEY)
-    await index.onRecipeSaved(recipe, data.tagIds)
+    await index.onRecipeSaved(recipe, tagNames)
     return recipe
   })
 
@@ -27,8 +40,9 @@ export const editRecipe = createServerFn({ method: 'POST' })
     const db = getDb()
     const { id, ...input } = data
     const recipe = await updateRecipe(db, id, input)
+    const tagNames = await getTagNamesByIds(db, input.tagIds)
     const index = createRecipeIndex(db, getVectorSearch(), env.OPENAI_API_KEY)
-    await index.onRecipeSaved(recipe, input.tagIds)
+    await index.onRecipeSaved(recipe, tagNames)
     return recipe
   })
 
