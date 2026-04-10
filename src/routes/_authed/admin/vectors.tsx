@@ -8,12 +8,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/_authed/admin/vectors')({
-  head: () => ({ meta: [{ title: 'Vektorsök | Tallriken' }] }),
-  component: VectorsAdminPage,
-})
-
-function VectorsAdminPage() {
+const VectorsAdminPage = () => {
   const [showConfirm, setShowConfirm] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [result, setResult] = useState<string | null>(null)
@@ -86,3 +81,8 @@ function VectorsAdminPage() {
     </div>
   )
 }
+
+export const Route = createFileRoute('/_authed/admin/vectors')({
+  head: () => ({ meta: [{ title: 'Vektorsök | Tallriken' }] }),
+  component: VectorsAdminPage,
+})

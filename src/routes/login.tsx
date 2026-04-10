@@ -1,16 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { requireGuest } from '#/auth/guards'
 
-export const Route = createFileRoute('/login')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    error: search.error as string | undefined,
-  }),
-  head: () => ({ meta: [{ title: 'Logga in | Tallriken' }] }),
-  beforeLoad: requireGuest,
-  component: LoginPage,
-})
-
-function LoginPage() {
+const LoginPage = () => {
   const { error } = Route.useSearch()
 
   return (
@@ -47,3 +38,12 @@ function LoginPage() {
     </main>
   )
 }
+
+export const Route = createFileRoute('/login')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    error: search.error as string | undefined,
+  }),
+  head: () => ({ meta: [{ title: 'Logga in | Tallriken' }] }),
+  beforeLoad: requireGuest,
+  component: LoginPage,
+})

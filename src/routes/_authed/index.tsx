@@ -24,20 +24,6 @@ import {
   ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/_authed/')({
-  loader: async () => {
-    const [recipes, tags, menuRecipeIds, favorites, stale] = await Promise.all([
-      fetchAllRecipes(),
-      fetchAllTags(),
-      fetchMenuRecipeIds(),
-      fetchFavoriteRecipes(),
-      fetchStaleRecipes(),
-    ])
-    return { recipes, tags, menuRecipeIds, favorites, stale }
-  },
-  component: HomePage,
-})
-
 type CookingInsightsProps = {
   favorites: { id: number; title: string; cookCount: number }[]
   stale: { id: number; title: string; lastCookedAt: Date | null }[]
@@ -98,7 +84,7 @@ const CookingInsights = ({ favorites, stale }: CookingInsightsProps) => {
   )
 }
 
-function HomePage() {
+const HomePage = () => {
   const { recipes: initialRecipes, tags, menuRecipeIds: initialMenuIds, favorites, stale } = Route.useLoaderData()
   const setPageContext = useChatStore((s) => s.setPageContext)
   const [recipes, setRecipes] = useState(initialRecipes)
@@ -304,3 +290,17 @@ function HomePage() {
     </div>
   )
 }
+
+export const Route = createFileRoute('/_authed/')({
+  loader: async () => {
+    const [recipes, tags, menuRecipeIds, favorites, stale] = await Promise.all([
+      fetchAllRecipes(),
+      fetchAllTags(),
+      fetchMenuRecipeIds(),
+      fetchFavoriteRecipes(),
+      fetchStaleRecipes(),
+    ])
+    return { recipes, tags, menuRecipeIds, favorites, stale }
+  },
+  component: HomePage,
+})

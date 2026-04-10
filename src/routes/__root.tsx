@@ -4,6 +4,36 @@ import { ChatToggle } from '#/chat/chat-toggle'
 import { useChatStore } from '#/chat/store'
 import appCss from '../styles.css?url'
 
+const RootDocument = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <html lang="sv">
+      <head>
+        <HeadContent />
+      </head>
+      <body className="min-h-screen font-sans text-gray-800 antialiased">
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
+const RootComponent = () => {
+  const isOpen = useChatStore((s) => s.isOpen)
+
+  return (
+    <>
+      <div
+        className={`transition-all duration-300 ${isOpen ? 'md:mr-[420px]' : ''}`}
+      >
+        <Outlet />
+      </div>
+      <ChatPanel />
+      <ChatToggle />
+    </>
+  )
+}
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -19,33 +49,3 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
   component: RootComponent,
 })
-
-function RootDocument({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="sv">
-      <head>
-        <HeadContent />
-      </head>
-      <body className="min-h-screen font-sans text-gray-800 antialiased">
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  )
-}
-
-function RootComponent() {
-  const isOpen = useChatStore((s) => s.isOpen)
-
-  return (
-    <>
-      <div
-        className={`transition-all duration-300 ${isOpen ? 'md:mr-[420px]' : ''}`}
-      >
-        <Outlet />
-      </div>
-      <ChatPanel />
-      <ChatToggle />
-    </>
-  )
-}

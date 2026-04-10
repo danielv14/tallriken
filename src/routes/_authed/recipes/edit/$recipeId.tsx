@@ -6,23 +6,7 @@ import { RecipeForm, type RecipeFormData } from '#/components/recipe-form'
 import { Recipe } from '#/recipes/recipe'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/_authed/recipes/edit/$recipeId')({
-  loader: async ({ params }) => {
-    const recipeId = parseInt(params.recipeId, 10)
-    const [recipe, tags] = await Promise.all([
-      fetchRecipeById({ data: { id: recipeId } }),
-      fetchAllTags(),
-    ])
-    if (!recipe) {
-      throw new Error('Receptet hittades inte')
-    }
-    return { recipe, tags }
-  },
-  head: ({ loaderData }) => ({ meta: [{ title: `Redigera ${loaderData.recipe.title} | Tallriken` }] }),
-  component: EditRecipePage,
-})
-
-function EditRecipePage() {
+const EditRecipePage = () => {
   const { recipe, tags } = Route.useLoaderData()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -73,3 +57,19 @@ function EditRecipePage() {
     </div>
   )
 }
+
+export const Route = createFileRoute('/_authed/recipes/edit/$recipeId')({
+  loader: async ({ params }) => {
+    const recipeId = parseInt(params.recipeId, 10)
+    const [recipe, tags] = await Promise.all([
+      fetchRecipeById({ data: { id: recipeId } }),
+      fetchAllTags(),
+    ])
+    if (!recipe) {
+      throw new Error('Receptet hittades inte')
+    }
+    return { recipe, tags }
+  },
+  head: ({ loaderData }) => ({ meta: [{ title: `Redigera ${loaderData.recipe.title} | Tallriken` }] }),
+  component: EditRecipePage,
+})

@@ -10,15 +10,9 @@ import { RecipeForm, TabButton, type RecipeFormData } from '#/components/recipe-
 import { fileToBase64 } from '#/utils/file'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/_authed/import')({
-  loader: () => fetchAllTags(),
-  head: () => ({ meta: [{ title: 'Nytt recept | Tallriken' }] }),
-  component: ImportPage,
-})
-
 type ImportTab = 'url' | 'photo' | 'manual'
 
-function ImportPage() {
+const ImportPage = () => {
   const tags = Route.useLoaderData()
   const navigate = useNavigate()
   const [tab, setTab] = useState<ImportTab>('url')
@@ -236,3 +230,9 @@ const PhotoImport = ({ onExtracted, onError }: PhotoImportProps) => {
     </div>
   )
 }
+
+export const Route = createFileRoute('/_authed/import')({
+  loader: () => fetchAllTags(),
+  head: () => ({ meta: [{ title: 'Nytt recept | Tallriken' }] }),
+  component: ImportPage,
+})
