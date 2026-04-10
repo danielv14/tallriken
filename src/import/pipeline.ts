@@ -69,8 +69,10 @@ const importFromUrl = async (
 
   const jsonLdDraft = extractJsonLdRecipe(html);
   if (jsonLdDraft) {
-    const tagIds = await resolveTagIds(jsonLdDraft, tags, classifyTags);
-    const imageUrl = await resolveImageUrl(html, storeImage);
+    const [tagIds, imageUrl] = await Promise.all([
+      resolveTagIds(jsonLdDraft, tags, classifyTags),
+      resolveImageUrl(html, storeImage),
+    ]);
     return {
       draft: jsonLdDraft,
       tagIds,
@@ -82,8 +84,10 @@ const importFromUrl = async (
 
   const aiDraft = await extractWithAi({ kind: "html", html }, tagNames);
   if (aiDraft) {
-    const tagIds = await resolveTagIds(aiDraft, tags, classifyTags);
-    const imageUrl = await resolveImageUrl(html, storeImage);
+    const [tagIds, imageUrl] = await Promise.all([
+      resolveTagIds(aiDraft, tags, classifyTags),
+      resolveImageUrl(html, storeImage),
+    ]);
     return {
       draft: aiDraft,
       tagIds,
