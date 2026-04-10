@@ -33,6 +33,7 @@ describe('syncRecipeVector', () => {
       id: 1,
       title: 'Pasta Carbonara',
       description: 'Klassisk pasta',
+      ingredients: [{ group: null, items: ['pasta', 'ägg'] }],
       cookingTimeMinutes: 25,
     }, [tag.id])
 
@@ -51,6 +52,7 @@ describe('syncRecipeVector', () => {
       id: 2,
       title: 'Enkel soppa',
       description: null,
+      ingredients: [],
       cookingTimeMinutes: null,
     }, [])
 
@@ -71,6 +73,7 @@ describe('syncRecipeVector', () => {
       id: 3,
       title: 'Pannkakor',
       description: 'Snabba pannkakor',
+      ingredients: [{ group: null, items: ['mjöl', 'ägg', 'mjölk'] }],
       cookingTimeMinutes: 15,
     }, [tag1.id, tag2.id])
 

@@ -4,6 +4,7 @@ type EmbeddingInput = {
   title: string
   tags: string[]
   description: string | null
+  ingredients: string[]
   cookingTimeMinutes: number | null
 }
 
@@ -16,6 +17,10 @@ export const buildEmbeddingText = (recipe: EmbeddingInput): string => {
 
   if (recipe.description) {
     parts.push(recipe.description)
+  }
+
+  if (recipe.ingredients.length > 0) {
+    parts.push(recipe.ingredients.join(', '))
   }
 
   if (recipe.cookingTimeMinutes != null) {

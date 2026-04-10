@@ -21,29 +21,25 @@ const recipeResultSchema = z.object({
 const searchRecipesDef = toolDefinition({
   name: 'search_recipes',
   description:
-    'Sök efter recept i användarens receptsamling. Returnerar recept som matchar sökfrasen med titel, beskrivning, ingredienser, tillagningstid, taggar, antal gånger lagat och senast lagat.',
+    'Sök efter recept i användarens receptsamling med semantisk sökning. Skriv alltid en beskrivande sökfras, t.ex. "snabba barnvänliga rätter" eller "vegetarisk pasta". Returnerar recept rankade efter relevans.',
   inputSchema: z.object({
-    query: z.string().describe('Sökfras (ingrediens, mattitel, typ av rätt etc)'),
+    query: z.string().describe('Beskrivande sökfras på naturligt språk (t.ex. "enkel vegetarisk middag", "barnvänligt under 30 min")'),
     maxCookingTimeMinutes: z
       .number()
       .optional()
       .describe('Max tillagningstid i minuter'),
-    tags: z
-      .array(z.string())
-      .optional()
-      .describe('Filtrera på taggar (t.ex. ["Vegetariskt", "Snabbt"])'),
   }),
   outputSchema: z.array(recipeResultSchema),
 })
 
 export const searchRecipesTool = searchRecipesDef.server(
-  async ({ query, maxCookingTimeMinutes, tags }) => {
+  async ({ query, maxCookingTimeMinutes }) => {
     const db = getDb()
     const vectorSearch = getVectorSearch()
     const search = createRecipeSearch(db, (q) =>
       vectorSearch.findSimilar({ query: q, topK: 15 }),
     )
-    const results = await search.search(query, { maxCookingTimeMinutes, tags })
+    const results = await search.search(query, { maxCookingTimeMinutes })
     return results.map((r) => ({
       ...r,
       lastCookedAt: r.lastCookedAt?.toISOString() ?? null,
