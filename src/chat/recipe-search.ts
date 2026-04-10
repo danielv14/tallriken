@@ -25,11 +25,21 @@ export type FindSimilar = (query: string) => Promise<{ recipeId: number; score: 
 
 export const createRecipeSearch = (db: Database, findSimilar?: FindSimilar) => ({
   search: async (query: string, filters?: SearchFilters): Promise<CompactRecipeResult[]> => {
+    console.log('[search] query:', query, 'filters:', filters, 'hasVectorSearch:', !!findSimilar)
     if (findSimilar && query) {
-      return vectorSearch(db, findSimilar, query, filters)
+      try {
+        const results = await vectorSearch(db, findSimilar, query, filters)
+        console.log('[search] vector results:', results.length)
+        return results
+      } catch (error) {
+        console.error('[search] vector search failed:', error)
+        return fallbackSearch(db, query, filters)
+      }
     }
 
-    return fallbackSearch(db, query, filters)
+    const results = await fallbackSearch(db, query, filters)
+    console.log('[search] fallback results:', results.length)
+    return results
   },
 })
 

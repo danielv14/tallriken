@@ -6,6 +6,11 @@ LOCAL_DB=".wrangler/state/v3/d1/miniflare-D1DatabaseObject/591bbc95322edaa17f434
 DUMP_FILE="/tmp/tallriken-d1-dump.sql"
 TABLES="tags recipes recipe_tags shopping_lists weekly_menu_items"
 
+# Reverse a space-separated list (macOS lacks tac)
+reverse_tables() {
+  echo "$TABLES" | tr ' ' '\n' | tail -r | tr '\n' ' '
+}
+
 usage() {
   echo "Usage: $0 <local-to-prod|prod-to-local>"
   echo ""
@@ -18,7 +23,8 @@ dump_local() {
   echo "Exporting local D1..."
   rm -f "$DUMP_FILE"
   for table in $TABLES; do
-    sqlite3 "$LOCAL_DB" ".dump $table" >> "$DUMP_FILE"
+    # Export INSERT statements only (no transactions, no schema)
+    sqlite3 "$LOCAL_DB" ".mode insert $table" "SELECT * FROM $table;" >> "$DUMP_FILE"
   done
   echo "Exported to $DUMP_FILE"
 }
@@ -31,7 +37,7 @@ dump_remote() {
 
 import_local() {
   echo "Clearing local tables..."
-  for table in $(echo "$TABLES" | tr ' ' '\n' | tac); do
+  for table in $(reverse_tables); do
     sqlite3 "$LOCAL_DB" "DELETE FROM $table;"
   done
   echo "Importing into local D1..."
@@ -41,7 +47,7 @@ import_local() {
 
 import_remote() {
   echo "Clearing remote tables..."
-  for table in $(echo "$TABLES" | tr ' ' '\n' | tac); do
+  for table in $(reverse_tables); do
     npx wrangler d1 execute "$DB_NAME" --remote --command="DELETE FROM $table;"
   done
   echo "Importing into remote D1..."
