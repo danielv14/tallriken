@@ -2,6 +2,7 @@ import type { Database } from "#/db/types";
 import { extractImageUrl, extractJsonLdRecipe } from "#/import/extract";
 import type { RecipeDraft } from "#/import/schema";
 import { getAllTags } from "#/tags/crud";
+import { validatePublicUrl } from "#/utils/url-validation";
 
 export type ImportSource =
   | { kind: "url"; url: string }
@@ -236,6 +237,8 @@ const defaultClassifyTags =
   };
 
 const defaultFetchHtml = async (url: string): Promise<string> => {
+  validatePublicUrl(url);
+
   const response = await fetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (compatible; Tallriken/1.0)",

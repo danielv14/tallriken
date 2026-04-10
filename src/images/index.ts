@@ -3,6 +3,7 @@ import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
 import { putToR2, deleteFromR2, keyToUrl, urlToKey } from '#/images/_r2'
 import { generateRecipeImage } from '#/images/_generate'
+import { validatePublicUrl } from '#/utils/url-validation'
 
 const makeKey = {
   forRecipe: (recipeId: number, ext: string) =>
@@ -118,6 +119,8 @@ export const downloadAndStoreImage = async (
   externalUrl: string,
 ): Promise<string | null> => {
   try {
+    validatePublicUrl(externalUrl)
+
     const response = await fetch(externalUrl)
     if (!response.ok) return null
 
