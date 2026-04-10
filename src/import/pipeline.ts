@@ -11,6 +11,12 @@ export type AiExtractionInput =
   | { kind: "html"; html: string }
   | { kind: "images"; images: Array<{ base64: string; mimeType: string }> };
 
+export type ClassifyTagsInput = {
+  title: string;
+  description: string | null;
+  ingredients: string[];
+};
+
 export type ImportDeps = {
   db: Database;
   openaiApiKey: string;
@@ -19,6 +25,10 @@ export type ImportDeps = {
     input: AiExtractionInput,
     tagNames: string[],
   ) => Promise<RecipeDraft | null>;
+  classifyTags?: (
+    recipe: ClassifyTagsInput,
+    tagNames: string[],
+  ) => Promise<string[]>;
   storeImage?: (url: string) => Promise<string | null>;
 };
 
@@ -48,6 +58,8 @@ const importFromUrl = async (
   const fetchHtml = deps.fetchHtml ?? defaultFetchHtml;
   const extractWithAi =
     deps.extractWithAi ?? defaultExtractWithAi(deps.openaiApiKey);
+  const classifyTags =
+    deps.classifyTags ?? defaultClassifyTags(deps.openaiApiKey);
   const storeImage = deps.storeImage ?? defaultStoreImage;
 
   const tags = await getAllTags(deps.db);
@@ -57,7 +69,7 @@ const importFromUrl = async (
 
   const jsonLdDraft = extractJsonLdRecipe(html);
   if (jsonLdDraft) {
-    const tagIds = await resolveTagIds(jsonLdDraft, tags, extractWithAi);
+    const tagIds = await resolveTagIds(jsonLdDraft, tags, classifyTags);
     const imageUrl = await resolveImageUrl(html, storeImage);
     return {
       draft: jsonLdDraft,
@@ -70,7 +82,7 @@ const importFromUrl = async (
 
   const aiDraft = await extractWithAi({ kind: "html", html }, tagNames);
   if (aiDraft) {
-    const tagIds = await resolveTagIds(aiDraft, tags, extractWithAi);
+    const tagIds = await resolveTagIds(aiDraft, tags, classifyTags);
     const imageUrl = await resolveImageUrl(html, storeImage);
     return {
       draft: aiDraft,
@@ -99,10 +111,10 @@ const matchTagNames = (
 const resolveTagIds = async (
   draft: RecipeDraft,
   tags: Array<{ id: number; name: string }>,
-  extractWithAi: (
-    input: AiExtractionInput,
+  classifyTags: (
+    recipe: ClassifyTagsInput,
     tagNames: string[],
-  ) => Promise<RecipeDraft | null>,
+  ) => Promise<string[]>,
 ): Promise<number[]> => {
   if (draft.suggestedTagNames && draft.suggestedTagNames.length > 0) {
     return matchTagNames(draft.suggestedTagNames, tags);
@@ -114,14 +126,15 @@ const resolveTagIds = async (
   try {
     const tagNames = tags.map((t) => t.name);
     const allItems = draft.ingredients.flatMap((g) => g.items);
-    const summaryHtml = `<title>${draft.title}</title><p>${draft.description ?? ""}</p><ul>${allItems.map((i) => `<li>${i}</li>`).join("")}</ul>`;
-    const aiDraft = await extractWithAi(
-      { kind: "html", html: summaryHtml },
+    const suggestedNames = await classifyTags(
+      {
+        title: draft.title,
+        description: draft.description ?? null,
+        ingredients: allItems,
+      },
       tagNames,
     );
-    if (aiDraft?.suggestedTagNames) {
-      return matchTagNames(aiDraft.suggestedTagNames, tags);
-    }
+    return matchTagNames(suggestedNames, tags);
   } catch {
     // AI tagging failed, continue without tags
   }
@@ -135,6 +148,8 @@ const importFromPhotos = async (
 ): Promise<ImportResult> => {
   const extractWithAi =
     deps.extractWithAi ?? defaultExtractWithAi(deps.openaiApiKey);
+  const classifyTags =
+    deps.classifyTags ?? defaultClassifyTags(deps.openaiApiKey);
 
   const tags = await getAllTags(deps.db);
   const tagNames = tags.map((t) => t.name);
@@ -145,7 +160,7 @@ const importFromPhotos = async (
     throw new Error("Kunde inte extrahera något recept från bilderna");
   }
 
-  const tagIds = await resolveTagIds(draft, tags, extractWithAi);
+  const tagIds = await resolveTagIds(draft, tags, classifyTags);
 
   return {
     draft,
@@ -181,6 +196,45 @@ const defaultExtractWithAi =
     }
     const { extractRecipeFromImages } = await import("#/import/ocr-extract");
     return extractRecipeFromImages(input.images, tagNames, apiKey);
+  };
+
+const defaultClassifyTags =
+  (apiKey: string) =>
+  async (
+    recipe: ClassifyTagsInput,
+    tagNames: string[],
+  ): Promise<string[]> => {
+    const OpenAI = (await import("openai")).default;
+    const client = new OpenAI({ apiKey });
+
+    const ingredientList = recipe.ingredients.join(", ");
+    const description = recipe.description ?? "";
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `Du är en receptklassificerare. Givet ett recepts titel, beskrivning och ingredienser, välj de taggar som passar bäst från listan.\n\nSvara med en JSON-array av strängar, t.ex. ["Fisk", "Vardag"]. Välj bara taggar från listan. Om inga taggar passar, svara med en tom array [].`,
+        },
+        {
+          role: "user",
+          content: `Recept: ${recipe.title}\nBeskrivning: ${description}\nIngredienser: ${ingredientList}\n\nTillgängliga taggar: ${tagNames.join(", ")}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = completion.choices[0].message.content;
+    if (!content) return [];
+
+    try {
+      const parsed = JSON.parse(content);
+      const tags = Array.isArray(parsed) ? parsed : parsed.tags ?? [];
+      return tags.filter((t: unknown): t is string => typeof t === "string");
+    } catch {
+      return [];
+    }
   };
 
 const defaultFetchHtml = async (url: string): Promise<string> => {
