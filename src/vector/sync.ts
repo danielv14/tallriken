@@ -4,7 +4,7 @@ import type { Database } from '#/db/types'
 import type { VectorSearch } from '#/vector/search'
 import { buildEmbeddingText, embed } from '#/vector/embed'
 
-type SyncRecipe = {
+export type SyncRecipe = {
   id: number
   title: string
   description: string | null

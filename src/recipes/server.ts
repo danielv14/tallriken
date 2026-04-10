@@ -5,7 +5,7 @@ import { createRecipe, getAllRecipes, getRecipeById, getRecipesByIds, updateReci
 import { recipeInputSchema } from '#/recipes/recipe'
 import { authMiddleware } from '#/auth/middleware'
 import { getVectorSearch } from '#/vector/client'
-import { syncRecipeVector } from '#/vector/sync'
+import { createRecipeIndex } from '#/vector/recipe-index'
 import { env } from 'cloudflare:workers'
 
 export const saveRecipe = createServerFn({ method: 'POST' })
@@ -14,7 +14,8 @@ export const saveRecipe = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const db = getDb()
     const recipe = await createRecipe(db, data)
-    await syncRecipeVector(getVectorSearch(), env.OPENAI_API_KEY, db, recipe, data.tagIds)
+    const index = createRecipeIndex(db, getVectorSearch(), env.OPENAI_API_KEY)
+    await index.onRecipeSaved(recipe, data.tagIds)
     return recipe
   })
 
@@ -25,7 +26,8 @@ export const editRecipe = createServerFn({ method: 'POST' })
     const db = getDb()
     const { id, ...input } = data
     const recipe = await updateRecipe(db, id, input)
-    await syncRecipeVector(getVectorSearch(), env.OPENAI_API_KEY, db, recipe, input.tagIds)
+    const index = createRecipeIndex(db, getVectorSearch(), env.OPENAI_API_KEY)
+    await index.onRecipeSaved(recipe, input.tagIds)
     return recipe
   })
 
@@ -35,7 +37,8 @@ export const removeRecipe = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const db = getDb()
     await deleteRecipe(db, data.id)
-    await getVectorSearch().remove(data.id)
+    const index = createRecipeIndex(db, getVectorSearch(), env.OPENAI_API_KEY)
+    await index.onRecipeDeleted(data.id)
   })
 
 export const fetchAllRecipes = createServerFn({ method: 'GET' })
