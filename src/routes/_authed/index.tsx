@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { fetchAllRecipes, findRecipes, fetchFavoriteRecipes, fetchStaleRecipes } from '#/recipes/server'
@@ -86,6 +86,7 @@ const CookingInsights = ({ favorites, stale }: CookingInsightsProps) => {
 
 const HomePage = () => {
   const { recipes: initialRecipes, tags, menuRecipeIds: initialMenuIds, favorites, stale } = Route.useLoaderData()
+  const router = useRouter()
   const setPageContext = useChatStore((s) => s.setPageContext)
   const [recipes, setRecipes] = useState(initialRecipes)
   const [menuRecipeIds, setMenuRecipeIds] = useState<number[]>(initialMenuIds)
@@ -133,6 +134,9 @@ const HomePage = () => {
       setMenuRecipeIds((prev) => [...prev, recipeId])
       await addRecipeToMenu({ data: { recipeId } })
     }
+    router.invalidate({
+      filter: (match) => match.routeId === '/_authed/weekly-menu',
+    })
   }
 
   const toggleTag = (tagId: number) => {
