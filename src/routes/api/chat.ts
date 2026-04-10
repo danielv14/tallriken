@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { getCookie } from '@tanstack/react-start/server'
 import { chat, toServerSentEventsResponse, maxIterations } from '@tanstack/ai'
 import { createOpenaiChat } from '@tanstack/ai-openai'
 import { env } from 'cloudflare:workers'
+import { validateSessionToken } from '#/auth/session'
+import { SESSION_COOKIE_NAME } from '#/auth/cookies'
 import { searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool } from '#/chat/tools'
 import { getDb } from '#/db/client'
 import { getAllTags } from '#/tags/crud'
@@ -34,6 +37,11 @@ export const Route = createFileRoute('/api/chat')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const sessionToken = getCookie(SESSION_COOKIE_NAME)
+        if (!sessionToken || !validateSessionToken(sessionToken, env.APP_SECRET)) {
+          return new Response('Unauthorized', { status: 401 })
+        }
+
         const { messages, conversationId } = await request.json()
 
         const db = getDb()
