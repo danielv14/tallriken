@@ -28,6 +28,7 @@ const createTestDeps = (overrides: Partial<ImportDeps> = {}): ImportDeps => ({
   openaiApiKey: "unused",
   fetchHtml: async () => "",
   extractWithAi: async () => null,
+  classifyTags: async () => [],
   storeImage: async () => null,
   ...overrides,
 });
@@ -147,37 +148,31 @@ describe("importRecipe", () => {
     expect(result.tagIds).toHaveLength(2);
   });
 
-  it("calls AI for tag classification when JSON-LD has no suggested tags", async () => {
+  it("calls classifyTags for tag classification when JSON-LD has no suggested tags", async () => {
     const db = createTestDb();
     const fisk = await createTestTag(db, "Fisk");
     await createTestTag(db, "Dessert");
 
-    let aiCallCount = 0;
+    let classifyCallCount = 0;
 
     const result = await importRecipe(
       { kind: "url", url: "https://example.com/salmon" },
       createTestDeps({
         db,
         fetchHtml: async () => JSON_LD_HTML,
-        extractWithAi: async () => {
-          aiCallCount++;
-          // AI is called only for tag classification, returns draft with tag suggestions
-          return {
-            title: "ignored",
-            description: null,
-            ingredients: [{ group: null, items: ["ignored"] }],
-            steps: null,
-            cookingTimeMinutes: null,
-            servings: null,
-            suggestedTagNames: ["Fisk"],
-          };
+        classifyTags: async (recipe, tagNames) => {
+          classifyCallCount++;
+          expect(recipe.title).toBe("Pannkakor");
+          expect(recipe.ingredients).toEqual(["3 dl mjöl", "6 dl mjölk", "3 ägg"]);
+          expect(tagNames).toEqual(expect.arrayContaining(["Fisk", "Dessert"]));
+          return ["Fisk"];
         },
       }),
     );
 
     expect(result.extraction).toBe("json-ld");
     expect(result.draft.title).toBe("Pannkakor");
-    expect(aiCallCount).toBe(1);
+    expect(classifyCallCount).toBe(1);
     expect(result.tagIds).toEqual([fisk.id]);
   });
 
