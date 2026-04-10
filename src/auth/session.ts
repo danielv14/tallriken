@@ -16,7 +16,10 @@ export const validateSessionToken = (token: string, secret: string): boolean => 
   const [payload, signature] = parts
   const expectedSignature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
 
-  if (signature !== expectedSignature) return false
+  const signatureBuffer = Buffer.from(signature, 'hex')
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex')
+  if (signatureBuffer.length !== expectedBuffer.length) return false
+  if (!crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) return false
 
   const expiresAt = parseInt(payload, 10)
   if (isNaN(expiresAt)) return false
