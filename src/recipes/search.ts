@@ -51,8 +51,8 @@ const vectorSearch = async (
   const recipes = await getRecipesByIds(db, recipeIds)
 
   const filtered = recipes.filter((r) => {
-    if (maxCookingTimeMinutes && r.cookingTimeMinutes != null) {
-      if (r.cookingTimeMinutes > maxCookingTimeMinutes) return false
+    if (maxCookingTimeMinutes) {
+      if (r.cookingTimeMinutes == null || r.cookingTimeMinutes > maxCookingTimeMinutes) return false
     }
     if (tagIds.length > 0) {
       const recipeTagIds = r.tags.map((t) => t.id)
