@@ -45,6 +45,12 @@ export const shoppingListsTable = sqliteTable('shopping_lists', {
     .$defaultFn(() => new Date()),
 })
 
+export const loginAttemptsTable = sqliteTable('login_attempts', {
+  ip: text('ip').primaryKey(),
+  attempts: integer('attempts').notNull().default(0),
+  lastAttempt: integer('last_attempt').notNull(),
+})
+
 export const weeklyMenuItemsTable = sqliteTable('weekly_menu_items', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   recipeId: integer('recipe_id')
