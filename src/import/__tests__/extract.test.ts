@@ -83,6 +83,25 @@ const HTML_WITH_ARRAY_JSON_LD = `
 </html>
 `
 
+const HTML_WITH_ARRAY_TYPE = `
+<html>
+<head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["Recipe", "HowTo"],
+  "name": "Köttbullar",
+  "recipeIngredient": ["500g blandfärs", "1 ägg", "1 dl ströbröd"],
+  "recipeInstructions": [{"@type": "HowToStep", "text": "Blanda ihop allt"}],
+  "totalTime": "PT30M",
+  "recipeYield": "4"
+}
+</script>
+</head>
+<body></body>
+</html>
+`
+
 describe('extractJsonLdRecipe', () => {
   it('extracts recipe from HTML with JSON-LD', () => {
     const result = extractJsonLdRecipe(HTML_WITH_RECIPE_JSON_LD)
@@ -111,6 +130,15 @@ describe('extractJsonLdRecipe', () => {
   it('returns null for malformed JSON-LD', () => {
     const result = extractJsonLdRecipe(HTML_WITH_MALFORMED_JSON_LD)
     expect(result).toBeNull()
+  })
+
+  it('handles @type as array', () => {
+    const result = extractJsonLdRecipe(HTML_WITH_ARRAY_TYPE)
+
+    expect(result).not.toBeNull()
+    expect(result!.title).toBe('Köttbullar')
+    expect(result!.cookingTimeMinutes).toBe(30)
+    expect(result!.servings).toBe(4)
   })
 
   it('finds recipe in JSON-LD array', () => {

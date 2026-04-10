@@ -50,7 +50,6 @@ describe('extractRecipeFromImages', () => {
     expect(result!.steps).toEqual(['Vispa ihop smeten', 'Stek i smör'])
     expect(result!.suggestedTagNames).toEqual(['Snabblagat'])
 
-    // Verify images were sent as content parts
     expect(parseMock).toHaveBeenCalledOnce()
     const callArgs = parseMock.mock.calls[0][0]
     const userMessage = callArgs.messages.find((m: { role: string }) => m.role === 'user')

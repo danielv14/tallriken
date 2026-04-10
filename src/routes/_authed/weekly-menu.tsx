@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
+import { CopyButton } from '#/components/copy-button'
 import { fetchMenu, removeRecipeFromMenu, clearAllMenu, toggleRecipeComplete, generateAndSaveShoppingList, fetchShoppingList } from '#/menu/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
@@ -11,25 +11,11 @@ import {
   UsersIcon,
   CalendarIcon,
   CheckCircleIcon,
-  ClipboardDocumentIcon,
-  CheckIcon,
   SparklesIcon,
   ChevronDownIcon,
   ChevronUpIcon,
 } from '@heroicons/react/24/outline'
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid'
-
-export const Route = createFileRoute('/_authed/weekly-menu')({
-  loader: async () => {
-    const [menu, savedShoppingList] = await Promise.all([
-      fetchMenu(),
-      fetchShoppingList(),
-    ])
-    return { menu, savedShoppingList }
-  },
-  head: () => ({ meta: [{ title: 'Veckans meny | Tallriken' }] }),
-  component: WeeklyMenuPage,
-})
 
 type ShoppingListSectionProps = {
   shoppingList: string | null
@@ -46,15 +32,9 @@ const ShoppingListSection = ({
   onGenerate,
   generating,
 }: ShoppingListSectionProps) => {
-  const { copied, copy: copyToClipboard } = useCopyToClipboard()
-
-  const handleCopy = async () => {
-    if (!shoppingList) return
-    const plainText = shoppingList
-      .replace(/^## /gm, '')
-      .replace(/^- /gm, '  ')
-    await copyToClipboard(plainText)
-  }
+  const plainText = shoppingList
+    ?.replace(/^## /gm, '')
+    .replace(/^- /gm, '  ') ?? ''
 
   return (
     <div className="mt-6 rounded-xl bg-white ring-1 ring-gray-100">
@@ -73,22 +53,7 @@ const ShoppingListSection = ({
         </button>
         <div className="flex items-center gap-2">
           {shoppingList && (
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-            >
-              {copied ? (
-                <>
-                  <CheckIcon className="h-3.5 w-3.5 text-green-500" />
-                  Kopierat
-                </>
-              ) : (
-                <>
-                  <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-                  Kopiera
-                </>
-              )}
-            </button>
+            <CopyButton text={plainText} />
           )}
           <Button
             size="sm"
@@ -117,7 +82,7 @@ const ShoppingListSection = ({
   )
 }
 
-function WeeklyMenuPage() {
+const WeeklyMenuPage = () => {
   const { menu: initialMenu, savedShoppingList } = Route.useLoaderData()
   const [menu, setMenu] = useState(initialMenu)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -293,3 +258,15 @@ function WeeklyMenuPage() {
     </div>
   )
 }
+
+export const Route = createFileRoute('/_authed/weekly-menu')({
+  loader: async () => {
+    const [menu, savedShoppingList] = await Promise.all([
+      fetchMenu(),
+      fetchShoppingList(),
+    ])
+    return { menu, savedShoppingList }
+  },
+  head: () => ({ meta: [{ title: 'Veckans meny | Tallriken' }] }),
+  component: WeeklyMenuPage,
+})

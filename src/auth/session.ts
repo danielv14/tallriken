@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 
-export const SESSION_DURATION_SECONDS = 30 * 24 * 60 * 60 // 30 days
+export const SESSION_DURATION_SECONDS = 30 * 24 * 60 * 60
 
 export const createSessionToken = (secret: string): string => {
   const expiresAt = Date.now() + SESSION_DURATION_SECONDS * 1000

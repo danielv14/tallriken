@@ -19,7 +19,6 @@ export const extractRecipeWithAi = async (
 
   const cleanedText = cleanHtmlForExtraction(html)
 
-  // Begränsa storleken för att undvika att spränga token-gränsen
   const trimmedText = cleanedText.slice(0, 30000)
 
   const completion = await client.chat.completions.parse({

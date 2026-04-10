@@ -11,13 +11,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/_authed/admin/tags')({
-  loader: () => fetchAllTags(),
-  head: () => ({ meta: [{ title: 'Taggar | Tallriken' }] }),
-  component: TagsAdminPage,
-})
-
-function TagsAdminPage() {
+const TagsAdminPage = () => {
   const tags = Route.useLoaderData()
   const [newTagName, setNewTagName] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -155,3 +149,9 @@ function TagsAdminPage() {
     </div>
   )
 }
+
+export const Route = createFileRoute('/_authed/admin/tags')({
+  loader: () => fetchAllTags(),
+  head: () => ({ meta: [{ title: 'Taggar | Tallriken' }] }),
+  component: TagsAdminPage,
+})

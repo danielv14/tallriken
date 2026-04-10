@@ -17,6 +17,7 @@ export const undoCooked = async (db: Database, recipeId: number) => {
     .update(schema.recipesTable)
     .set({
       cookCount: sql`MAX(${schema.recipesTable.cookCount} - 1, 0)`,
+      lastCookedAt: sql`CASE WHEN ${schema.recipesTable.cookCount} <= 1 THEN NULL ELSE ${schema.recipesTable.lastCookedAt} END`,
     })
     .where(eq(schema.recipesTable.id, recipeId))
 }
