@@ -1,5 +1,7 @@
 import { embed } from '#/vector/embed'
 
+const MIN_SIMILARITY_SCORE = 0.3
+
 type FindSimilarOptions = {
   query: string
   topK?: number
@@ -27,10 +29,12 @@ export const createVectorSearch = (vectorize: VectorizeIndex, apiKey: string) =>
       returnMetadata: 'none',
     })
 
-    return results.matches.map((match) => ({
-      recipeId: Number(match.id),
-      score: match.score,
-    }))
+    return results.matches
+      .filter((match) => match.score >= MIN_SIMILARITY_SCORE)
+      .map((match) => ({
+        recipeId: Number(match.id),
+        score: match.score,
+      }))
   },
 
   upsert: async (
