@@ -18,16 +18,25 @@ const TOOL_LABELS: Record<string, string> = {
 }
 
 
+type ChatMessageData = {
+  id: string
+  role: string
+  parts: Array<{ type: string; name?: string; content?: string }>
+}
+
 type ChatMessageProps = {
-  message: {
-    id: string
-    role: string
-    parts: Array<{ type: string; name?: string; content?: string }>
-  }
+  message: ChatMessageData
   isLoading: boolean
   copiedId: string | null
   onCopy: (text: string, messageId: string) => void
 }
+
+const isToolOnlyMessage = (message: ChatMessageData): boolean =>
+  message.role === 'assistant' &&
+  message.parts.some((p) => p.type === 'tool-call') &&
+  message.parts
+    .filter((p) => p.type === 'text')
+    .every((p) => !('content' in p) || !p.content?.trim())
 
 const ChatMessage = ({ message, isLoading, copiedId, onCopy }: ChatMessageProps) => {
   const isAssistant = message.role === 'assistant'
@@ -180,20 +189,23 @@ const ChatPanel = () => {
               </ul>
             </div>
           )}
-          {messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              isLoading={isLoading}
-              copiedId={copiedId}
-              onCopy={handleCopy}
-            />
-          ))}
-          {isLoading && !messages.some((m) =>
-            m.role === 'assistant' &&
-            m.parts.some((p) => p.type === 'tool-call') &&
-            m.parts.filter((p) => p.type === 'text').every((p) => !('content' in p) || !p.content.trim()),
-          ) && (
+          {messages.map((message, index) => {
+            if (isToolOnlyMessage(message)) {
+              const hasLaterToolOnly = messages.slice(index + 1).some(isToolOnlyMessage)
+              if (hasLaterToolOnly) return null
+            }
+
+            return (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                isLoading={isLoading}
+                copiedId={copiedId}
+                onCopy={handleCopy}
+              />
+            )
+          })}
+          {isLoading && !messages.some(isToolOnlyMessage) && (
             <div className="mb-4">
               <div className="max-w-[85%] rounded-2xl bg-gray-100 px-4 py-2.5 text-sm text-gray-400">
                 Tänker...
