@@ -32,7 +32,7 @@ describe('RecipeIndex', () => {
           ingredients: [{ group: null, items: ['pasta', 'ägg'] }],
           cookingTimeMinutes: 25,
         },
-        [],
+        ['Italienskt'],
       )
 
       expect(vectorSearch.upsert).toHaveBeenCalledWith(

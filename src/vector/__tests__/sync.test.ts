@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createTestDb, createTestTag } from '#/test-utils'
 import { syncRecipeVector } from '#/vector/sync'
 import type { VectorSearch } from '#/vector/search'
 
@@ -25,17 +24,20 @@ const createMockVectorSearch = (): VectorSearch & { upsertCalls: unknown[][] } =
 
 describe('syncRecipeVector', () => {
   it('embeds recipe with tag names and upserts vector', async () => {
-    const db = createTestDb()
-    const tag = await createTestTag(db, 'Italienskt')
     const vectorSearch = createMockVectorSearch()
 
-    await syncRecipeVector(vectorSearch, 'test-api-key', db, {
-      id: 1,
-      title: 'Pasta Carbonara',
-      description: 'Klassisk pasta',
-      ingredients: [{ group: null, items: ['pasta', 'ägg'] }],
-      cookingTimeMinutes: 25,
-    }, [tag.id])
+    await syncRecipeVector({
+      vectorSearch,
+      apiKey: 'test-api-key',
+      recipe: {
+        id: 1,
+        title: 'Pasta Carbonara',
+        description: 'Klassisk pasta',
+        ingredients: [{ group: null, items: ['pasta', 'ägg'] }],
+        cookingTimeMinutes: 25,
+      },
+      tagNames: ['Italienskt'],
+    })
 
     expect(vectorSearch.upsert).toHaveBeenCalledWith(
       1,
@@ -45,16 +47,20 @@ describe('syncRecipeVector', () => {
   })
 
   it('handles recipe with no tags', async () => {
-    const db = createTestDb()
     const vectorSearch = createMockVectorSearch()
 
-    await syncRecipeVector(vectorSearch, 'test-api-key', db, {
-      id: 2,
-      title: 'Enkel soppa',
-      description: null,
-      ingredients: [],
-      cookingTimeMinutes: null,
-    }, [])
+    await syncRecipeVector({
+      vectorSearch,
+      apiKey: 'test-api-key',
+      recipe: {
+        id: 2,
+        title: 'Enkel soppa',
+        description: null,
+        ingredients: [],
+        cookingTimeMinutes: null,
+      },
+      tagNames: [],
+    })
 
     expect(vectorSearch.upsert).toHaveBeenCalledWith(
       2,
@@ -63,19 +69,21 @@ describe('syncRecipeVector', () => {
     )
   })
 
-  it('resolves multiple tag names from ids', async () => {
-    const db = createTestDb()
-    const tag1 = await createTestTag(db, 'Snabblagat')
-    const tag2 = await createTestTag(db, 'Barnvänligt')
+  it('passes multiple tag names through to metadata', async () => {
     const vectorSearch = createMockVectorSearch()
 
-    await syncRecipeVector(vectorSearch, 'test-api-key', db, {
-      id: 3,
-      title: 'Pannkakor',
-      description: 'Snabba pannkakor',
-      ingredients: [{ group: null, items: ['mjöl', 'ägg', 'mjölk'] }],
-      cookingTimeMinutes: 15,
-    }, [tag1.id, tag2.id])
+    await syncRecipeVector({
+      vectorSearch,
+      apiKey: 'test-api-key',
+      recipe: {
+        id: 3,
+        title: 'Pannkakor',
+        description: 'Snabba pannkakor',
+        ingredients: [{ group: null, items: ['mjöl', 'ägg', 'mjölk'] }],
+        cookingTimeMinutes: 15,
+      },
+      tagNames: ['Snabblagat', 'Barnvänligt'],
+    })
 
     const metadata = vectorSearch.upsertCalls[0][2] as Record<string, unknown>
     expect(metadata.tagNames).toHaveLength(2)

@@ -1,6 +1,3 @@
-import { inArray } from 'drizzle-orm'
-import * as schema from '#/db/schema'
-import type { Database } from '#/db/types'
 import type { VectorSearch } from '#/vector/search'
 import { buildEmbeddingText, embed } from '#/vector/embed'
 
@@ -12,20 +9,15 @@ export type SyncRecipe = {
   cookingTimeMinutes: number | null
 }
 
-export const syncRecipeVector = async (
-  vectorSearch: VectorSearch,
-  apiKey: string,
-  db: Database,
-  recipe: SyncRecipe,
-  tagIds: number[],
-): Promise<void> => {
-  const tagNames = tagIds.length > 0
-    ? (await db
-        .select({ name: schema.tagsTable.name })
-        .from(schema.tagsTable)
-        .where(inArray(schema.tagsTable.id, tagIds))
-      ).map((t) => t.name)
-    : []
+type SyncRecipeVectorOptions = {
+  vectorSearch: VectorSearch
+  apiKey: string
+  recipe: SyncRecipe
+  tagNames: string[]
+}
+
+export const syncRecipeVector = async (options: SyncRecipeVectorOptions): Promise<void> => {
+  const { vectorSearch, apiKey, recipe, tagNames } = options
 
   const text = buildEmbeddingText({
     title: recipe.title,
