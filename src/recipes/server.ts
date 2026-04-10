@@ -1,8 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
-import { createRecipe, getAllRecipes, getRecipeById, getRecipesByIds, updateRecipe, deleteRecipe, searchRecipes, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
+import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
 import { recipeInputSchema } from '#/recipes/recipe'
+import { createRecipeSearch } from '#/recipes/search'
 import { authMiddleware } from '#/auth/middleware'
 import { getVectorSearch } from '#/vector/client'
 import { createRecipeIndex } from '#/vector/recipe-index'
@@ -67,32 +68,8 @@ export const findRecipes = createServerFn({ method: 'GET' })
   )
   .handler(async ({ data }) => {
     const db = getDb()
-    const hasQuery = data.query && data.query.trim().length > 0
-    const hasTagFilter = data.tagIds && data.tagIds.length > 0
-
-    // Vector search for freetext queries without tag filters
-    if (hasQuery && !hasTagFilter) {
-      const vectorSearch = getVectorSearch()
-      const similar = await vectorSearch.findSimilar({ query: data.query!, topK: 20 })
-
-      if (similar.length > 0) {
-        const recipeIds = similar.map((s) => s.recipeId)
-        const recipes = await getRecipesByIds(db, recipeIds)
-
-        const filtered = data.maxCookingTimeMinutes
-          ? recipes.filter((r) => r.cookingTimeMinutes != null && r.cookingTimeMinutes <= data.maxCookingTimeMinutes!)
-          : recipes
-
-        // Preserve vector similarity ranking
-        const idOrder = new Map(recipeIds.map((id, i) => [id, i]))
-        filtered.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0))
-
-        return filtered
-      }
-    }
-
-    // D1 search for tag-only, filter-only, or empty queries
-    return searchRecipes(db, data)
+    const search = createRecipeSearch(db, (q) => getVectorSearch().findSimilar({ query: q, topK: 20 }))
+    return search.search({ query: data.query, tags: data.tagIds, maxCookingTimeMinutes: data.maxCookingTimeMinutes })
   })
 
 export const fetchFavoriteRecipes = createServerFn({ method: 'GET' })
