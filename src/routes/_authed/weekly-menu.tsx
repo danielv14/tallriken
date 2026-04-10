@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { CopyButton } from '#/components/copy-button'
+import { PageShell } from '#/components/page-shell'
 import { fetchMenu, removeRecipeFromMenu, clearAllMenu, toggleRecipeComplete, generateAndSaveShoppingList, fetchShoppingList } from '#/menu/server'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
-  ArrowLeftIcon,
   TrashIcon,
   ClockIcon,
   UsersIcon,
@@ -127,17 +127,7 @@ const WeeklyMenuPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
-          <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
-            <ArrowLeftIcon className="h-4 w-4" />
-            Tillbaka
-          </Link>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-4xl px-4 py-8">
+    <PageShell to="/">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Veckans meny</h1>
           {menu.length > 0 && (
@@ -254,8 +244,7 @@ const WeeklyMenuPage = () => {
           confirmLabel="Rensa"
           onConfirm={handleClear}
         />
-      </main>
-    </div>
+    </PageShell>
   )
 }
 
