@@ -1,9 +1,38 @@
 import { toolDefinition } from '@tanstack/ai'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
-import { createRecipeSearch } from '#/chat/recipe-search'
+import { createRecipeSearch } from '#/recipes/search'
+import type { getAllRecipes } from '#/recipes/crud'
 import { getVectorSearch } from '#/vector/client'
 import { getMenu, addToMenu } from '#/menu/crud'
+
+type CompactRecipeResult = {
+  id: number
+  title: string
+  description: string | null
+  ingredients: string[]
+  cookingTimeMinutes: number | null
+  servings: number | null
+  tags: string[]
+  cookCount: number
+  lastCookedAt: string | null
+  url: string
+}
+
+const formatResult = (r: Awaited<ReturnType<typeof getAllRecipes>>[number]): CompactRecipeResult => ({
+  id: r.id,
+  title: r.title,
+  description: r.description,
+  ingredients: r.ingredients.flatMap((g) =>
+    g.group ? [`[${g.group}]`, ...g.items] : g.items,
+  ),
+  cookingTimeMinutes: r.cookingTimeMinutes,
+  servings: r.servings,
+  tags: r.tags.map((t) => t.name),
+  cookCount: r.cookCount,
+  lastCookedAt: r.lastCookedAt?.toISOString() ?? null,
+  url: `/recipes/${r.id}`,
+})
 
 const recipeResultSchema = z.object({
   id: z.number(),
@@ -39,11 +68,8 @@ export const searchRecipesTool = searchRecipesDef.server(
     const search = createRecipeSearch(db, (q) =>
       vectorSearch.findSimilar({ query: q, topK: 15 }),
     )
-    const results = await search.search(query, { maxCookingTimeMinutes })
-    return results.map((r) => ({
-      ...r,
-      lastCookedAt: r.lastCookedAt?.toISOString() ?? null,
-    }))
+    const results = await search.search({ query, maxCookingTimeMinutes })
+    return results.map(formatResult)
   },
 )
 

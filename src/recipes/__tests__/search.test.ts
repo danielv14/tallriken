@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createTestDb, createTestRecipe, createTestTag } from '#/test-utils'
-import { createRecipeSearch, type FindSimilar } from '#/chat/recipe-search'
+import { createRecipeSearch, type FindSimilar } from '#/recipes/search'
 
 describe('recipe search', () => {
   it('finds recipes matching query in title', async () => {
@@ -9,7 +9,7 @@ describe('recipe search', () => {
     await createTestRecipe(db, { title: 'Chicken Curry' })
 
     const search = createRecipeSearch(db)
-    const results = await search.search('pasta')
+    const results = await search.search({ query: 'pasta' })
 
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('Pasta Carbonara')
@@ -21,44 +21,12 @@ describe('recipe search', () => {
     await createTestRecipe(db, { title: 'Chicken Curry' })
 
     const search = createRecipeSearch(db)
-    const results = await search.search('')
+    const results = await search.search({})
 
     expect(results).toHaveLength(2)
   })
 
-  it('formats results with flattened ingredients, string tags, and URL', async () => {
-    const db = createTestDb()
-    const tag = await createTestTag(db, 'Italian')
-    await createTestRecipe(db, {
-      title: 'Pasta Carbonara',
-      description: 'Classic Roman dish',
-      ingredients: [
-        { group: 'Pasta', items: ['spaghetti', 'eggs'] },
-        { group: null, items: ['parmesan'] },
-      ],
-      cookingTimeMinutes: 30,
-      servings: 4,
-      tagIds: [tag.id],
-    })
-
-    const search = createRecipeSearch(db)
-    const results = await search.search('pasta')
-
-    expect(results[0]).toEqual({
-      id: expect.any(Number),
-      title: 'Pasta Carbonara',
-      description: 'Classic Roman dish',
-      ingredients: ['[Pasta]', 'spaghetti', 'eggs', 'parmesan'],
-      cookingTimeMinutes: 30,
-      servings: 4,
-      tags: ['Italian'],
-      cookCount: 0,
-      lastCookedAt: null,
-      url: `/recipes/${results[0].id}`,
-    })
-  })
-
-  it('filters by tag names', async () => {
+  it('filters by tag names (string[])', async () => {
     const db = createTestDb()
     const italian = await createTestTag(db, 'Italian')
     const thai = await createTestTag(db, 'Thai')
@@ -66,7 +34,21 @@ describe('recipe search', () => {
     await createTestRecipe(db, { title: 'Pad Thai', tagIds: [thai.id] })
 
     const search = createRecipeSearch(db)
-    const results = await search.search('', { tags: ['Thai'] })
+    const results = await search.search({ tags: ['Thai'] })
+
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Pad Thai')
+  })
+
+  it('filters by tag IDs (number[])', async () => {
+    const db = createTestDb()
+    const italian = await createTestTag(db, 'Italian')
+    const thai = await createTestTag(db, 'Thai')
+    await createTestRecipe(db, { title: 'Pasta Carbonara', tagIds: [italian.id] })
+    await createTestRecipe(db, { title: 'Pad Thai', tagIds: [thai.id] })
+
+    const search = createRecipeSearch(db)
+    const results = await search.search({ tags: [thai.id] })
 
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('Pad Thai')
@@ -78,7 +60,7 @@ describe('recipe search', () => {
     await createTestRecipe(db, { title: 'Slow Roast', cookingTimeMinutes: 180 })
 
     const search = createRecipeSearch(db)
-    const results = await search.search('', { maxCookingTimeMinutes: 30 })
+    const results = await search.search({ maxCookingTimeMinutes: 30 })
 
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('Quick Salad')
@@ -89,7 +71,7 @@ describe('recipe search', () => {
     await createTestRecipe(db, { title: 'Pasta Carbonara' })
 
     const search = createRecipeSearch(db)
-    const results = await search.search('pasta')
+    const results = await search.search({ query: 'pasta' })
 
     expect(results[0].cookCount).toBe(0)
     expect(results[0].lastCookedAt).toBeNull()
@@ -102,7 +84,7 @@ describe('recipe search', () => {
     await createTestRecipe(db, { title: 'Pad Thai' })
 
     const search = createRecipeSearch(db)
-    const results = await search.search('barnvänliga')
+    const results = await search.search({ query: 'barnvänliga' })
 
     expect(results.map((r) => r.title)).toContain('Ugnspannkaka')
     expect(results.map((r) => r.title)).not.toContain('Pad Thai')
@@ -119,7 +101,7 @@ describe('recipe search with vector search', () => {
     ])
 
     const search = createRecipeSearch(db, findSimilar)
-    const results = await search.search('krämig kyckling')
+    const results = await search.search({ query: 'krämig kyckling' })
 
     expect(findSimilar).toHaveBeenCalledWith('krämig kyckling')
     expect(results).toHaveLength(1)
@@ -134,7 +116,7 @@ describe('recipe search with vector search', () => {
     const findSimilar: FindSimilar = vi.fn()
 
     const search = createRecipeSearch(db, findSimilar)
-    const results = await search.search('')
+    const results = await search.search({})
 
     expect(findSimilar).not.toHaveBeenCalled()
     expect(results).toHaveLength(2)
@@ -151,7 +133,7 @@ describe('recipe search with vector search', () => {
     ])
 
     const search = createRecipeSearch(db, findSimilar)
-    const results = await search.search('gryta')
+    const results = await search.search({ query: 'gryta' })
 
     expect(results[0].title).toBe('Långsam gryta')
     expect(results[1].title).toBe('Snabb pasta')
@@ -170,7 +152,7 @@ describe('recipe search with vector search', () => {
     ])
 
     const search = createRecipeSearch(db, findSimilar)
-    const results = await search.search('nudlar', { tags: ['Italienskt'] })
+    const results = await search.search({ query: 'nudlar', tags: ['Italienskt'] })
 
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('Pasta')
@@ -187,9 +169,22 @@ describe('recipe search with vector search', () => {
     ])
 
     const search = createRecipeSearch(db, findSimilar)
-    const results = await search.search('mat', { maxCookingTimeMinutes: 30 })
+    const results = await search.search({ query: 'mat', maxCookingTimeMinutes: 30 })
 
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('Snabbsallad')
+  })
+
+  it('falls back to DB search when vector search throws', async () => {
+    const db = createTestDb()
+    await createTestRecipe(db, { title: 'Pasta Carbonara' })
+
+    const findSimilar: FindSimilar = vi.fn().mockRejectedValue(new Error('Vector service down'))
+
+    const search = createRecipeSearch(db, findSimilar)
+    const results = await search.search({ query: 'pasta' })
+
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Pasta Carbonara')
   })
 })
