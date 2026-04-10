@@ -105,7 +105,6 @@ const resolveTagsParam = async (db: Database, tags?: string[] | number[]): Promi
   // If already numeric IDs, return directly
   if (typeof tags[0] === 'number') return tags as number[]
 
-  // Resolve string tag names to IDs
   return resolveTagNames(db, tags as string[])
 }
 

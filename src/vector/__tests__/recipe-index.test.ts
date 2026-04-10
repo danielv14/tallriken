@@ -104,7 +104,6 @@ describe('RecipeIndex', () => {
   describe('backfillAll', () => {
     it('processes all recipes in batches', async () => {
       const db = createTestDb()
-      // Create 3 recipes
       await createTestRecipe(db, { title: 'Recept 1' })
       await createTestRecipe(db, { title: 'Recept 2' })
       await createTestRecipe(db, { title: 'Recept 3' })

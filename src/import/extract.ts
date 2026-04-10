@@ -52,7 +52,8 @@ const findRecipeInJsonLd = (data: unknown): Record<string, unknown> | null => {
 
   const obj = data as Record<string, unknown>
 
-  if (obj['@type'] === 'Recipe') return obj
+  const type = obj['@type']
+  if (type === 'Recipe' || (Array.isArray(type) && type.includes('Recipe'))) return obj
 
   if (obj['@graph'] && Array.isArray(obj['@graph'])) {
     return findRecipeInJsonLd(obj['@graph'])
@@ -62,7 +63,6 @@ const findRecipeInJsonLd = (data: unknown): Record<string, unknown> | null => {
 }
 
 export const extractImageUrl = (html: string): string | null => {
-  // Try JSON-LD first
   const jsonLdMatches = [...html.matchAll(JSON_LD_REGEX)]
   for (const match of jsonLdMatches) {
     try {
@@ -79,7 +79,6 @@ export const extractImageUrl = (html: string): string | null => {
     }
   }
 
-  // Fallback: Open Graph image
   const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
     ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i)
   if (ogMatch?.[1]) return ogMatch[1]

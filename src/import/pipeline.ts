@@ -135,9 +135,7 @@ const resolveTagIds = async (
       tagNames,
     );
     return matchTagNames(suggestedNames, tags);
-  } catch {
-    // AI tagging failed, continue without tags
-  }
+  } catch {}
 
   return [];
 };
