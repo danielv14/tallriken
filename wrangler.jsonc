@@ -24,11 +24,6 @@
 		{
 			"binding": "VECTORIZE",
 			"index_name": "tallriken-recipes"
-		},
-		{
-			"binding": "VECTORIZE",
-			"index_name": "tallriken-recipes",
-			"remote": true
 		}
 	]
 }
