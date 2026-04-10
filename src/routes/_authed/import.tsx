@@ -41,19 +41,6 @@ const ImportPage = () => {
     }
   }
 
-  const handleSave = async () => {
-    if (!previewData) return
-    setSaving(true)
-    setError(null)
-    try {
-      await saveRecipe({ data: { ...Recipe.fromForm(previewData), ...importMeta } })
-      navigate({ to: '/' })
-    } catch {
-      setError('Kunde inte spara receptet. Försök igen.')
-      setSaving(false)
-    }
-  }
-
   if (previewData) {
     return (
       <div className="min-h-screen">
@@ -74,10 +61,17 @@ const ImportPage = () => {
               initialData={previewData}
               initialImageUrl={importMeta.imageUrl}
               tags={tags}
-              onSubmit={(form, formImageUrl) => {
-                setPreviewData(form)
-                setImportMeta((prev) => ({ ...prev, imageUrl: formImageUrl }))
-                handleSave()
+              onSubmit={async (form, formImageUrl) => {
+                setSaving(true)
+                setError(null)
+                try {
+                  const meta = { ...importMeta, imageUrl: formImageUrl }
+                  await saveRecipe({ data: { ...Recipe.fromForm(form), ...meta } })
+                  navigate({ to: '/' })
+                } catch {
+                  setError('Kunde inte spara receptet. Forsok igen.')
+                  setSaving(false)
+                }
               }}
               submitLabel={saving ? 'Sparar...' : 'Spara recept'}
               onCancel={() => setPreviewData(null)}
