@@ -8,6 +8,7 @@ type ConfirmDialogProps = {
   title: string
   description: string
   confirmLabel?: string
+  confirmVariant?: 'primary' | 'danger'
   onConfirm: () => void
 }
 
@@ -17,6 +18,7 @@ const ConfirmDialog = ({
   title,
   description,
   confirmLabel = 'Ta bort',
+  confirmVariant = 'danger',
   onConfirm,
 }: ConfirmDialogProps) => {
   return (
@@ -42,7 +44,7 @@ const ConfirmDialog = ({
               render={<Button variant="ghost">Avbryt</Button>}
             />
             <Button
-              variant="danger"
+              variant={confirmVariant}
               onClick={() => {
                 onConfirm()
                 onOpenChange(false)
