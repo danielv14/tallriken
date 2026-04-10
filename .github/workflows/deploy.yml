@@ -43,6 +43,8 @@ jobs:
     needs: test
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,7 +53,16 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - uses: cloudflare/wrangler-action@v3
+      - name: Deploy preview
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: deploy --env preview
+      - name: Comment preview URL on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview-deploy
+          message: |
+            **Preview deployed!**
+            ${{ steps.deploy.outputs.deployment-url }}
