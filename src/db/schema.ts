@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const tagsTable = sqliteTable('tags', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -32,7 +32,10 @@ export const recipeTagsTable = sqliteTable('recipe_tags', {
   tagId: integer('tag_id')
     .notNull()
     .references(() => tagsTable.id, { onDelete: 'cascade' }),
-})
+}, (table) => [
+  index('idx_recipe_tags_recipe_id').on(table.recipeId),
+  index('idx_recipe_tags_tag_id').on(table.tagId),
+])
 
 export const shoppingListsTable = sqliteTable('shopping_lists', {
   id: integer('id').primaryKey({ autoIncrement: true }),
