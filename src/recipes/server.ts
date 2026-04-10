@@ -1,16 +1,21 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
-import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
+import { createRecipe, getAllRecipes, getRecipeById, getRecipesByIds, updateRecipe, deleteRecipe, searchRecipes, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
 import { recipeInputSchema } from '#/recipes/recipe'
 import { authMiddleware } from '#/auth/middleware'
+import { getVectorSearch } from '#/vector/client'
+import { syncRecipeVector } from '#/vector/sync'
+import { env } from 'cloudflare:workers'
 
 export const saveRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(recipeInputSchema)
   .handler(async ({ data }) => {
     const db = getDb()
-    return createRecipe(db, data)
+    const recipe = await createRecipe(db, data)
+    await syncRecipeVector(getVectorSearch(), env.OPENAI_API_KEY, db, recipe, data.tagIds)
+    return recipe
   })
 
 export const editRecipe = createServerFn({ method: 'POST' })
@@ -19,7 +24,9 @@ export const editRecipe = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const db = getDb()
     const { id, ...input } = data
-    return updateRecipe(db, id, input)
+    const recipe = await updateRecipe(db, id, input)
+    await syncRecipeVector(getVectorSearch(), env.OPENAI_API_KEY, db, recipe, input.tagIds)
+    return recipe
   })
 
 export const removeRecipe = createServerFn({ method: 'POST' })
@@ -28,6 +35,7 @@ export const removeRecipe = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const db = getDb()
     await deleteRecipe(db, data.id)
+    await getVectorSearch().remove(data.id)
   })
 
 export const fetchAllRecipes = createServerFn({ method: 'GET' })
@@ -56,6 +64,31 @@ export const findRecipes = createServerFn({ method: 'GET' })
   )
   .handler(async ({ data }) => {
     const db = getDb()
+    const hasQuery = data.query && data.query.trim().length > 0
+    const hasTagFilter = data.tagIds && data.tagIds.length > 0
+
+    // Vector search for freetext queries without tag filters
+    if (hasQuery && !hasTagFilter) {
+      const vectorSearch = getVectorSearch()
+      const similar = await vectorSearch.findSimilar({ query: data.query!, topK: 20 })
+
+      if (similar.length > 0) {
+        const recipeIds = similar.map((s) => s.recipeId)
+        const recipes = await getRecipesByIds(db, recipeIds)
+
+        const filtered = data.maxCookingTimeMinutes
+          ? recipes.filter((r) => r.cookingTimeMinutes != null && r.cookingTimeMinutes <= data.maxCookingTimeMinutes!)
+          : recipes
+
+        // Preserve vector similarity ranking
+        const idOrder = new Map(recipeIds.map((id, i) => [id, i]))
+        filtered.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0))
+
+        return filtered
+      }
+    }
+
+    // D1 search for tag-only, filter-only, or empty queries
     return searchRecipes(db, data)
   })
 

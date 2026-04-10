@@ -173,6 +173,17 @@ const attachTags = async (db: Database, recipes: (typeof schema.recipesTable.$in
   }))
 }
 
+export const getRecipesByIds = async (db: Database, ids: number[]) => {
+  if (ids.length === 0) return []
+
+  const recipes = await db
+    .select()
+    .from(schema.recipesTable)
+    .where(inArray(schema.recipesTable.id, ids))
+
+  return attachTags(db, recipes)
+}
+
 export const getFavoriteRecipes = async (db: Database, limit: number) => {
   const recipes = await db
     .select()

@@ -2,6 +2,7 @@ import { toolDefinition } from '@tanstack/ai'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
 import { createRecipeSearch } from '#/chat/recipe-search'
+import { getVectorSearch } from '#/vector/client'
 import { getMenu, addToMenu } from '#/menu/crud'
 
 const recipeResultSchema = z.object({
@@ -38,7 +39,10 @@ const searchRecipesDef = toolDefinition({
 export const searchRecipesTool = searchRecipesDef.server(
   async ({ query, maxCookingTimeMinutes, tags }) => {
     const db = getDb()
-    const search = createRecipeSearch(db)
+    const vectorSearch = getVectorSearch()
+    const search = createRecipeSearch(db, (q) =>
+      vectorSearch.findSimilar({ query: q, topK: 15 }),
+    )
     const results = await search.search(query, { maxCookingTimeMinutes, tags })
     return results.map((r) => ({
       ...r,
