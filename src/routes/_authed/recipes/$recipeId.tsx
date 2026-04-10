@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
-import { useCopyToClipboard } from '#/hooks/use-copy-to-clipboard'
+import { CopyButton } from '#/components/copy-button'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
@@ -19,34 +19,16 @@ import {
   ClockIcon,
   UsersIcon,
   ArrowTopRightOnSquareIcon,
-  ClipboardDocumentIcon,
-  CheckIcon,
   CalendarIcon,
   PencilSquareIcon,
   TrashIcon,
   EllipsisVerticalIcon,
 } from '@heroicons/react/24/outline'
 
-export const Route = createFileRoute('/_authed/recipes/$recipeId')({
-  loader: async ({ params }) => {
-    const [recipe, menuRecipeIds] = await Promise.all([
-      fetchRecipeById({ data: { id: parseInt(params.recipeId, 10) } }),
-      fetchMenuRecipeIds(),
-    ])
-    if (!recipe) {
-      throw new Error('Receptet hittades inte')
-    }
-    return { recipe, menuRecipeIds }
-  },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData.recipe.title} | Tallriken` }] }),
-  component: RecipeDetailPage,
-})
-
-function RecipeDetailPage() {
+const RecipeDetailPage = () => {
   const { recipe, menuRecipeIds } = Route.useLoaderData()
   const navigate = useNavigate()
   const setPageContext = useChatStore((s) => s.setPageContext)
-  const { copied, copy: copyToClipboard } = useCopyToClipboard()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState(recipe.imageUrl)
   const [inMenu, setInMenu] = useState(menuRecipeIds.includes(recipe.id))
@@ -56,15 +38,12 @@ function RecipeDetailPage() {
     return () => setPageContext({ type: 'other' })
   }, [recipe.id, recipe.title, setPageContext])
 
-  const handleCopyIngredients = async () => {
-    const text = recipe.ingredients
-      .map((g) => {
-        const header = g.group ? `${g.group}\n` : ''
-        return header + g.items.join('\n')
-      })
-      .join('\n\n')
-    await copyToClipboard(text)
-  }
+  const ingredientsText = recipe.ingredients
+    .map((g) => {
+      const header = g.group ? `${g.group}\n` : ''
+      return header + g.items.join('\n')
+    })
+    .join('\n\n')
 
   const handleGenerateImage = async (): Promise<string> => {
     const result = await generateAndSaveImage({ data: { recipeId: recipe.id } })
@@ -190,22 +169,7 @@ function RecipeDetailPage() {
           <section>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wide text-gray-400">Ingredienser</h2>
-              <button
-                onClick={handleCopyIngredients}
-                className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-              >
-                {copied ? (
-                  <>
-                    <CheckIcon className="h-3.5 w-3.5 text-green-500" />
-                    Kopierat
-                  </>
-                ) : (
-                  <>
-                    <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-                    Kopiera
-                  </>
-                )}
-              </button>
+              <CopyButton text={ingredientsText} />
             </div>
             <div className="mt-3 space-y-4">
               {recipe.ingredients.map((group, groupIndex) => (
@@ -258,3 +222,18 @@ function RecipeDetailPage() {
     </div>
   )
 }
+
+export const Route = createFileRoute('/_authed/recipes/$recipeId')({
+  loader: async ({ params }) => {
+    const [recipe, menuRecipeIds] = await Promise.all([
+      fetchRecipeById({ data: { id: parseInt(params.recipeId, 10) } }),
+      fetchMenuRecipeIds(),
+    ])
+    if (!recipe) {
+      throw new Error('Receptet hittades inte')
+    }
+    return { recipe, menuRecipeIds }
+  },
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData.recipe.title} | Tallriken` }] }),
+  component: RecipeDetailPage,
+})
