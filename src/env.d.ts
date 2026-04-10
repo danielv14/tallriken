@@ -2,6 +2,7 @@ declare module 'cloudflare:workers' {
   interface CloudflareEnv {
     DB: D1Database
     R2: R2Bucket
+    VECTORIZE: VectorizeIndex
     APP_PASSWORD: string
     APP_SECRET: string
     OPENAI_API_KEY: string
