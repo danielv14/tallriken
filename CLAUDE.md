@@ -54,6 +54,14 @@ Two config files:
 
 Ingredients are stored as JSON arrays of `{ group: string | null, items: string[] }`.
 
+Sync data between local and prod (full replacement, not merge):
+```
+./scripts/db-sync.sh local-to-prod   # Overwrite prod with local data
+./scripts/db-sync.sh prod-to-local   # Overwrite local with prod data
+```
+
+After syncing to prod, trigger vector backfill from the admin page in the UI.
+
 ## Testing patterns
 
 Tests use in-memory SQLite via better-sqlite3. Shared utilities in `src/test-utils.ts`:

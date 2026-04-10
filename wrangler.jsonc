@@ -1,21 +1,29 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tallriken",
-  "compatibility_date": "2026-04-07",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "tallriken-db",
-      "database_id": "65fbf673-e8ce-499a-af01-ab586e538e26",
-      "migrations_dir": "drizzle"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "R2",
-      "bucket_name": "tallriken-images"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "tallriken",
+	"compatibility_date": "2026-04-07",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "@tanstack/react-start/server-entry",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "tallriken-db",
+			"database_id": "65fbf673-e8ce-499a-af01-ab586e538e26",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "R2",
+			"bucket_name": "tallriken-images"
+		}
+	],
+	"vectorize": [
+		{
+			"binding": "VECTORIZE",
+			"index_name": "tallriken-recipes"
+		}
+	]
 }

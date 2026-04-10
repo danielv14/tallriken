@@ -1,7 +1,7 @@
 import { inArray, sql } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
-import { searchRecipes, getAllRecipes } from '#/recipes/crud'
+import { searchRecipes, getAllRecipes, getRecipesByIds } from '#/recipes/crud'
 
 export type CompactRecipeResult = {
   id: number
@@ -21,43 +21,89 @@ type SearchFilters = {
   maxCookingTimeMinutes?: number
 }
 
-export const createRecipeSearch = (db: Database) => ({
+export type FindSimilar = (query: string) => Promise<{ recipeId: number; score: number }[]>
+
+export const createRecipeSearch = (db: Database, findSimilar?: FindSimilar) => ({
   search: async (query: string, filters?: SearchFilters): Promise<CompactRecipeResult[]> => {
-    const explicitTagIds = await resolveTagNames(db, filters?.tags)
-    const fuzzyTagIds = query ? await fuzzyMatchTags(db, query) : []
-    const allTagIds = [...new Set([...explicitTagIds, ...fuzzyTagIds])]
-
-    const textResults = query
-      ? await searchRecipes(db, {
-          query,
-          maxCookingTimeMinutes: filters?.maxCookingTimeMinutes,
-        })
-      : []
-
-    const tagResults = allTagIds.length > 0
-      ? await searchRecipes(db, {
-          tagIds: allTagIds,
-          maxCookingTimeMinutes: filters?.maxCookingTimeMinutes,
-        })
-      : []
-
-    if (!query && allTagIds.length === 0) {
-      const all = await searchRecipes(db, {
-        maxCookingTimeMinutes: filters?.maxCookingTimeMinutes,
-      })
-      return all.map(formatResult)
+    if (findSimilar && query) {
+      return vectorSearch(db, findSimilar, query, filters)
     }
 
-    const seen = new Set<number>()
-    const merged = [...tagResults, ...textResults].filter((r) => {
-      if (seen.has(r.id)) return false
-      seen.add(r.id)
-      return true
-    })
-
-    return merged.map(formatResult)
+    return fallbackSearch(db, query, filters)
   },
 })
+
+const vectorSearch = async (
+  db: Database,
+  findSimilar: FindSimilar,
+  query: string,
+  filters?: SearchFilters,
+): Promise<CompactRecipeResult[]> => {
+  const similar = await findSimilar(query)
+  if (similar.length === 0) return []
+
+  const recipeIds = similar.map((s) => s.recipeId)
+  const recipes = await getRecipesByIds(db, recipeIds)
+
+  const explicitTagIds = await resolveTagNames(db, filters?.tags)
+
+  const filtered = recipes.filter((r) => {
+    if (filters?.maxCookingTimeMinutes && r.cookingTimeMinutes != null) {
+      if (r.cookingTimeMinutes > filters.maxCookingTimeMinutes) return false
+    }
+    if (explicitTagIds.length > 0) {
+      const recipeTagIds = r.tags.map((t) => t.id)
+      if (!explicitTagIds.some((id) => recipeTagIds.includes(id))) return false
+    }
+    return true
+  })
+
+  // Preserve vector similarity ranking
+  const idOrder = new Map(recipeIds.map((id, i) => [id, i]))
+  filtered.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0))
+
+  return filtered.map(formatResult)
+}
+
+const fallbackSearch = async (
+  db: Database,
+  query: string,
+  filters?: SearchFilters,
+): Promise<CompactRecipeResult[]> => {
+  const explicitTagIds = await resolveTagNames(db, filters?.tags)
+  const fuzzyTagIds = query ? await fuzzyMatchTags(db, query) : []
+  const allTagIds = [...new Set([...explicitTagIds, ...fuzzyTagIds])]
+
+  const textResults = query
+    ? await searchRecipes(db, {
+        query,
+        maxCookingTimeMinutes: filters?.maxCookingTimeMinutes,
+      })
+    : []
+
+  const tagResults = allTagIds.length > 0
+    ? await searchRecipes(db, {
+        tagIds: allTagIds,
+        maxCookingTimeMinutes: filters?.maxCookingTimeMinutes,
+      })
+    : []
+
+  if (!query && allTagIds.length === 0) {
+    const all = await searchRecipes(db, {
+      maxCookingTimeMinutes: filters?.maxCookingTimeMinutes,
+    })
+    return all.map(formatResult)
+  }
+
+  const seen = new Set<number>()
+  const merged = [...tagResults, ...textResults].filter((r) => {
+    if (seen.has(r.id)) return false
+    seen.add(r.id)
+    return true
+  })
+
+  return merged.map(formatResult)
+}
 
 const formatResult = (r: Awaited<ReturnType<typeof getAllRecipes>>[number]): CompactRecipeResult => ({
   id: r.id,
