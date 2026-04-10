@@ -1,14 +1,14 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { fetchAllTags } from '#/tags/server'
 import { saveRecipe } from '#/recipes/server'
 import { extractRecipeFromUrl, extractRecipeFromPhotos } from '#/import/server'
 import { Recipe } from '#/recipes/recipe'
+import { PageShell } from '#/components/page-shell'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { RecipeForm, TabButton, type RecipeFormData } from '#/components/recipe-form'
 import { fileToBase64 } from '#/utils/file'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 type ImportTab = 'url' | 'photo' | 'manual'
 
@@ -43,16 +43,7 @@ const ImportPage = () => {
 
   if (previewData) {
     return (
-      <div className="min-h-screen">
-        <nav className="border-b border-gray-100 bg-white">
-          <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
-            <button onClick={() => setPreviewData(null)} className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
-              <ArrowLeftIcon className="h-4 w-4" />
-              Tillbaka
-            </button>
-          </div>
-        </nav>
-        <main className="mx-auto max-w-4xl px-4 py-8">
+      <PageShell onBack={() => setPreviewData(null)}>
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Granska recept</h1>
           <p className="mt-1 text-sm text-gray-500">Granska och redigera innan du sparar.</p>
           {error && <div className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
@@ -77,23 +68,12 @@ const ImportPage = () => {
               onCancel={() => setPreviewData(null)}
             />
           </div>
-        </main>
-      </div>
+      </PageShell>
     )
   }
 
   return (
-    <div className="min-h-screen">
-      <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
-          <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
-            <ArrowLeftIcon className="h-4 w-4" />
-            Tillbaka
-          </Link>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-4xl px-4 py-8">
+    <PageShell to="/">
         <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Lägg till recept</h1>
 
         <div className="mt-5 flex gap-4 border-b border-gray-200">
@@ -158,8 +138,7 @@ const ImportPage = () => {
             />
           </div>
         )}
-      </main>
-    </div>
+    </PageShell>
   )
 }
 

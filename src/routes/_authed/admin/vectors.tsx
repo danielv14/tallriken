@@ -1,12 +1,10 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { PageShell } from '#/components/page-shell'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import { triggerBackfill } from '#/vector/server'
-import {
-  ArrowLeftIcon,
-  ArrowPathIcon,
-} from '@heroicons/react/24/outline'
+import { ArrowPathIcon } from '@heroicons/react/24/outline'
 
 const VectorsAdminPage = () => {
   const [showConfirm, setShowConfirm] = useState(false)
@@ -27,17 +25,7 @@ const VectorsAdminPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
-          <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
-            <ArrowLeftIcon className="h-4 w-4" />
-            Tillbaka
-          </Link>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-4xl px-4 py-8">
+    <PageShell to="/">
         <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Vektorsök</h1>
         <p className="mt-2 text-sm text-gray-500">
           Hantera vektordatabasen som driver semantisk sökning. Kör backfill efter att du synkat receptdata till prod.
@@ -67,8 +55,6 @@ const VectorsAdminPage = () => {
             </div>
           )}
         </div>
-      </main>
-
       <ConfirmDialog
         open={showConfirm}
         onOpenChange={setShowConfirm}
@@ -78,7 +64,7 @@ const VectorsAdminPage = () => {
         confirmVariant="primary"
         onConfirm={handleBackfill}
       />
-    </div>
+    </PageShell>
   )
 }
 

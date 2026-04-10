@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { CopyButton } from '#/components/copy-button'
+import { PageShell } from '#/components/page-shell'
 import { fetchRecipeById, removeRecipe } from '#/recipes/server'
 import { generateAndSaveImage, uploadImageForRecipe } from '#/images/server'
 import { fetchMenuRecipeIds, addRecipeToMenu, removeRecipeFromMenu } from '#/menu/server'
@@ -15,7 +16,6 @@ import {
 } from '#/components/ui/dropdown-menu'
 import { ConfirmDialog } from '#/components/ui/confirm-dialog'
 import {
-  ArrowLeftIcon,
   ClockIcon,
   UsersIcon,
   ArrowTopRightOnSquareIcon,
@@ -71,17 +71,7 @@ const RecipeDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <nav className="border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center px-4 py-3">
-          <Link to="/" className="flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-gray-800">
-            <ArrowLeftIcon className="h-4 w-4" />
-            Tillbaka
-          </Link>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-4xl px-4 py-8">
+    <PageShell to="/">
         <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
           <ImagePicker
             imageUrl={currentImageUrl ?? undefined}
@@ -210,8 +200,6 @@ const RecipeDetailPage = () => {
           )}
           </div>
         </div>
-      </main>
-
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
@@ -219,7 +207,7 @@ const RecipeDetailPage = () => {
         description={`Är du säker på att du vill ta bort "${recipe.title}"?`}
         onConfirm={handleDelete}
       />
-    </div>
+    </PageShell>
   )
 }
 
