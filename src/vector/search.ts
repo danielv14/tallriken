@@ -1,6 +1,6 @@
 import { embed } from '#/vector/embed'
 
-const MIN_SIMILARITY_SCORE = 0.3
+const MIN_SIMILARITY_SCORE = 0.2
 
 type FindSimilarOptions = {
   query: string
