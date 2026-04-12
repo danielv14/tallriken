@@ -175,6 +175,20 @@ describe('recipe search with vector search', () => {
     expect(results[0].title).toBe('Snabbsallad')
   })
 
+  it('falls back to DB search when vector search returns empty', async () => {
+    const db = createTestDb()
+    await createTestRecipe(db, { title: 'Pasta Carbonara' })
+
+    const findSimilar: FindSimilar = vi.fn().mockResolvedValue([])
+
+    const search = createRecipeSearch(db, findSimilar)
+    const results = await search.search({ query: 'pasta' })
+
+    expect(findSimilar).toHaveBeenCalled()
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Pasta Carbonara')
+  })
+
   it('falls back to DB search when vector search throws', async () => {
     const db = createTestDb()
     await createTestRecipe(db, { title: 'Pasta Carbonara' })
@@ -186,5 +200,75 @@ describe('recipe search with vector search', () => {
 
     expect(results).toHaveLength(1)
     expect(results[0].title).toBe('Pasta Carbonara')
+  })
+
+  it('merges fuzzy tag results with vector results', async () => {
+    const db = createTestDb()
+    const tag = await createTestTag(db, 'Barnvänligt')
+    const pancake = await createTestRecipe(db, { title: 'Ugnspannkaka', tagIds: [tag.id] })
+    const fishSticks = await createTestRecipe(db, { title: 'Fiskpinnar', tagIds: [tag.id] })
+    const bolognese = await createTestRecipe(db, { title: 'Pasta Bolognese' })
+
+    const findSimilar: FindSimilar = vi.fn().mockResolvedValue([
+      { recipeId: bolognese.id, score: 0.95 },
+      { recipeId: pancake.id, score: 0.7 },
+    ])
+
+    const search = createRecipeSearch(db, findSimilar)
+    const results = await search.search({ query: 'barnvänliga rätter' })
+
+    const titles = results.map((r) => r.title)
+    // Tag-matched recipes should be included
+    expect(titles).toContain('Ugnspannkaka')
+    expect(titles).toContain('Fiskpinnar')
+    // Vector results should also be included
+    expect(titles).toContain('Pasta Bolognese')
+    // Tag-matched recipes should come before non-tagged vector results
+    const taggedIndex = Math.max(titles.indexOf('Ugnspannkaka'), titles.indexOf('Fiskpinnar'))
+    const nonTaggedIndex = titles.indexOf('Pasta Bolognese')
+    expect(taggedIndex).toBeLessThan(nonTaggedIndex)
+  })
+
+  it('includes tag-matched recipes even when vector search misses them', async () => {
+    const db = createTestDb()
+    const tag = await createTestTag(db, 'Barnvänligt')
+    await createTestRecipe(db, { title: 'Ugnspannkaka', tagIds: [tag.id] })
+    const unrelated = await createTestRecipe(db, { title: 'Tom Yum Soppa' })
+
+    // Vector search only returns the unrelated recipe
+    const findSimilar: FindSimilar = vi.fn().mockResolvedValue([
+      { recipeId: unrelated.id, score: 0.8 },
+    ])
+
+    const search = createRecipeSearch(db, findSimilar)
+    const results = await search.search({ query: 'barnvänliga rätter' })
+
+    const titles = results.map((r) => r.title)
+    // Should find the tagged recipe even though vector search missed it
+    expect(titles).toContain('Ugnspannkaka')
+    // Should also include vector results
+    expect(titles).toContain('Tom Yum Soppa')
+  })
+
+  it('uses explicit tags to filter vector results while keeping fuzzy merge', async () => {
+    const db = createTestDb()
+    const kidTag = await createTestTag(db, 'Barnvänligt')
+    const quickTag = await createTestTag(db, 'Snabblagat')
+    const pancake = await createTestRecipe(db, { title: 'Ugnspannkaka', tagIds: [kidTag.id] })
+    const salad = await createTestRecipe(db, { title: 'Snabbsallad', tagIds: [quickTag.id] })
+
+    const findSimilar: FindSimilar = vi.fn().mockResolvedValue([
+      { recipeId: pancake.id, score: 0.9 },
+      { recipeId: salad.id, score: 0.8 },
+    ])
+
+    const search = createRecipeSearch(db, findSimilar)
+    // Explicit tag filter: only Barnvänligt
+    const results = await search.search({ query: 'mat', tags: ['Barnvänligt'] })
+
+    const titles = results.map((r) => r.title)
+    expect(titles).toContain('Ugnspannkaka')
+    // Snabbsallad should be filtered out by explicit tag
+    expect(titles).not.toContain('Snabbsallad')
   })
 })

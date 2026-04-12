@@ -53,6 +53,10 @@ const searchRecipesDef = toolDefinition({
     'Sök efter recept i användarens receptsamling med semantisk sökning. Skriv alltid en beskrivande sökfras, t.ex. "snabba barnvänliga rätter" eller "vegetarisk pasta". Returnerar recept rankade efter relevans.',
   inputSchema: z.object({
     query: z.string().describe('Beskrivande sökfras på naturligt språk (t.ex. "enkel vegetarisk middag", "barnvänligt under 30 min")'),
+    tags: z
+      .array(z.string())
+      .optional()
+      .describe('Exakta taggnamn att filtrera på (t.ex. ["Barnvänligt", "Vegetariskt"])'),
     maxCookingTimeMinutes: z
       .number()
       .optional()
@@ -62,13 +66,13 @@ const searchRecipesDef = toolDefinition({
 })
 
 export const searchRecipesTool = searchRecipesDef.server(
-  async ({ query, maxCookingTimeMinutes }) => {
+  async ({ query, tags, maxCookingTimeMinutes }) => {
     const db = getDb()
     const vectorSearch = getVectorSearch()
     const search = createRecipeSearch(db, (q) =>
       vectorSearch.findSimilar({ query: q, topK: 15 }),
     )
-    const results = await search.search({ query, maxCookingTimeMinutes })
+    const results = await search.search({ query, tags, maxCookingTimeMinutes })
     return results.map(formatResult)
   },
 )
