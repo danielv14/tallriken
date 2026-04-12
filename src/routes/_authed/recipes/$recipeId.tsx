@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { RouteError } from '#/components/route-error'
 import { useState, useEffect } from 'react'
 import { useChatStore } from '#/chat/store'
 import { CopyButton } from '#/components/copy-button'
@@ -224,4 +225,12 @@ export const Route = createFileRoute('/_authed/recipes/$recipeId')({
   },
   head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.recipe.title} | Tallriken` }] }),
   component: RecipeDetailPage,
+  errorComponent: ({ error }) => (
+    <RouteError
+      title="Receptet kunde inte laddas"
+      message={error.message}
+      backTo="/"
+      backLabel="Tillbaka"
+    />
+  ),
 })
