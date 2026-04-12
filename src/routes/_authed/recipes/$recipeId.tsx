@@ -222,6 +222,6 @@ export const Route = createFileRoute('/_authed/recipes/$recipeId')({
     }
     return { recipe, menuRecipeIds }
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData.recipe.title} | Tallriken` }] }),
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.recipe.title} | Tallriken` }] }),
   component: RecipeDetailPage,
 })
