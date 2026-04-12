@@ -24,12 +24,12 @@ export const RouteError = ({
         <h1 className="mt-4 text-xl font-bold text-gray-800">{title}</h1>
         <p className="mt-2 text-gray-500">{message}</p>
         <div className="mt-6 flex items-center justify-center gap-3">
-          <Button variant="secondary" onClick={() => router.invalidate()}>
+          <Button onClick={() => router.invalidate()}>
             Försök igen
           </Button>
           {backTo && (
             <Link to={backTo}>
-              <Button variant="ghost">{backLabel}</Button>
+              <Button variant="secondary">{backLabel}</Button>
             </Link>
           )}
         </div>
