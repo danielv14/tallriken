@@ -42,7 +42,10 @@ export const Route = createFileRoute('/api/chat')({
           return new Response('Unauthorized', { status: 401 })
         }
 
-        const { messages, conversationId } = await request.json()
+        const { messages, conversationId } = (await request.json()) as {
+          messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
+          conversationId: string
+        }
 
         const db = getDb()
         const tags = await getAllTags(db)

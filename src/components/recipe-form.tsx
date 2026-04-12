@@ -362,7 +362,7 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
                       mode="array"
                       children={(itemsField) => (
                         <div className="space-y-2">
-                          {itemsField.state.value.map((_, itemIndex) => (
+                          {itemsField.state.value.map((_item, itemIndex) => (
                             <div key={itemIndex} className="flex gap-2">
                               <form.Field
                                 name={`ingredientGroups[${groupIndex}].items[${itemIndex}]`}

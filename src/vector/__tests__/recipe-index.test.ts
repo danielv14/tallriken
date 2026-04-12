@@ -7,7 +7,7 @@ vi.mock('#/vector/embed', async (importOriginal) => {
   const actual = await importOriginal<typeof import('#/vector/embed')>()
   return {
     ...actual,
-    embed: vi.fn().mockResolvedValue(new Array(1536).fill(0.1)),
+    embed: vi.fn().mockResolvedValue(Array.from({ length: 1536 }, () => 0.1)),
   }
 })
 
