@@ -59,21 +59,30 @@ const getRecipeOrThrow = async (db: Database, recipeId: number) => {
   return recipes[0]
 }
 
+const storeRecipeImage = async (
+  db: Database,
+  recipeId: number,
+  data: ArrayBuffer,
+  mimeType: string,
+  ext: string,
+): Promise<{ imageUrl: string }> => {
+  const recipe = await getRecipeOrThrow(db, recipeId)
+  await deleteOldImage(recipe.imageUrl)
+  const key = makeKey.forRecipe(recipeId, ext)
+  await putToR2(key, data, mimeType)
+  const imageUrl = keyToUrl(key)
+  await updateRecipeImageUrl(db, recipeId, imageUrl)
+  return { imageUrl }
+}
+
 export const generateImageForRecipe = async (
   db: Database,
   recipeId: number,
   apiKey: string,
 ): Promise<{ imageUrl: string }> => {
   const recipe = await getRecipeOrThrow(db, recipeId)
-  await deleteOldImage(recipe.imageUrl)
-
   const imageData = await generateRecipeImage(recipe.title, recipe.description, apiKey)
-  const key = makeKey.forRecipe(recipeId, 'png')
-  await putToR2(key, imageData, 'image/png')
-
-  const imageUrl = keyToUrl(key)
-  await updateRecipeImageUrl(db, recipeId, imageUrl)
-  return { imageUrl }
+  return storeRecipeImage(db, recipeId, imageData, 'image/png', 'png')
 }
 
 export const uploadImageForRecipe = async (
@@ -82,16 +91,8 @@ export const uploadImageForRecipe = async (
   base64: string,
   mimeType: string,
 ): Promise<{ imageUrl: string }> => {
-  const recipe = await getRecipeOrThrow(db, recipeId)
-  await deleteOldImage(recipe.imageUrl)
-
   const data = decodeBase64(base64)
-  const key = makeKey.forRecipe(recipeId, extFromMime(mimeType))
-  await putToR2(key, data, mimeType)
-
-  const imageUrl = keyToUrl(key)
-  await updateRecipeImageUrl(db, recipeId, imageUrl)
-  return { imageUrl }
+  return storeRecipeImage(db, recipeId, data, mimeType, extFromMime(mimeType))
 }
 
 export const generateImagePreview = async (
