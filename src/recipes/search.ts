@@ -22,18 +22,27 @@ export const createRecipeSearch = (db: Database, findSimilar?: FindSimilar): Rec
     const query = params.query?.trim() ?? ''
     const hasQuery = query.length > 0
 
-    const tagIds = await resolveTagsParam(db, params.tags)
+    const explicitTagIds = await resolveTagsParam(db, params.tags)
 
     if (findSimilar && hasQuery) {
       try {
-        return await vectorSearch(db, findSimilar, query, tagIds, params.maxCookingTimeMinutes)
+        const fuzzyTagIds = await fuzzyMatchTags(db, query)
+        const allTagIds = [...new Set([...explicitTagIds, ...fuzzyTagIds])]
+
+        const vectorResults = await vectorSearch(db, findSimilar, query, explicitTagIds, params.maxCookingTimeMinutes)
+
+        const tagResults = allTagIds.length > 0
+          ? await searchRecipes(db, { tagIds: allTagIds, maxCookingTimeMinutes: params.maxCookingTimeMinutes })
+          : []
+
+        const merged = mergeResults(tagResults, vectorResults)
+        if (merged.length > 0) return merged
       } catch (error) {
         console.error('[search] vector search failed, falling back to DB search:', error)
-        return fallbackSearch(db, query, tagIds, params.maxCookingTimeMinutes)
       }
     }
 
-    return fallbackSearch(db, query, tagIds, params.maxCookingTimeMinutes)
+    return fallbackSearch(db, query, explicitTagIds, params.maxCookingTimeMinutes)
   },
 })
 
@@ -41,7 +50,7 @@ const vectorSearch = async (
   db: Database,
   findSimilar: FindSimilar,
   query: string,
-  tagIds: number[],
+  explicitTagIds: number[],
   maxCookingTimeMinutes?: number,
 ): Promise<RecipeWithTags[]> => {
   const similar = await findSimilar(query)
@@ -54,9 +63,9 @@ const vectorSearch = async (
     if (maxCookingTimeMinutes) {
       if (r.cookingTimeMinutes == null || r.cookingTimeMinutes > maxCookingTimeMinutes) return false
     }
-    if (tagIds.length > 0) {
+    if (explicitTagIds.length > 0) {
       const recipeTagIds = r.tags.map((t) => t.id)
-      if (!tagIds.some((id) => recipeTagIds.includes(id))) return false
+      if (!explicitTagIds.some((id) => recipeTagIds.includes(id))) return false
     }
     return true
   })
@@ -66,6 +75,27 @@ const vectorSearch = async (
   filtered.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0))
 
   return filtered
+}
+
+const mergeResults = (tagResults: RecipeWithTags[], vectorResults: RecipeWithTags[]): RecipeWithTags[] => {
+  const seen = new Set<number>()
+  const merged: RecipeWithTags[] = []
+
+  for (const r of tagResults) {
+    if (!seen.has(r.id)) {
+      seen.add(r.id)
+      merged.push(r)
+    }
+  }
+
+  for (const r of vectorResults) {
+    if (!seen.has(r.id)) {
+      seen.add(r.id)
+      merged.push(r)
+    }
+  }
+
+  return merged
 }
 
 const fallbackSearch = async (
