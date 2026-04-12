@@ -2,6 +2,7 @@ import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-r
 import { ChatPanel } from '#/chat/chat-panel'
 import { ChatToggle } from '#/chat/chat-toggle'
 import { useChatStore } from '#/chat/store'
+import { RouteError, NotFound } from '#/components/route-error'
 import appCss from '../styles.css?url'
 
 const RootDocument = ({ children }: { children: React.ReactNode }) => {
@@ -48,4 +49,8 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   component: RootComponent,
+  errorComponent: ({ error }) => (
+    <RouteError message={error.message} />
+  ),
+  notFoundComponent: () => <NotFound />,
 })

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { RouteError } from '#/components/route-error'
 import { useState } from 'react'
 import { fetchRecipeById, editRecipe } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
@@ -57,4 +58,12 @@ export const Route = createFileRoute('/_authed/recipes/edit/$recipeId')({
   },
   head: ({ loaderData }) => ({ meta: [{ title: `Redigera ${loaderData?.recipe.title} | Tallriken` }] }),
   component: EditRecipePage,
+  errorComponent: ({ error }) => (
+    <RouteError
+      title="Receptet kunde inte laddas"
+      message={error.message}
+      backTo="/recipes"
+      backLabel="Alla recept"
+    />
+  ),
 })
