@@ -229,8 +229,8 @@ export const Route = createFileRoute('/_authed/recipes/$recipeId')({
     <RouteError
       title="Receptet kunde inte laddas"
       message={error.message}
-      backTo="/recipes"
-      backLabel="Alla recept"
+      backTo="/"
+      backLabel="Tillbaka"
     />
   ),
 })
