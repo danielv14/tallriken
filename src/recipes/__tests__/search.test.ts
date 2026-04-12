@@ -175,6 +175,20 @@ describe('recipe search with vector search', () => {
     expect(results[0].title).toBe('Snabbsallad')
   })
 
+  it('falls back to DB search when vector search returns empty', async () => {
+    const db = createTestDb()
+    await createTestRecipe(db, { title: 'Pasta Carbonara' })
+
+    const findSimilar: FindSimilar = vi.fn().mockResolvedValue([])
+
+    const search = createRecipeSearch(db, findSimilar)
+    const results = await search.search({ query: 'pasta' })
+
+    expect(findSimilar).toHaveBeenCalled()
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Pasta Carbonara')
+  })
+
   it('falls back to DB search when vector search throws', async () => {
     const db = createTestDb()
     await createTestRecipe(db, { title: 'Pasta Carbonara' })
