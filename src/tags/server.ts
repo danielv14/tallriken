@@ -1,11 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { env } from 'cloudflare:workers'
 import { getDb } from '#/db/client'
 import { createTag, getAllTags, renameTag, deleteTag } from '#/tags/crud'
 import { authMiddleware } from '#/auth/middleware'
-import { getVectorSearch } from '#/vector/client'
-import { createRecipeIndex } from '#/vector/recipe-index'
+import { getRecipeIndex } from '#/vector/client'
 
 export const fetchAllTags = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
@@ -29,7 +27,7 @@ export const updateTagName = createServerFn({ method: 'POST' })
     const db = getDb()
     const tag = await renameTag(db, data.id, data.name)
 
-    const index = createRecipeIndex(db, getVectorSearch(), env.OPENAI_API_KEY)
+    const index = getRecipeIndex()
     await index.onTagRenamed(data.id)
 
     return tag
