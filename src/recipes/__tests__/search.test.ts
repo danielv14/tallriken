@@ -206,7 +206,7 @@ describe('recipe search with vector search', () => {
     const db = createTestDb()
     const tag = await createTestTag(db, 'Barnvänligt')
     const pancake = await createTestRecipe(db, { title: 'Ugnspannkaka', tagIds: [tag.id] })
-    const fishSticks = await createTestRecipe(db, { title: 'Fiskpinnar', tagIds: [tag.id] })
+    await createTestRecipe(db, { title: 'Fiskpinnar', tagIds: [tag.id] })
     const bolognese = await createTestRecipe(db, { title: 'Pasta Bolognese' })
 
     const findSimilar: FindSimilar = vi.fn().mockResolvedValue([
