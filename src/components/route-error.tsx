@@ -52,7 +52,7 @@ export const NotFound = ({
       <p className="mt-2 text-gray-500">Den här sidan finns inte eller har flyttats.</p>
       <div className="mt-6">
         <Link to={backTo}>
-          <Button variant="secondary">{backLabel}</Button>
+          <Button>{backLabel}</Button>
         </Link>
       </div>
     </div>
