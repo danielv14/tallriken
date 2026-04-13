@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChat, fetchServerSentEvents } from '@tanstack/ai-react'
+import { useRouter } from '@tanstack/react-router'
 import { useChatStore } from '#/chat/store'
 import { Markdown } from '#/components/markdown'
 import { Button } from '#/components/ui/button'
@@ -106,14 +107,25 @@ const ChatMessage = ({ message, isLoading, copiedId, onCopy }: ChatMessageProps)
   )
 }
 
+const MENU_TOOLS = ['add_to_weekly_menu']
+
+const hasMenuToolCall = (message: ChatMessageData): boolean =>
+  message.parts.some((p) => p.type === 'tool-call' && MENU_TOOLS.includes(p.name ?? ''))
+
 const ChatPanel = () => {
   const { isOpen, close, pageContext } = useChatStore()
   const [input, setInput] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   const { messages, sendMessage, isLoading, clear } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
+    onFinish: (message) => {
+      if (hasMenuToolCall(message as unknown as ChatMessageData)) {
+        router.invalidate()
+      }
+    },
   })
 
   useEffect(() => {
