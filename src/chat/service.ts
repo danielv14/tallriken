@@ -76,26 +76,6 @@ Regler:
 - Basera ALLA förslag på användarens egna receptsamling. Hitta aldrig på recept.
 - Om meddelandet börjar med [KONTEXT: ...] innehåller det information om vilken sida användaren befinner sig på. Använd den informationen för att förstå vad användaren syftar på med "det här receptet" eller liknande.`
 
-const recipeResultSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  description: z.string().nullable(),
-  ingredients: z.array(z.string()),
-  cookingTimeMinutes: z.number().nullable(),
-  servings: z.number().nullable(),
-  tags: z.array(z.string()),
-  cookCount: z.number(),
-  lastCookedAt: z.string().nullable(),
-  url: z.string(),
-})
-
-const menuItemSchema = z.object({
-  recipeId: z.number(),
-  title: z.string(),
-  cookingTimeMinutes: z.number().nullable(),
-  servings: z.number().nullable(),
-  cooked: z.boolean(),
-})
 
 const createTools = (db: Database, vectorSearch: VectorSearch) => {
   const searchRecipesDef = toolDefinition({
@@ -113,7 +93,6 @@ const createTools = (db: Database, vectorSearch: VectorSearch) => {
         .optional()
         .describe('Max tillagningstid i minuter'),
     }),
-    outputSchema: z.array(recipeResultSchema),
   })
 
   const searchRecipesTool = searchRecipesDef.server(
@@ -131,7 +110,6 @@ const createTools = (db: Database, vectorSearch: VectorSearch) => {
     description:
       'Hämta användarens veckomenyn. Returnerar alla planerade recept med titel, tillagningstid, portioner och om de är tillagade.',
     inputSchema: z.object({}),
-    outputSchema: z.array(menuItemSchema),
   })
 
   const getWeeklyMenuTool = getWeeklyMenuDef.server(async () => {
@@ -151,10 +129,6 @@ const createTools = (db: Database, vectorSearch: VectorSearch) => {
       'Lägg till ett recept i användarens veckomeny. Tar ett recept-ID. Returnerar bekräftelse eller felmeddelande om receptet redan finns i menyn.',
     inputSchema: z.object({
       recipeId: z.number().describe('ID för receptet som ska läggas till'),
-    }),
-    outputSchema: z.object({
-      success: z.boolean(),
-      message: z.string(),
     }),
   })
 
