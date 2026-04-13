@@ -47,9 +47,8 @@ const ChatMessage = ({ message, isLoading, copiedId, onCopy }: ChatMessageProps)
     .trim()
 
   const toolCallParts = message.parts.filter((p) => p.type === 'tool-call')
-  const hasOnlyToolParts = textContent === '' && toolCallParts.length > 0
 
-  if (isAssistant && hasOnlyToolParts) {
+  if (isAssistant && isToolOnlyMessage(message)) {
     if (!isLoading) return null
     const lastToolCall = toolCallParts[toolCallParts.length - 1]
     return (
