@@ -189,6 +189,39 @@ describe('recipe search with vector search', () => {
     expect(results[0].title).toBe('Pasta Carbonara')
   })
 
+  it('finds recipe by title even when not in vector index', async () => {
+    const db = createTestDb()
+    const indexed = await createTestRecipe(db, { title: 'Tom Yum Soppa' })
+    await createTestRecipe(db, { title: 'Majscarbonara' })
+
+    // Vector only knows about Tom Yum, not Majscarbonara
+    const findSimilar: FindSimilar = vi.fn().mockResolvedValue([
+      { recipeId: indexed.id, score: 0.5 },
+    ])
+
+    const search = createRecipeSearch(db, findSimilar)
+    const results = await search.search({ query: 'majscarbonara' })
+
+    const titles = results.map((r) => r.title)
+    expect(titles).toContain('Majscarbonara')
+  })
+
+  it('merges vector and DB results without duplicates', async () => {
+    const db = createTestDb()
+    const recipe = await createTestRecipe(db, { title: 'Pasta Carbonara' })
+
+    // Vector returns the same recipe DB search would find
+    const findSimilar: FindSimilar = vi.fn().mockResolvedValue([
+      { recipeId: recipe.id, score: 0.9 },
+    ])
+
+    const search = createRecipeSearch(db, findSimilar)
+    const results = await search.search({ query: 'pasta' })
+
+    expect(results).toHaveLength(1)
+    expect(results[0].title).toBe('Pasta Carbonara')
+  })
+
   it('falls back to DB search when vector search throws', async () => {
     const db = createTestDb()
     await createTestRecipe(db, { title: 'Pasta Carbonara' })

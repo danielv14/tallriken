@@ -24,18 +24,39 @@ export const createRecipeSearch = (db: Database, findSimilar?: FindSimilar): Rec
 
     const tagIds = await resolveTagsParam(db, params.tags)
 
+    let vectorResults: RecipeWithTags[] = []
     if (findSimilar && hasQuery) {
       try {
-        const results = await vectorSearch(db, findSimilar, query, tagIds, params.maxCookingTimeMinutes)
-        if (results.length > 0) return results
+        vectorResults = await vectorSearch(db, findSimilar, query, tagIds, params.maxCookingTimeMinutes)
       } catch (error) {
         console.error('[search] vector search failed, falling back to DB search:', error)
       }
     }
 
-    return fallbackSearch(db, query, tagIds, params.maxCookingTimeMinutes)
+    const dbResults = await fallbackSearch(db, query, tagIds, params.maxCookingTimeMinutes)
+
+    return mergeResults(vectorResults, dbResults)
   },
 })
+
+const mergeResults = (primary: RecipeWithTags[], secondary: RecipeWithTags[]): RecipeWithTags[] => {
+  const seen = new Set<number>()
+  const merged: RecipeWithTags[] = []
+
+  for (const r of primary) {
+    seen.add(r.id)
+    merged.push(r)
+  }
+
+  for (const r of secondary) {
+    if (!seen.has(r.id)) {
+      seen.add(r.id)
+      merged.push(r)
+    }
+  }
+
+  return merged
+}
 
 const vectorSearch = async (
   db: Database,
