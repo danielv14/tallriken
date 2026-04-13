@@ -5,7 +5,6 @@ const MIN_SIMILARITY_SCORE = 0.2
 type FindSimilarOptions = {
   query: string
   topK?: number
-  filter?: VectorizeVectorMetadataFilter
 }
 
 export type FindSimilarResult = {
@@ -19,13 +18,11 @@ export const createVectorSearch = (vectorize: VectorizeIndex, apiKey: string) =>
   findSimilar: async ({
     query,
     topK = 10,
-    filter,
   }: FindSimilarOptions): Promise<FindSimilarResult[]> => {
     const queryVector = await embed(query, apiKey)
 
     const results = await vectorize.query(queryVector, {
       topK,
-      filter,
       returnMetadata: 'none',
     })
 
@@ -40,13 +37,11 @@ export const createVectorSearch = (vectorize: VectorizeIndex, apiKey: string) =>
   upsert: async (
     recipeId: number,
     vector: number[],
-    metadata: Record<string, string | number | string[]>,
   ): Promise<void> => {
     await vectorize.upsert([
       {
         id: String(recipeId),
         values: vector,
-        metadata,
       },
     ])
   },

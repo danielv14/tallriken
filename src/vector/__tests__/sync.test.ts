@@ -10,17 +10,11 @@ vi.mock('#/vector/embed', async (importOriginal) => {
   }
 })
 
-const createMockVectorSearch = (): VectorSearch & { upsertCalls: unknown[][] } => {
-  const upsertCalls: unknown[][] = []
-  return {
-    upsertCalls,
-    findSimilar: vi.fn().mockResolvedValue([]),
-    upsert: vi.fn(async (...args: unknown[]) => {
-      upsertCalls.push(args)
-    }),
-    remove: vi.fn(),
-  }
-}
+const createMockVectorSearch = (): VectorSearch => ({
+  findSimilar: vi.fn().mockResolvedValue([]),
+  upsert: vi.fn(),
+  remove: vi.fn(),
+})
 
 describe('syncRecipeVector', () => {
   it('embeds recipe with tag names and upserts vector', async () => {
@@ -42,7 +36,6 @@ describe('syncRecipeVector', () => {
     expect(vectorSearch.upsert).toHaveBeenCalledWith(
       1,
       expect.any(Array),
-      { tagNames: ['Italienskt'], cookingTimeMinutes: 25 },
     )
   })
 
@@ -65,11 +58,10 @@ describe('syncRecipeVector', () => {
     expect(vectorSearch.upsert).toHaveBeenCalledWith(
       2,
       expect.any(Array),
-      { tagNames: [], cookingTimeMinutes: 0 },
     )
   })
 
-  it('passes multiple tag names through to metadata', async () => {
+  it('upserts vector for recipe with multiple tags', async () => {
     const vectorSearch = createMockVectorSearch()
 
     await syncRecipeVector({
@@ -85,9 +77,9 @@ describe('syncRecipeVector', () => {
       tagNames: ['Snabblagat', 'Barnvänligt'],
     })
 
-    const metadata = vectorSearch.upsertCalls[0][2] as Record<string, unknown>
-    expect(metadata.tagNames).toHaveLength(2)
-    expect(metadata.tagNames).toContain('Snabblagat')
-    expect(metadata.tagNames).toContain('Barnvänligt')
+    expect(vectorSearch.upsert).toHaveBeenCalledWith(
+      3,
+      expect.any(Array),
+    )
   })
 })
