@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useChatStore } from '#/chat/store'
 import { fetchAllRecipes, findRecipes, fetchFavoriteRecipes, fetchStaleRecipes } from '#/recipes/server'
 import { fetchAllTags } from '#/tags/server'
@@ -98,7 +98,9 @@ const HomePage = () => {
     return () => setPageContext({ type: 'other' })
   }, [setPageContext])
 
-  const handleSearch = async (query: string, tagIds: number[]) => {
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
+
+  const handleSearch = useCallback(async (query: string, tagIds: number[]) => {
     if (!query.trim() && tagIds.length === 0) {
       setRecipes(initialRecipes)
     } else {
@@ -110,11 +112,14 @@ const HomePage = () => {
       })
       setRecipes(results)
     }
-  }
+  }, [initialRecipes])
 
   const handleQueryChange = (value: string) => {
     setSearchQuery(value)
-    handleSearch(value, selectedTagIds)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      handleSearch(value, selectedTagIds)
+    }, 250)
   }
 
   const handleToggleMenu = async (e: React.MouseEvent, recipeId: number) => {
