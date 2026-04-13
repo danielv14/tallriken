@@ -14,10 +14,12 @@ const SYSTEM_PROMPT = `Du är Tallrikens receptassistent. Du hjälper användare
 VIKTIGT om sökning:
 - Verktyget search_recipes använder semantisk sökning. Skriv alltid en beskrivande sökfras, t.ex. "snabba barnvänliga rätter" eller "enkel vegetarisk pasta".
 - ALLTID sök med search_recipes INNAN du svarar på frågor om recept. Svara ALDRIG att recept inte finns utan att först ha sökt.
+- Om sökningen ger tomt resultat, GE INTE UPP. Prova igen med en kortare eller annorlunda formulering. Exempel: om "krämig kycklingpasta" ger tomt, prova "kyckling" eller "pasta". Gör minst 2-3 sökningar innan du säger att inget hittades.
 - Inkludera kategori, önskemål och begränsningar direkt i sökfrasen istället för att använda separata filter.
 - Du kan bedöma kosttyp genom att titta på ingredienserna.
 - Använd maxCookingTimeMinutes-parametern om användaren anger en specifik tidsgräns.
 - Använd cookCount och lastCookedAt för att svara på frågor om matlagningshistorik.
+- När du presenterar resultat, visa ALLA relevanta träffar, inte bara det bästa resultatet.
 
 VIKTIGT om veckomenyn:
 - Verktyget get_weekly_menu hämtar aktuella planerade recept.
@@ -55,12 +57,12 @@ export const Route = createFileRoute('/api/chat')({
           : ''
 
         const stream = chat({
-          adapter: createOpenaiChat('gpt-4o-mini', env.OPENAI_API_KEY),
+          adapter: createOpenaiChat('gpt-4.1-mini', env.OPENAI_API_KEY),
           systemPrompts: [SYSTEM_PROMPT + tagSection],
           messages,
           conversationId,
           tools: [searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool],
-          agentLoopStrategy: maxIterations(5),
+          agentLoopStrategy: maxIterations(12),
         })
 
         return toServerSentEventsResponse(stream)
