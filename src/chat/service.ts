@@ -3,112 +3,46 @@ import { createOpenaiChat } from '@tanstack/ai-openai'
 import { toolDefinition } from '@tanstack/ai'
 import { z } from 'zod'
 import type { Database } from '#/db/types'
-import type { VectorSearch } from '#/vector/search'
 import { validateSessionToken } from '#/auth/session'
 import { SESSION_COOKIE_NAME } from '#/auth/cookies'
-import { createRecipeSearch } from '#/recipes/search'
-import { getAllTags } from '#/tags/crud'
+import { getAllRecipes } from '#/recipes/crud'
 import { getMenu, addToMenu } from '#/menu/crud'
-import type { getAllRecipes } from '#/recipes/crud'
+import { buildRecipeIndex } from '#/chat/recipe-index'
 
 export type ChatDeps = {
   db: Database
   openaiApiKey: string
   appSecret: string
-  vectorSearch: VectorSearch
 }
 
 export type ChatService = {
   handleRequest: (request: Request) => Promise<Response>
 }
 
-type CompactRecipeResult = {
-  id: number
-  title: string
-  description: string | null
-  ingredients: string[]
-  cookingTimeMinutes: number | null
-  servings: number | null
-  tags: string[]
-  cookCount: number
-  lastCookedAt: string | null
-  url: string
-}
-
-const formatResult = (r: Awaited<ReturnType<typeof getAllRecipes>>[number]): CompactRecipeResult => ({
-  id: r.id,
-  title: r.title,
-  description: r.description,
-  ingredients: r.ingredients.flatMap((g) =>
-    g.group ? [`[${g.group}]`, ...g.items] : g.items,
-  ),
-  cookingTimeMinutes: r.cookingTimeMinutes,
-  servings: r.servings,
-  tags: r.tags.map((t) => t.name),
-  cookCount: r.cookCount,
-  lastCookedAt: r.lastCookedAt?.toISOString() ?? null,
-  url: `/recipes/${r.id}`,
-})
-
 const SYSTEM_PROMPT = `Du är Tallrikens receptassistent. Du hjälper användaren att hitta recept, planera veckomenyer, skapa inköpslistor och skala recept.
 
-VIKTIGT om sökning:
-- Verktyget search_recipes använder semantisk sökning. SÖK ALLTID med en beskrivande fras, t.ex. "barnvänliga rätter" eller "pasta".
-- ALLTID sök med search_recipes INNAN du svarar på frågor om recept. Svara ALDRIG att recept inte finns utan att först ha sökt.
-- Om sökningen ger tomt resultat, GE INTE UPP. Prova igen med en kortare eller annorlunda formulering. Gör minst 2-3 sökningar innan du säger att inget hittades.
-- Fokusera på query-parametern. Taggar är ett valfritt extra filter, inte det primära sättet att söka. Om en tagg inte finns, sök ändå med query.
-- Du kan bedöma kosttyp genom att titta på ingredienserna i sökresultatet.
-- Använd maxCookingTimeMinutes-parametern om användaren anger en specifik tidsgräns.
-- Använd cookCount och lastCookedAt för att svara på frågor om matlagningshistorik.
-- När du presenterar resultat, visa ALLA relevanta träffar, inte bara det bästa resultatet.
-
-VIKTIGT om veckomenyn:
-- Verktyget get_weekly_menu hämtar aktuella planerade recept.
-- Verktyget add_to_weekly_menu lägger till ett recept via dess ID. Använd det när du rekommenderar ett recept och användaren vill lägga till det.
+Du har tillgång till HELA användarens receptsamling nedan. Använd den direkt for att svara på frågor om recept.
 
 Regler:
 - Svara alltid på svenska
-- Varje recept i sökresultatet har ett "url"-fält. Använd det exakt som det är för att skapa markdown-länkar. Exempel: om ett recept har url "/recipes/5" och titel "Pasta Carbonara", skriv [Pasta Carbonara](/recipes/5)
-- Ge en kort beskrivning av receptet men länka till det istället för att skriva ut hela receptet, om inte användaren explicit ber om detaljer
-- Om du inte hittar något passande, säg det
+- Skapa markdown-länkar med receptets URL. Exempel: om ett recept har ID 5 och titel "Pasta Carbonara", skriv [Pasta Carbonara](/recipes/5)
+- När du presenterar recept, lista ALLA relevanta träffar med en kort beskrivning och länk
+- Ge en kort beskrivning men länka till receptet istället för att skriva ut hela, om inte användaren explicit ber om detaljer
 - Var kortfattad och tydlig
 - Formatera inköpslistor och veckomenyer på ett lättläst sätt med markdown
-- Basera ALLA förslag på användarens egna receptsamling. Hitta aldrig på recept.
-- Om meddelandet börjar med [KONTEXT: ...] innehåller det information om vilken sida användaren befinner sig på. Använd den informationen för att förstå vad användaren syftar på med "det här receptet" eller liknande.`
+- Basera ALLA förslag på receptsamlingen nedan. Hitta aldrig på recept.
+- Du kan bedöma kosttyp genom att titta på ingredienserna i receptlistan.
+- Om meddelandet börjar med [KONTEXT: ...] innehåller det information om vilken sida användaren befinner sig på. Använd den informationen för att förstå vad användaren syftar på med "det här receptet" eller liknande.
 
+VIKTIGT om veckomenyn:
+- Verktyget get_weekly_menu hämtar aktuella planerade recept.
+- Verktyget add_to_weekly_menu lägger till ett recept via dess ID.`
 
-const createTools = (db: Database, vectorSearch: VectorSearch) => {
-  const searchRecipesDef = toolDefinition({
-    name: 'search_recipes',
-    description:
-      'Sök efter recept i användarens receptsamling med semantisk sökning. Skriv alltid en beskrivande sökfras, t.ex. "snabba barnvänliga rätter" eller "vegetarisk pasta". Returnerar recept rankade efter relevans.',
-    inputSchema: z.object({
-      query: z.string().describe('Beskrivande sökfras på naturligt språk (t.ex. "enkel vegetarisk middag", "barnvänligt under 30 min")'),
-      tags: z
-        .array(z.string())
-        .optional()
-        .describe('Filtrera på taggnamn (t.ex. ["Pasta", "Barnvänligt"]). Använd EXAKT de taggnamn som finns i samlingen.'),
-      maxCookingTimeMinutes: z
-        .number()
-        .optional()
-        .describe('Max tillagningstid i minuter'),
-    }),
-  })
-
-  const searchRecipesTool = searchRecipesDef.server(
-    async ({ query, tags, maxCookingTimeMinutes }) => {
-      const search = createRecipeSearch(db, (q) =>
-        vectorSearch.findSimilar({ query: q, topK: 20 }),
-      )
-      const results = await search.search({ query, tags, maxCookingTimeMinutes })
-      return results.map(formatResult)
-    },
-  )
-
+const createTools = (db: Database) => {
   const getWeeklyMenuDef = toolDefinition({
     name: 'get_weekly_menu',
     description:
-      'Hämta användarens veckomenyn. Returnerar alla planerade recept med titel, tillagningstid, portioner och om de är tillagade.',
+      'Hämta användarens veckomeny. Returnerar alla planerade recept med titel, tillagningstid, portioner och om de är tillagade.',
     inputSchema: z.object({}),
   })
 
@@ -141,19 +75,12 @@ const createTools = (db: Database, vectorSearch: VectorSearch) => {
     }
   })
 
-  return [searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool]
+  return [getWeeklyMenuTool, addToWeeklyMenuTool]
 }
 
 const parseCookie = (cookieHeader: string, name: string): string | undefined => {
   const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
   return match?.[1]
-}
-
-const buildSystemPrompt = (tagNames: string[]): string => {
-  const tagSection = tagNames.length > 0
-    ? `\n\nTillgängliga taggar i användarens samling: ${tagNames.join(', ')}\nDu kan använda dessa som extra filter i tags-parametern, men sök alltid med query-parametern först.`
-    : ''
-  return SYSTEM_PROMPT + tagSection
 }
 
 export const createChatService = (deps: ChatDeps): ChatService => ({
@@ -170,14 +97,14 @@ export const createChatService = (deps: ChatDeps): ChatService => ({
       conversationId: string
     }
 
-    const tags = await getAllTags(deps.db)
-    const tagNames = tags.map((t) => t.name)
+    const recipes = await getAllRecipes(deps.db)
+    const recipeIndex = buildRecipeIndex(recipes)
 
-    const tools = createTools(deps.db, deps.vectorSearch)
+    const tools = createTools(deps.db)
 
     const stream = chat({
       adapter: createOpenaiChat('gpt-4.1-mini', deps.openaiApiKey),
-      systemPrompts: [buildSystemPrompt(tagNames)],
+      systemPrompts: [SYSTEM_PROMPT + `\n\nRECEPTSAMLING (${recipes.length} recept):\n\n` + recipeIndex],
       messages,
       conversationId,
       tools,
