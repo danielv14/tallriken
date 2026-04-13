@@ -52,7 +52,7 @@ const vectorSearch = async (
 
   const filtered = recipes.filter((r) => {
     if (maxCookingTimeMinutes) {
-      if (r.cookingTimeMinutes == null || r.cookingTimeMinutes > maxCookingTimeMinutes) return false
+      if (r.cookingTimeMinutes != null && r.cookingTimeMinutes > maxCookingTimeMinutes) return false
     }
     if (tagIds.length > 0) {
       const recipeTagIds = r.tags.map((t) => t.id)

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, isNotNull, like, lte, or } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, like, lte, or } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
 import type { RecipeInput } from '#/recipes/recipe'
@@ -104,7 +104,10 @@ export const searchRecipes = async (db: Database, filters: SearchFilters) => {
 
   if (filters.maxCookingTimeMinutes) {
     conditions.push(
-      lte(schema.recipesTable.cookingTimeMinutes, filters.maxCookingTimeMinutes),
+      or(
+        lte(schema.recipesTable.cookingTimeMinutes, filters.maxCookingTimeMinutes),
+        isNull(schema.recipesTable.cookingTimeMinutes),
+      ),
     )
   }
 
