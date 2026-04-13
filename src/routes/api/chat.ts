@@ -1,71 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { getCookie } from '@tanstack/react-start/server'
-import { chat, toServerSentEventsResponse, maxIterations } from '@tanstack/ai'
-import { createOpenaiChat } from '@tanstack/ai-openai'
 import { env } from 'cloudflare:workers'
-import { validateSessionToken } from '#/auth/session'
-import { SESSION_COOKIE_NAME } from '#/auth/cookies'
-import { searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool } from '#/chat/tools'
 import { getDb } from '#/db/client'
-import { getAllTags } from '#/tags/crud'
-
-const SYSTEM_PROMPT = `Du är Tallrikens receptassistent. Du hjälper användaren att hitta recept, planera veckomenyer, skapa inköpslistor och skala recept.
-
-VIKTIGT om sökning:
-- Verktyget search_recipes använder semantisk sökning. Skriv alltid en beskrivande sökfras, t.ex. "snabba barnvänliga rätter" eller "enkel vegetarisk pasta".
-- ALLTID sök med search_recipes INNAN du svarar på frågor om recept. Svara ALDRIG att recept inte finns utan att först ha sökt.
-- Om sökningen ger tomt resultat, GE INTE UPP. Prova igen med en kortare eller annorlunda formulering. Exempel: om "krämig kycklingpasta" ger tomt, prova "kyckling" eller "pasta". Gör minst 2-3 sökningar innan du säger att inget hittades.
-- Inkludera kategori, önskemål och begränsningar direkt i sökfrasen istället för att använda separata filter.
-- Du kan bedöma kosttyp genom att titta på ingredienserna.
-- Använd maxCookingTimeMinutes-parametern om användaren anger en specifik tidsgräns.
-- Använd cookCount och lastCookedAt för att svara på frågor om matlagningshistorik.
-- När du presenterar resultat, visa ALLA relevanta träffar, inte bara det bästa resultatet.
-
-VIKTIGT om veckomenyn:
-- Verktyget get_weekly_menu hämtar aktuella planerade recept.
-- Verktyget add_to_weekly_menu lägger till ett recept via dess ID. Använd det när du rekommenderar ett recept och användaren vill lägga till det.
-
-Regler:
-- Svara alltid på svenska
-- Varje recept i sökresultatet har ett "url"-fält. Använd det exakt som det är för att skapa markdown-länkar. Exempel: om ett recept har url "/recipes/5" och titel "Pasta Carbonara", skriv [Pasta Carbonara](/recipes/5)
-- Ge en kort beskrivning av receptet men länka till det istället för att skriva ut hela receptet, om inte användaren explicit ber om detaljer
-- Om du inte hittar något passande, säg det
-- Var kortfattad och tydlig
-- Formatera inköpslistor och veckomenyer på ett lättläst sätt med markdown
-- Basera ALLA förslag på användarens egna receptsamling. Hitta aldrig på recept.
-- Om meddelandet börjar med [KONTEXT: ...] innehåller det information om vilken sida användaren befinner sig på. Använd den informationen för att förstå vad användaren syftar på med "det här receptet" eller liknande.`
+import { createVectorSearch } from '#/vector/search'
+import { createChatService } from '#/chat/service'
 
 export const Route = createFileRoute('/api/chat')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const sessionToken = getCookie(SESSION_COOKIE_NAME)
-        if (!sessionToken || !validateSessionToken(sessionToken, env.APP_SECRET)) {
-          return new Response('Unauthorized', { status: 401 })
-        }
-
-        const { messages, conversationId } = (await request.json()) as {
-          messages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }>
-          conversationId: string
-        }
-
-        const db = getDb()
-        const tags = await getAllTags(db)
-        const tagNames = tags.map((t) => t.name)
-        const tagSection = tagNames.length > 0
-          ? `\n\nTillgängliga taggar i användarens samling: ${tagNames.join(', ')}\nAnvänd EXAKT dessa taggnamn i tags-parametern vid sökning.`
-          : ''
-
-        const stream = chat({
-          adapter: createOpenaiChat('gpt-4.1-mini', env.OPENAI_API_KEY),
-          systemPrompts: [SYSTEM_PROMPT + tagSection],
-          messages,
-          conversationId,
-          tools: [searchRecipesTool, getWeeklyMenuTool, addToWeeklyMenuTool],
-          agentLoopStrategy: maxIterations(12),
+        const service = createChatService({
+          db: getDb(),
+          openaiApiKey: env.OPENAI_API_KEY,
+          appSecret: env.APP_SECRET,
+          vectorSearch: createVectorSearch(env.VECTORIZE, env.OPENAI_API_KEY),
         })
-
-        return toServerSentEventsResponse(stream)
+        return service.handleRequest(request)
       },
     },
   },
