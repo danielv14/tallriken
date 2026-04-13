@@ -26,10 +26,10 @@ export const createRecipeSearch = (db: Database, findSimilar?: FindSimilar): Rec
 
     if (findSimilar && hasQuery) {
       try {
-        return await vectorSearch(db, findSimilar, query, tagIds, params.maxCookingTimeMinutes)
+        const results = await vectorSearch(db, findSimilar, query, tagIds, params.maxCookingTimeMinutes)
+        if (results.length > 0) return results
       } catch (error) {
         console.error('[search] vector search failed, falling back to DB search:', error)
-        return fallbackSearch(db, query, tagIds, params.maxCookingTimeMinutes)
       }
     }
 
