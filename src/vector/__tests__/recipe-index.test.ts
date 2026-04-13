@@ -38,7 +38,6 @@ describe('RecipeIndex', () => {
       expect(vectorSearch.upsert).toHaveBeenCalledWith(
         1,
         expect.any(Array),
-        expect.objectContaining({ cookingTimeMinutes: 25 }),
       )
     })
   })

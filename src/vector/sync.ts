@@ -29,8 +29,5 @@ export const syncRecipeVector = async (options: SyncRecipeVectorOptions): Promis
 
   const vector = await embed(text, apiKey)
 
-  await vectorSearch.upsert(recipe.id, vector, {
-    tagNames,
-    cookingTimeMinutes: recipe.cookingTimeMinutes ?? 0,
-  })
+  await vectorSearch.upsert(recipe.id, vector)
 }
