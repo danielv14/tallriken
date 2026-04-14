@@ -5,6 +5,7 @@ import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { ImagePicker } from '#/components/image-picker'
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { SortableStepsList } from '#/components/sortable-steps-list'
 import { generateImageFromDetails, uploadRecipeImage } from '#/images/server'
 import { Recipe, recipeFormSchema } from '#/recipes/recipe'
 
@@ -425,35 +426,7 @@ const RecipeForm = ({ initialData, initialImageUrl, tags, onSubmit, submitLabel,
                 <FieldError field={stepsField} />
               )}
               <div className="mt-2 space-y-2">
-                {stepsField.state.value.map((_, index) => (
-                  <div key={index} className="flex gap-2">
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      <span className="shrink-0 text-sm font-bold tabular-nums text-plum-600">
-                        {index + 1}.
-                      </span>
-                      <form.Field
-                        name={`steps[${index}]`}
-                        children={(field) => (
-                          <Input
-                            value={field.state.value}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            onBlur={field.handleBlur}
-                            placeholder={`Steg ${index + 1}`}
-                          />
-                        )}
-                      />
-                    </div>
-                    {stepsField.state.value.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => stepsField.removeValue(index)}
-                        className="shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-                      >
-                        <XMarkIcon className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                <SortableStepsList stepsField={stepsField} form={form} />
                 <button
                   type="button"
                   onClick={() => stepsField.pushValue('')}
