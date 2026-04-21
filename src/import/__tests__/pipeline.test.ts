@@ -1,5 +1,5 @@
-import type { ImportDeps } from "#/import/pipeline";
-import { importRecipe } from "#/import/pipeline";
+import type { ImportDeps, ImportTestOverrides } from "#/import/pipeline";
+import { importFromPhotos, importFromUrl } from "#/import/pipeline";
 import type { RecipeDraft } from "#/import/schema";
 import { createTestDb, createTestTag } from "#/test-utils";
 import { describe, expect, it } from "vitest";
@@ -26,6 +26,12 @@ const JSON_LD_HTML = `
 const createTestDeps = (overrides: Partial<ImportDeps> = {}): ImportDeps => ({
   db: createTestDb(),
   openaiApiKey: "unused",
+  ...overrides,
+});
+
+const urlStubs = (
+  overrides: ImportTestOverrides = {},
+): ImportTestOverrides => ({
   fetchHtml: async () => "",
   extractWithAi: async () => null,
   classifyTags: async () => [],
@@ -33,13 +39,14 @@ const createTestDeps = (overrides: Partial<ImportDeps> = {}): ImportDeps => ({
   ...overrides,
 });
 
-describe("importRecipe", () => {
+describe("importFromUrl", () => {
   it("extracts recipe from JSON-LD without calling AI", async () => {
     let aiWasCalled = false;
 
-    const result = await importRecipe(
-      { kind: "url", url: "https://example.com/recipe" },
-      createTestDeps({
+    const result = await importFromUrl(
+      "https://example.com/recipe",
+      createTestDeps(),
+      urlStubs({
         fetchHtml: async () => JSON_LD_HTML,
         extractWithAi: async () => {
           aiWasCalled = true;
@@ -70,9 +77,10 @@ describe("importRecipe", () => {
       suggestedTagNames: null,
     };
 
-    const result = await importRecipe(
-      { kind: "url", url: "https://example.com/recipe" },
-      createTestDeps({
+    const result = await importFromUrl(
+      "https://example.com/recipe",
+      createTestDeps(),
+      urlStubs({
         fetchHtml: async () => "<html><body>Some recipe text</body></html>",
         extractWithAi: async (input) => {
           expect(input.kind).toBe("html");
@@ -83,38 +91,6 @@ describe("importRecipe", () => {
 
     expect(result.draft.title).toBe("AI-extraherat recept");
     expect(result.extraction).toBe("ai");
-  });
-
-  it("extracts recipe from photos via OCR", async () => {
-    const ocrDraft: RecipeDraft = {
-      title: "Fotograferat recept",
-      description: null,
-      ingredients: [{ group: null, items: ["2 dl grädde"] }],
-      steps: ["Vispa grädden"],
-      cookingTimeMinutes: null,
-      servings: null,
-      suggestedTagNames: null,
-    };
-
-    const images = [{ base64: "abc123", mimeType: "image/jpeg" }];
-
-    const result = await importRecipe(
-      { kind: "photos", images },
-      createTestDeps({
-        extractWithAi: async (input) => {
-          expect(input.kind).toBe("images");
-          if (input.kind === "images") {
-            expect(input.images).toEqual(images);
-          }
-          return ocrDraft;
-        },
-      }),
-    );
-
-    expect(result.draft.title).toBe("Fotograferat recept");
-    expect(result.extraction).toBe("ocr");
-    expect(result.imageUrl).toBeNull();
-    expect(result.sourceUrl).toBeUndefined();
   });
 
   it("resolves tag IDs from AI-suggested tag names (case-insensitive)", async () => {
@@ -133,10 +109,10 @@ describe("importRecipe", () => {
       suggestedTagNames: ["dessert", "VEGETARISKT"],
     };
 
-    const result = await importRecipe(
-      { kind: "url", url: "https://example.com/mousse" },
-      createTestDeps({
-        db,
+    const result = await importFromUrl(
+      "https://example.com/mousse",
+      createTestDeps({ db }),
+      urlStubs({
         fetchHtml: async () => "<html><body>No JSON-LD here</body></html>",
         extractWithAi: async () => draft,
       }),
@@ -155,15 +131,19 @@ describe("importRecipe", () => {
 
     let classifyCallCount = 0;
 
-    const result = await importRecipe(
-      { kind: "url", url: "https://example.com/salmon" },
-      createTestDeps({
-        db,
+    const result = await importFromUrl(
+      "https://example.com/salmon",
+      createTestDeps({ db }),
+      urlStubs({
         fetchHtml: async () => JSON_LD_HTML,
         classifyTags: async (recipe, tagNames) => {
           classifyCallCount++;
           expect(recipe.title).toBe("Pannkakor");
-          expect(recipe.ingredients).toEqual(["3 dl mjöl", "6 dl mjölk", "3 ägg"]);
+          expect(recipe.ingredients).toEqual([
+            "3 dl mjöl",
+            "6 dl mjölk",
+            "3 ägg",
+          ]);
           expect(tagNames).toEqual(expect.arrayContaining(["Fisk", "Dessert"]));
           return ["Fisk"];
         },
@@ -194,9 +174,10 @@ describe("importRecipe", () => {
 
     let storedUrl: string | null = null;
 
-    const result = await importRecipe(
-      { kind: "url", url: "https://example.com/pasta" },
-      createTestDeps({
+    const result = await importFromUrl(
+      "https://example.com/pasta",
+      createTestDeps(),
+      urlStubs({
         fetchHtml: async () => htmlWithImage,
         storeImage: async (url) => {
           storedUrl = url;
@@ -211,9 +192,10 @@ describe("importRecipe", () => {
 
   it("throws when both JSON-LD and AI extraction fail", async () => {
     await expect(
-      importRecipe(
-        { kind: "url", url: "https://example.com/bad" },
-        createTestDeps({
+      importFromUrl(
+        "https://example.com/bad",
+        createTestDeps(),
+        urlStubs({
           fetchHtml: async () => "<html><body>Not a recipe</body></html>",
           extractWithAi: async () => null,
         }),
@@ -223,27 +205,58 @@ describe("importRecipe", () => {
     );
   });
 
-  it("throws when OCR extraction returns null", async () => {
-    await expect(
-      importRecipe(
-        { kind: "photos", images: [{ base64: "abc", mimeType: "image/jpeg" }] },
-        createTestDeps({
-          extractWithAi: async () => null,
-        }),
-      ),
-    ).rejects.toThrow("Kunde inte extrahera något recept från bilderna");
-  });
-
   it("propagates fetchHtml errors", async () => {
     await expect(
-      importRecipe(
-        { kind: "url", url: "https://example.com/down" },
-        createTestDeps({
+      importFromUrl(
+        "https://example.com/down",
+        createTestDeps(),
+        urlStubs({
           fetchHtml: async () => {
             throw new Error("Kunde inte hämta sidan (500)");
           },
         }),
       ),
     ).rejects.toThrow("Kunde inte hämta sidan (500)");
+  });
+});
+
+describe("importFromPhotos", () => {
+  it("extracts recipe from photos via OCR", async () => {
+    const ocrDraft: RecipeDraft = {
+      title: "Fotograferat recept",
+      description: null,
+      ingredients: [{ group: null, items: ["2 dl grädde"] }],
+      steps: ["Vispa grädden"],
+      cookingTimeMinutes: null,
+      servings: null,
+      suggestedTagNames: null,
+    };
+
+    const images = [{ base64: "abc123", mimeType: "image/jpeg" }];
+
+    const result = await importFromPhotos(images, createTestDeps(), {
+      extractWithAi: async (input) => {
+        expect(input.kind).toBe("images");
+        if (input.kind === "images") {
+          expect(input.images).toEqual(images);
+        }
+        return ocrDraft;
+      },
+    });
+
+    expect(result.draft.title).toBe("Fotograferat recept");
+    expect(result.extraction).toBe("ocr");
+  });
+
+  it("throws when OCR extraction returns null", async () => {
+    await expect(
+      importFromPhotos(
+        [{ base64: "abc", mimeType: "image/jpeg" }],
+        createTestDeps(),
+        {
+          extractWithAi: async () => null,
+        },
+      ),
+    ).rejects.toThrow("Kunde inte extrahera något recept från bilderna");
   });
 });

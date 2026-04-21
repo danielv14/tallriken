@@ -33,7 +33,7 @@ const ImportPage = () => {
     try {
       const result = await extractRecipeFromUrl({ data: { url: url.trim() } })
       setImportMeta({ sourceUrl: result.sourceUrl, imageUrl: result.imageUrl ?? undefined })
-      setPreviewData(Recipe.fromDraft(result))
+      setPreviewData(Recipe.fromDraft({ ...result.draft, tagIds: result.tagIds }))
     } catch {
       setError('Kunde inte hämta recept från den angivna URL:en. Prova att lägga till manuellt istället.')
     } finally {
@@ -170,7 +170,7 @@ const PhotoImport = ({ onExtracted, onError }: PhotoImportProps) => {
 
       const result = await extractRecipeFromPhotos({ data: { images } })
 
-      onExtracted(Recipe.fromDraft(result))
+      onExtracted(Recipe.fromDraft({ ...result.draft, tagIds: result.tagIds }))
     } catch {
       onError('Kunde inte extrahera recept från bilderna. Försök med tydligare bilder eller lägg till manuellt.')
     } finally {
