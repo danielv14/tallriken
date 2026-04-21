@@ -1,6 +1,15 @@
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, inArray } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
+
+export const getTagNamesByIds = async (db: Database, tagIds: number[]): Promise<string[]> => {
+  if (tagIds.length === 0) return []
+  const tags = await db
+    .select({ name: schema.tagsTable.name })
+    .from(schema.tagsTable)
+    .where(inArray(schema.tagsTable.id, tagIds))
+  return tags.map((t) => t.name)
+}
 
 export const createTag = async (db: Database, name: string) => {
   const result = await db

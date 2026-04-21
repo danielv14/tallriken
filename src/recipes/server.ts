@@ -1,57 +1,33 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { inArray } from 'drizzle-orm'
 import { getDb } from '#/db/client'
-import * as schema from '#/db/schema'
-import { createRecipe, getAllRecipes, getRecipeById, updateRecipe, deleteRecipe, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
+import { getAllRecipes, getRecipeById, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
 import { recipeInputSchema } from '#/recipes/recipe'
 import { createRecipeSearch } from '#/recipes/search'
 import { authMiddleware } from '#/auth/middleware'
 import { getVectorSearch, getRecipeIndex } from '#/vector/client'
-import type { Database } from '#/db/types'
+import { createSyncedMutations } from '#/vector/with-vector-sync'
 
-const getTagNamesByIds = async (db: Database, tagIds: number[]): Promise<string[]> => {
-  if (tagIds.length === 0) return []
-  const tags = await db
-    .select({ name: schema.tagsTable.name })
-    .from(schema.tagsTable)
-    .where(inArray(schema.tagsTable.id, tagIds))
-  return tags.map((t) => t.name)
-}
+const getMutations = () => createSyncedMutations(getDb(), getRecipeIndex())
 
 export const saveRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(recipeInputSchema)
-  .handler(async ({ data }) => {
-    const db = getDb()
-    const recipe = await createRecipe(db, data)
-    const tagNames = await getTagNamesByIds(db, data.tagIds)
-    const index = getRecipeIndex()
-    await index.onRecipeSaved(recipe, tagNames)
-    return recipe
-  })
+  .handler(async ({ data }) => getMutations().createRecipe(data))
 
 export const editRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(recipeInputSchema.extend({ id: z.number() }))
   .handler(async ({ data }) => {
-    const db = getDb()
     const { id, ...input } = data
-    const recipe = await updateRecipe(db, id, input)
-    const tagNames = await getTagNamesByIds(db, input.tagIds)
-    const index = getRecipeIndex()
-    await index.onRecipeSaved(recipe, tagNames)
-    return recipe
+    return getMutations().updateRecipe(id, input)
   })
 
 export const removeRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.number() }))
   .handler(async ({ data }) => {
-    const db = getDb()
-    await deleteRecipe(db, data.id)
-    const index = getRecipeIndex()
-    await index.onRecipeDeleted(data.id)
+    await getMutations().deleteRecipe(data.id)
   })
 
 export const fetchAllRecipes = createServerFn({ method: 'GET' })
