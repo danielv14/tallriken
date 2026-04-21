@@ -1,26 +1,23 @@
 import type { Database } from "#/db/types";
+import {
+  classifyRecipeTags,
+  type ClassifyTagsInput,
+} from "#/import/classify-tags";
 import { extractImageUrl, extractJsonLdRecipe } from "#/import/extract";
 import type { RecipeDraft } from "#/import/schema";
 import { getAllTags } from "#/tags/crud";
 import { validatePublicUrl } from "#/utils/url-validation";
 
-export type ImportSource =
-  | { kind: "url"; url: string }
-  | { kind: "photos"; images: Array<{ base64: string; mimeType: string }> };
-
 export type AiExtractionInput =
   | { kind: "html"; html: string }
   | { kind: "images"; images: Array<{ base64: string; mimeType: string }> };
 
-export type ClassifyTagsInput = {
-  title: string;
-  description: string | null;
-  ingredients: string[];
-};
-
 export type ImportDeps = {
   db: Database;
   openaiApiKey: string;
+};
+
+export type ImportTestOverrides = {
   fetchHtml?: (url: string) => Promise<string>;
   extractWithAi?: (
     input: AiExtractionInput,
@@ -33,35 +30,41 @@ export type ImportDeps = {
   storeImage?: (url: string) => Promise<string | null>;
 };
 
-export type ImportResult = {
+export type UrlImportResult = {
   draft: RecipeDraft;
   tagIds: number[];
   imageUrl: string | null;
-  sourceUrl?: string;
-  extraction: "json-ld" | "ai" | "ocr";
+  sourceUrl: string;
+  extraction: "json-ld" | "ai";
 };
 
-export const importRecipe = async (
-  source: ImportSource,
-  deps: ImportDeps,
-): Promise<ImportResult> => {
-  if (source.kind === "url") {
-    return importFromUrl(source.url, deps);
-  }
-
-  return importFromPhotos(source.images, deps);
+export type PhotoImportResult = {
+  draft: RecipeDraft;
+  tagIds: number[];
+  extraction: "ocr";
 };
 
-const importFromUrl = async (
+type ClassifyTagsFn = (
+  recipe: ClassifyTagsInput,
+  tagNames: string[],
+) => Promise<string[]>;
+
+type ExtractWithAiFn = (
+  input: AiExtractionInput,
+  tagNames: string[],
+) => Promise<RecipeDraft | null>;
+
+export const importFromUrl = async (
   url: string,
   deps: ImportDeps,
-): Promise<ImportResult> => {
-  const fetchHtml = deps.fetchHtml ?? defaultFetchHtml;
+  overrides: ImportTestOverrides = {},
+): Promise<UrlImportResult> => {
+  const fetchHtml = overrides.fetchHtml ?? defaultFetchHtml;
   const extractWithAi =
-    deps.extractWithAi ?? defaultExtractWithAi(deps.openaiApiKey);
+    overrides.extractWithAi ?? defaultExtractWithAi(deps.openaiApiKey);
   const classifyTags =
-    deps.classifyTags ?? defaultClassifyTags(deps.openaiApiKey);
-  const storeImage = deps.storeImage ?? defaultStoreImage;
+    overrides.classifyTags ?? defaultClassifyTags(deps.openaiApiKey);
+  const storeImage = overrides.storeImage ?? defaultStoreImage;
 
   const tags = await getAllTags(deps.db);
   const tagNames = tags.map((t) => t.name);
@@ -101,6 +104,34 @@ const importFromUrl = async (
   throw new Error("Kunde inte extrahera något recept från den angivna sidan");
 };
 
+export const importFromPhotos = async (
+  images: Array<{ base64: string; mimeType: string }>,
+  deps: ImportDeps,
+  overrides: ImportTestOverrides = {},
+): Promise<PhotoImportResult> => {
+  const extractWithAi =
+    overrides.extractWithAi ?? defaultExtractWithAi(deps.openaiApiKey);
+  const classifyTags =
+    overrides.classifyTags ?? defaultClassifyTags(deps.openaiApiKey);
+
+  const tags = await getAllTags(deps.db);
+  const tagNames = tags.map((t) => t.name);
+
+  const draft = await extractWithAi({ kind: "images", images }, tagNames);
+
+  if (!draft) {
+    throw new Error("Kunde inte extrahera något recept från bilderna");
+  }
+
+  const tagIds = await resolveTagIds(draft, tags, classifyTags);
+
+  return {
+    draft,
+    tagIds,
+    extraction: "ocr",
+  };
+};
+
 const matchTagNames = (
   suggestedNames: string[],
   tags: Array<{ id: number; name: string }>,
@@ -116,10 +147,7 @@ const matchTagNames = (
 const resolveTagIds = async (
   draft: RecipeDraft,
   tags: Array<{ id: number; name: string }>,
-  classifyTags: (
-    recipe: ClassifyTagsInput,
-    tagNames: string[],
-  ) => Promise<string[]>,
+  classifyTags: ClassifyTagsFn,
 ): Promise<number[]> => {
   if (draft.suggestedTagNames && draft.suggestedTagNames.length > 0) {
     return matchTagNames(draft.suggestedTagNames, tags);
@@ -145,34 +173,6 @@ const resolveTagIds = async (
   return [];
 };
 
-const importFromPhotos = async (
-  images: Array<{ base64: string; mimeType: string }>,
-  deps: ImportDeps,
-): Promise<ImportResult> => {
-  const extractWithAi =
-    deps.extractWithAi ?? defaultExtractWithAi(deps.openaiApiKey);
-  const classifyTags =
-    deps.classifyTags ?? defaultClassifyTags(deps.openaiApiKey);
-
-  const tags = await getAllTags(deps.db);
-  const tagNames = tags.map((t) => t.name);
-
-  const draft = await extractWithAi({ kind: "images", images }, tagNames);
-
-  if (!draft) {
-    throw new Error("Kunde inte extrahera något recept från bilderna");
-  }
-
-  const tagIds = await resolveTagIds(draft, tags, classifyTags);
-
-  return {
-    draft,
-    tagIds,
-    imageUrl: null,
-    extraction: "ocr",
-  };
-};
-
 const resolveImageUrl = async (
   html: string,
   storeImage: (url: string) => Promise<string | null>,
@@ -188,11 +188,8 @@ const defaultStoreImage = async (url: string): Promise<string | null> => {
 };
 
 const defaultExtractWithAi =
-  (apiKey: string) =>
-  async (
-    input: AiExtractionInput,
-    tagNames: string[],
-  ): Promise<RecipeDraft | null> => {
+  (apiKey: string): ExtractWithAiFn =>
+  async (input, tagNames) => {
     if (input.kind === "html") {
       const { extractRecipeWithAi } = await import("#/import/ai-extract");
       return extractRecipeWithAi(input.html, tagNames, apiKey);
@@ -202,43 +199,9 @@ const defaultExtractWithAi =
   };
 
 const defaultClassifyTags =
-  (apiKey: string) =>
-  async (
-    recipe: ClassifyTagsInput,
-    tagNames: string[],
-  ): Promise<string[]> => {
-    const OpenAI = (await import("openai")).default;
-    const client = new OpenAI({ apiKey });
-
-    const ingredientList = recipe.ingredients.join(", ");
-    const description = recipe.description ?? "";
-
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Du är en receptklassificerare. Givet ett recepts titel, beskrivning och ingredienser, välj de taggar som passar bäst från listan.\n\nSvara med en JSON-array av strängar, t.ex. ["Fisk", "Vardag"]. Välj bara taggar från listan. Om inga taggar passar, svara med en tom array [].`,
-        },
-        {
-          role: "user",
-          content: `Recept: ${recipe.title}\nBeskrivning: ${description}\nIngredienser: ${ingredientList}\n\nTillgängliga taggar: ${tagNames.join(", ")}`,
-        },
-      ],
-      response_format: { type: "json_object" },
-    });
-
-    const content = completion.choices[0].message.content;
-    if (!content) return [];
-
-    try {
-      const parsed = JSON.parse(content);
-      const tags = Array.isArray(parsed) ? parsed : parsed.tags ?? [];
-      return tags.filter((t: unknown): t is string => typeof t === "string");
-    } catch {
-      return [];
-    }
-  };
+  (apiKey: string): ClassifyTagsFn =>
+  (recipe, tagNames) =>
+    classifyRecipeTags(recipe, tagNames, apiKey);
 
 const defaultFetchHtml = async (url: string): Promise<string> => {
   validatePublicUrl(url);
