@@ -20,7 +20,6 @@ import {
   CalendarIcon,
   EllipsisVerticalIcon,
   TagIcon,
-  MagnifyingGlassCircleIcon,
   ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline'
 
@@ -185,12 +184,6 @@ const HomePage = () => {
                   <Link to="/admin/tags" className="flex items-center gap-2.5">
                     <TagIcon className="h-4 w-4 text-gray-400" />
                     Taggar
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/admin/vectors" className="flex items-center gap-2.5">
-                    <MagnifyingGlassCircleIcon className="h-4 w-4 text-gray-400" />
-                    Vektorsök
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

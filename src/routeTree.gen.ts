@@ -19,7 +19,6 @@ import { Route as ApiImagesSplatRouteImport } from './routes/api/images/$'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as AuthedRecipesRecipeIdRouteImport } from './routes/_authed/recipes/$recipeId'
-import { Route as AuthedAdminVectorsRouteImport } from './routes/_authed/admin/vectors'
 import { Route as AuthedAdminTagsRouteImport } from './routes/_authed/admin/tags'
 import { Route as AuthedRecipesEditRecipeIdRouteImport } from './routes/_authed/recipes/edit/$recipeId'
 
@@ -72,11 +71,6 @@ const AuthedRecipesRecipeIdRoute = AuthedRecipesRecipeIdRouteImport.update({
   path: '/recipes/$recipeId',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedAdminVectorsRoute = AuthedAdminVectorsRouteImport.update({
-  id: '/admin/vectors',
-  path: '/admin/vectors',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthedAdminTagsRoute = AuthedAdminTagsRouteImport.update({
   id: '/admin/tags',
   path: '/admin/tags',
@@ -96,7 +90,6 @@ export interface FileRoutesByFullPath {
   '/weekly-menu': typeof AuthedWeeklyMenuRoute
   '/api/chat': typeof ApiChatRoute
   '/admin/tags': typeof AuthedAdminTagsRoute
-  '/admin/vectors': typeof AuthedAdminVectorsRoute
   '/recipes/$recipeId': typeof AuthedRecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -110,7 +103,6 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/': typeof AuthedIndexRoute
   '/admin/tags': typeof AuthedAdminTagsRoute
-  '/admin/vectors': typeof AuthedAdminVectorsRoute
   '/recipes/$recipeId': typeof AuthedRecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -126,7 +118,6 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/admin/tags': typeof AuthedAdminTagsRoute
-  '/_authed/admin/vectors': typeof AuthedAdminVectorsRoute
   '/_authed/recipes/$recipeId': typeof AuthedRecipesRecipeIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -142,7 +133,6 @@ export interface FileRouteTypes {
     | '/weekly-menu'
     | '/api/chat'
     | '/admin/tags'
-    | '/admin/vectors'
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -156,7 +146,6 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/'
     | '/admin/tags'
-    | '/admin/vectors'
     | '/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -171,7 +160,6 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/_authed/'
     | '/_authed/admin/tags'
-    | '/_authed/admin/vectors'
     | '/_authed/recipes/$recipeId'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -260,13 +248,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedRecipesRecipeIdRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/admin/vectors': {
-      id: '/_authed/admin/vectors'
-      path: '/admin/vectors'
-      fullPath: '/admin/vectors'
-      preLoaderRoute: typeof AuthedAdminVectorsRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/admin/tags': {
       id: '/_authed/admin/tags'
       path: '/admin/tags'
@@ -289,7 +270,6 @@ interface AuthedRouteChildren {
   AuthedWeeklyMenuRoute: typeof AuthedWeeklyMenuRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
   AuthedAdminTagsRoute: typeof AuthedAdminTagsRoute
-  AuthedAdminVectorsRoute: typeof AuthedAdminVectorsRoute
   AuthedRecipesRecipeIdRoute: typeof AuthedRecipesRecipeIdRoute
   AuthedRecipesEditRecipeIdRoute: typeof AuthedRecipesEditRecipeIdRoute
 }
@@ -299,7 +279,6 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedWeeklyMenuRoute: AuthedWeeklyMenuRoute,
   AuthedIndexRoute: AuthedIndexRoute,
   AuthedAdminTagsRoute: AuthedAdminTagsRoute,
-  AuthedAdminVectorsRoute: AuthedAdminVectorsRoute,
   AuthedRecipesRecipeIdRoute: AuthedRecipesRecipeIdRoute,
   AuthedRecipesEditRecipeIdRoute: AuthedRecipesEditRecipeIdRoute,
 }
