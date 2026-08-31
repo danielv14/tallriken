@@ -1,7 +1,7 @@
 import { inArray, sql } from 'drizzle-orm'
 import * as schema from '#/db/schema'
 import type { Database } from '#/db/types'
-import { searchRecipes, getAllRecipes, getRecipesByIds } from '#/recipes/crud'
+import { searchRecipes, getAllRecipes } from '#/recipes/crud'
 
 type RecipeWithTags = Awaited<ReturnType<typeof getAllRecipes>>[number]
 
@@ -15,110 +15,34 @@ export type RecipeSearch = {
   search: (params: SearchParams) => Promise<RecipeWithTags[]>
 }
 
-export type FindSimilar = (query: string) => Promise<{ recipeId: number; score: number }[]>
-
-export const createRecipeSearch = (db: Database, findSimilar?: FindSimilar): RecipeSearch => ({
+export const createRecipeSearch = (db: Database): RecipeSearch => ({
   search: async (params: SearchParams): Promise<RecipeWithTags[]> => {
     const query = params.query?.trim() ?? ''
-    const hasQuery = query.length > 0
-
     const tagIds = await resolveTagsParam(db, params.tags)
 
-    let vectorResults: RecipeWithTags[] = []
-    if (findSimilar && hasQuery) {
-      try {
-        vectorResults = await vectorSearch(db, findSimilar, query, tagIds, params.maxCookingTimeMinutes)
-      } catch (error) {
-        console.error('[search] vector search failed, falling back to DB search:', error)
-      }
+    const fuzzyTagIds = query ? await fuzzyMatchTags(db, query) : []
+    const allTagIds = [...new Set([...tagIds, ...fuzzyTagIds])]
+
+    if (!query && allTagIds.length === 0) {
+      return searchRecipes(db, { maxCookingTimeMinutes: params.maxCookingTimeMinutes })
     }
 
-    const dbResults = await fallbackSearch(db, query, tagIds, params.maxCookingTimeMinutes)
+    const textResults = query
+      ? await searchRecipes(db, { query, maxCookingTimeMinutes: params.maxCookingTimeMinutes })
+      : []
 
-    return mergeResults(vectorResults, dbResults)
+    const tagResults = allTagIds.length > 0
+      ? await searchRecipes(db, { tagIds: allTagIds, maxCookingTimeMinutes: params.maxCookingTimeMinutes })
+      : []
+
+    const seen = new Set<number>()
+    return [...tagResults, ...textResults].filter((r) => {
+      if (seen.has(r.id)) return false
+      seen.add(r.id)
+      return true
+    })
   },
 })
-
-const mergeResults = (primary: RecipeWithTags[], secondary: RecipeWithTags[]): RecipeWithTags[] => {
-  const seen = new Set<number>()
-  const merged: RecipeWithTags[] = []
-
-  for (const r of primary) {
-    seen.add(r.id)
-    merged.push(r)
-  }
-
-  for (const r of secondary) {
-    if (!seen.has(r.id)) {
-      seen.add(r.id)
-      merged.push(r)
-    }
-  }
-
-  return merged
-}
-
-const vectorSearch = async (
-  db: Database,
-  findSimilar: FindSimilar,
-  query: string,
-  tagIds: number[],
-  maxCookingTimeMinutes?: number,
-): Promise<RecipeWithTags[]> => {
-  const similar = await findSimilar(query)
-  if (similar.length === 0) return []
-
-  const recipeIds = similar.map((s) => s.recipeId)
-  const recipes = await getRecipesByIds(db, recipeIds)
-
-  const filtered = recipes.filter((r) => {
-    if (maxCookingTimeMinutes) {
-      if (r.cookingTimeMinutes != null && r.cookingTimeMinutes > maxCookingTimeMinutes) return false
-    }
-    if (tagIds.length > 0) {
-      const recipeTagIds = r.tags.map((t) => t.id)
-      if (!tagIds.some((id) => recipeTagIds.includes(id))) return false
-    }
-    return true
-  })
-
-  // Preserve vector similarity ranking
-  const idOrder = new Map(recipeIds.map((id, i) => [id, i]))
-  filtered.sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0))
-
-  return filtered
-}
-
-const fallbackSearch = async (
-  db: Database,
-  query: string,
-  tagIds: number[],
-  maxCookingTimeMinutes?: number,
-): Promise<RecipeWithTags[]> => {
-  const fuzzyTagIds = query ? await fuzzyMatchTags(db, query) : []
-  const allTagIds = [...new Set([...tagIds, ...fuzzyTagIds])]
-
-  const textResults = query
-    ? await searchRecipes(db, { query, maxCookingTimeMinutes })
-    : []
-
-  const tagResults = allTagIds.length > 0
-    ? await searchRecipes(db, { tagIds: allTagIds, maxCookingTimeMinutes })
-    : []
-
-  if (!query && allTagIds.length === 0) {
-    return searchRecipes(db, { maxCookingTimeMinutes })
-  }
-
-  const seen = new Set<number>()
-  const merged = [...tagResults, ...textResults].filter((r) => {
-    if (seen.has(r.id)) return false
-    seen.add(r.id)
-    return true
-  })
-
-  return merged
-}
 
 const resolveTagsParam = async (db: Database, tags?: string[] | number[]): Promise<number[]> => {
   if (!tags || tags.length === 0) return []

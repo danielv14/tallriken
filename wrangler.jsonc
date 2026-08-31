@@ -19,11 +19,5 @@
 			"binding": "R2",
 			"bucket_name": "tallriken-images"
 		}
-	],
-	"vectorize": [
-		{
-			"binding": "VECTORIZE",
-			"index_name": "tallriken-recipes"
-		}
 	]
 }

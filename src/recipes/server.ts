@@ -1,33 +1,37 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDb } from '#/db/client'
-import { getAllRecipes, getRecipeById, getFavoriteRecipes, getStaleRecipes } from '#/recipes/crud'
+import {
+  createRecipe,
+  updateRecipe,
+  deleteRecipe,
+  getAllRecipes,
+  getRecipeById,
+  getFavoriteRecipes,
+  getStaleRecipes,
+} from '#/recipes/crud'
 import { recipeInputSchema } from '#/recipes/recipe'
 import { createRecipeSearch } from '#/recipes/search'
 import { authMiddleware } from '#/auth/middleware'
-import { getVectorSearch, getRecipeIndex } from '#/vector/client'
-import { createSyncedMutations } from '#/vector/with-vector-sync'
-
-const getMutations = () => createSyncedMutations(getDb(), getRecipeIndex())
 
 export const saveRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(recipeInputSchema)
-  .handler(async ({ data }) => getMutations().createRecipe(data))
+  .handler(async ({ data }) => createRecipe(getDb(), data))
 
 export const editRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(recipeInputSchema.extend({ id: z.number() }))
   .handler(async ({ data }) => {
     const { id, ...input } = data
-    return getMutations().updateRecipe(id, input)
+    return updateRecipe(getDb(), id, input)
   })
 
 export const removeRecipe = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(z.object({ id: z.number() }))
   .handler(async ({ data }) => {
-    await getMutations().deleteRecipe(data.id)
+    await deleteRecipe(getDb(), data.id)
   })
 
 export const fetchAllRecipes = createServerFn({ method: 'GET' })
@@ -56,7 +60,7 @@ export const findRecipes = createServerFn({ method: 'GET' })
   )
   .handler(async ({ data }) => {
     const db = getDb()
-    const search = createRecipeSearch(db, (q) => getVectorSearch().findSimilar({ query: q, topK: 20 }))
+    const search = createRecipeSearch(db)
     return search.search({ query: data.query, tags: data.tagIds, maxCookingTimeMinutes: data.maxCookingTimeMinutes })
   })
 
