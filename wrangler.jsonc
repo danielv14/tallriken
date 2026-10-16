@@ -1,6 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "tallriken",
+	"account_id": "6f2919f1cf71f3876121f51afa7e38bf",
 	"compatibility_date": "2026-04-07",
 	"compatibility_flags": [
 		"nodejs_compat"
